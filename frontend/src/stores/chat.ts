@@ -14,6 +14,7 @@ export const useChatStore = defineStore('chat', () => {
   const sending = ref(false)
   const error = ref<string | null>(null)
   const loadingMessages = ref(false)
+  const modelMessages = ref<Message[]>([])
 
   let pollTimer: ReturnType<typeof setTimeout> | null = null
   // key: runtimeExecutionId, value: runId —— 用于把 waiting/run 关联到消息
@@ -86,6 +87,20 @@ export const useChatStore = defineStore('chat', () => {
     } finally {
       sending.value = false
     }
+  }
+
+  async function sendModelMessage(modelId: string, content: string) {
+    sending.value = true; error.value = null
+    const user: Message = { id: `model-u-${Date.now()}`, role: 'user', content, runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString() }
+    const assistant: Message = { id: `model-a-${Date.now()}`, role: 'assistant', content: '', runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString() }
+    modelMessages.value.push(user, assistant)
+    try {
+      const result = await api.complete({ modelId, messages: modelMessages.value.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content })) })
+      assistant.content = result.content; assistant.status = 'COMPLETED'
+    } catch {
+      assistant.content = '这次没有得到回复，请稍后重试。'; assistant.status = 'FAILED'
+      error.value = '模型暂时无法响应，请稍后重试'
+    } finally { sending.value = false }
   }
 
   async function fetchRun(runId: string) {
@@ -181,6 +196,7 @@ export const useChatStore = defineStore('chat', () => {
     error.value = null
     runIdByExec.value = {}
     stopPolling()
+    modelMessages.value = []
   }
 
   /** 根据消息的 execId 找到关联的 run（用于 inline approval） */
@@ -190,8 +206,8 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   return {
-    messages, currentRun, sending, error, loadingMessages,
+    messages, modelMessages, currentRun, sending, error, loadingMessages,
     fetchMessages, sendMessage, fetchRun, resumeRun, cancelRun, reset, stopPolling,
-    resumeFromSession, runForMessage,
+    resumeFromSession, runForMessage, sendModelMessage,
   }
 })

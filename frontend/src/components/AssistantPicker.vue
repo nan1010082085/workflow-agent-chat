@@ -30,7 +30,6 @@ function pick(a: Agent) {
     </div>
     <div v-else-if="agentStore.error" class="empty-state" style="padding: 24px;">
       <p>助手列表暂时不可用</p>
-      <p style="font-size: 12px;">{{ agentStore.error }}</p>
     </div>
     <div v-else-if="!agents.length" class="empty-state" style="padding: 24px;">
       <p>暂无可用助手</p>

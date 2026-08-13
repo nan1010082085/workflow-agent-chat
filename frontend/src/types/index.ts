@@ -13,6 +13,15 @@ export interface Agent {
   published: boolean
 }
 
+export interface ChatModel {
+  id: string
+  name: string
+  model: string
+  provider: string
+  capabilities: string[]
+  isDefault: boolean
+}
+
 export interface SessionSummary {
   id: string
   title: string

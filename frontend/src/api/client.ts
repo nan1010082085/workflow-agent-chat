@@ -27,7 +27,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let body: any = null
     try { body = await res.json() } catch { /* ignore */ }
     const code = body?.code || `HTTP_${res.status}`
-    const message = body?.message || res.statusText
+    const message = userMessage(code, res.status)
     throw new ApiError(code, message, body?.details)
   }
   if (res.status === 204) return null as T
@@ -37,7 +37,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>
 }
 
+function userMessage(code: string, status: number): string {
+  const messages: Record<string, string> = {
+    CATALOG_UNAVAILABLE: '专用能力暂时不可用，请稍后重试',
+    MODEL_LIST_UNAVAILABLE: '模型列表暂时不可用，请稍后重试',
+    MODEL_UNAVAILABLE: '当前模型暂时不可用，请换一个模型',
+    MODEL_RUNTIME_UNAVAILABLE: '当前模型暂时无法响应，请稍后重试',
+    NETWORK_ERROR: '网络连接异常，请稍后重试',
+  }
+  return messages[code] || (status >= 500 ? '服务暂时不可用，请稍后重试' : '请求未完成，请稍后重试')
+}
+
 export const api = {
+  listModels: () => request<{ items: any[]; defaultModelId: string | null }>('/chat/models'),
+  complete: (data: { modelId: string; messages: Array<{ role: string; content: string }> }) =>
+    request<{ modelId: string; content: string }>('/chat/models/completions', { method: 'POST', body: JSON.stringify(data) }),
   // agents
   listAgents: () => request<any[]>('/chat/agents'),
 

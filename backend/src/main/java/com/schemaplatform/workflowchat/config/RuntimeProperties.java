@@ -20,6 +20,8 @@ public record RuntimeProperties(
     String executionPathTemplate,
     String resumePathTemplate,
     String cancelPathTemplate,
+    String modelCatalogPath,
+    String modelCompletionPath,
     int connectTimeoutMs,
     int readTimeoutMs,
     int pollIntervalMs,
@@ -45,6 +47,8 @@ public record RuntimeProperties(
     if (cancelPathTemplate == null || cancelPathTemplate.isBlank()) {
       cancelPathTemplate = "/api/ai/workflows/invoke/executions/{id}/cancel";
     }
+    if (modelCatalogPath == null || modelCatalogPath.isBlank()) modelCatalogPath = "/api/ai/chat/models";
+    if (modelCompletionPath == null || modelCompletionPath.isBlank()) modelCompletionPath = "/api/ai/chat/completions";
     if (connectTimeoutMs <= 0) {
       connectTimeoutMs = 5000;
     }
@@ -88,4 +92,6 @@ public record RuntimeProperties(
     return key != null && (key.startsWith("sk_") || key.startsWith("sk-"))
         ? "X-API-Key" : "X-Workflow-Key";
   }
+  public String modelCredential() { return catalogCredential(); }
+  public String modelCredentialHeader() { return catalogCredentialHeader(); }
 }

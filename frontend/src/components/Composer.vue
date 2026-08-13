@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 
-const props = defineProps<{ disabled: boolean; agentSelected: boolean }>()
+const props = defineProps<{ disabled: boolean; agentSelected?: boolean; placeholder?: string }>()
 const emit = defineEmits<{ (e: 'send', content: string): void }>()
 
 const input = ref('')
@@ -35,7 +35,7 @@ function onEnter(e: KeyboardEvent) {
     <textarea
       ref="textareaRef"
       v-model="input"
-      :placeholder="agentSelected ? '描述你想完成的任务...' : '先说说你想完成什么，我们会帮你找到合适的助手'"
+      :placeholder="placeholder || '输入消息…'"
       :disabled="disabled"
       @input="autoResize"
       @keydown="onEnter"
