@@ -50,13 +50,13 @@ function useBaseModel() {
 <template>
   <div class="workspace">
     <header class="topbar">
-      <div class="topbar-copy"><strong>对话</strong><span class="subtle">{{ mode === 'agent' ? `当前使用：${selectedAgent?.name}` : '当前使用：基础平台模型' }}</span></div>
+      <div class="topbar-copy"><strong>对话</strong><span class="subtle">{{ mode === 'agent' ? `当前使用：${selectedAgent?.name}` : '当前使用：基础模型' }}</span></div>
       <p v-if="modelStore.error || chatStore.error" class="status-error">{{ modelStore.error || chatStore.error }}</p>
     </header>
     <main class="conversation" :class="{ empty: !hasMessages }">
       <section v-if="!hasMessages" class="welcome">
         <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
-        <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，使用 Schema Platform 的基础模型开始对话。' }}</p>
+        <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，开始对话。' }}</p>
       </section>
       <MessageList v-else :messages="activeMessages" :loading="false" :current-run="mode === 'agent' ? chatStore.currentRun : null" @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)" @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)" />
       <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">

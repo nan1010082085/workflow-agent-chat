@@ -5,7 +5,7 @@ export interface TextPart {
   artifactType?: 'code' | 'json' | 'html' | 'form'
 }
 
-/** Keep message rendering aligned with schema-platform/ai textParser. */
+/** Keep message rendering aligned with the platform chat message contract. */
 export function splitTextAndCodeBlocks(content: string): TextPart[] {
   const parts: TextPart[] = []
   const blockRegex = /(<schema>[\s\S]*?<\/schema>|```([\w:]+)?\n([\s\S]*?)```)/g

@@ -14,7 +14,7 @@ export const useModelStore = defineStore('model', () => {
     try {
       const result = await api.listModels()
       models.value = (result.items || []).map((m: any) => ({
-        id: m.id, name: m.name || m.model, model: m.model, provider: m.provider || '平台模型',
+        id: m.id, name: m.name || m.model, model: m.model, provider: m.provider || '模型服务',
         capabilities: m.capabilities || ['chat'], isDefault: !!m.isDefault,
       }))
       selectedId.value = result.defaultModelId || models.value[0]?.id || null
