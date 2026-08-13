@@ -36,6 +36,7 @@ function pick(a: Agent) {
     </div>
     <button
       v-for="a in agents" :key="a.id"
+      type="button"
       class="agent-item" :class="{ active: props.modelValue === a.id }"
       @click="pick(a)"
     >

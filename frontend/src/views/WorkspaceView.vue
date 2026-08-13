@@ -51,33 +51,34 @@ function useBaseModel() {
   <div class="workspace">
     <header class="topbar">
       <div class="topbar-copy"><strong>对话</strong><span class="subtle">{{ mode === 'agent' ? `当前使用：${selectedAgent?.name}` : '当前使用：基础平台模型' }}</span></div>
-      <div class="topbar-controls">
-        <p v-if="modelStore.error || chatStore.error" class="status-error">{{ modelStore.error || chatStore.error }}</p>
-        <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">返回基础模型</button>
-        <ModelPicker v-else v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
-      </div>
-      <button class="workflow-toggle" type="button" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起专用能力' : '选择专用能力' }}</button>
+      <p v-if="modelStore.error || chatStore.error" class="status-error">{{ modelStore.error || chatStore.error }}</p>
     </header>
-    <aside v-if="showWorkflows" class="workflow-panel">
-      <div class="panel-title"><strong>已发布的专用能力</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
-      <AssistantPicker :model-value="selectedAgent?.id || null" @select="selectAgent" />
-      <p v-if="agentStore.error" class="subtle">专用能力暂时不可用，请稍后重试。</p>
-    </aside>
     <main class="conversation" :class="{ empty: !hasMessages }">
       <section v-if="!hasMessages" class="welcome">
         <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
         <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，使用 Schema Platform 的基础模型开始对话。' }}</p>
       </section>
       <MessageList v-else :messages="activeMessages" :loading="false" :current-run="mode === 'agent' ? chatStore.currentRun : null" @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)" @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)" />
-      <Composer :disabled="chatStore.sending" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send" />
+      <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">
+        <template #tools>
+          <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
+          <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">返回基础模型</button>
+          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起专用能力' : '选择专用能力' }}</button>
+        </template>
+        <template #panel>
+          <div class="panel-title"><strong>已发布的专用能力</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
+          <AssistantPicker :model-value="selectedAgent?.id || null" @select="selectAgent" />
+          <p v-if="agentStore.error" class="subtle">专用能力暂时不可用，请稍后重试。</p>
+        </template>
+      </Composer>
     </main>
   </div>
 </template>
 <style scoped>
 .workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:var(--c-bg); }
-.topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; border-bottom:1px solid var(--c-border); background:var(--c-surface); }.topbar-copy,.topbar-controls{display:flex;align-items:center;gap:12px;min-width:0}.topbar-copy{flex-direction:column;align-items:flex-start;gap:0}.topbar-controls{margin-left:auto}.status-error{margin:0;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; border-bottom:1px solid var(--c-border); background:var(--c-surface); }.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}.status-error{margin:0 0 0 auto;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 .topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }.mode-action { padding:7px 10px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }
-.workflow-panel { width:min(760px,calc(100% - 48px)); margin:18px auto 0; padding:16px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }.panel-title { display:flex; justify-content:space-between; margin-bottom:12px; }
+.panel-title { display:flex; justify-content:space-between; margin-bottom:12px; }
 .conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }.welcome { margin:auto auto 24px; width:min(720px,calc(100% - 48px)); text-align:center; }.welcome-mark { color:var(--c-accent); font-size:28px; }.welcome h1 { margin:12px 0 8px; font-size:30px; }.welcome p { margin:0 0 20px; color:var(--c-text-secondary); }
 @media(max-width:767px){.topbar{padding:12px 16px}.subtle{display:none}.topbar-controls{margin-left:auto}.status-error{position:absolute;top:70px;left:16px;right:16px;max-width:none;padding:8px 10px;background:var(--c-danger-soft);border:1px solid #f0c4be;border-radius:6px;white-space:normal}.workflow-panel{width:calc(100% - 32px)}.welcome{width:calc(100% - 32px)}.welcome h1{font-size:26px}}
 </style>
