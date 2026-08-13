@@ -1,15 +1,15 @@
 <script setup lang="ts">
 /**
- * 应用标记：与 favicon.ico 同构——实心圆角方 + 居中白色字形。
- * - product：青绿品牌标（W）
- * - ai：暖橙助手标（星形或自定义 icon）
+ * 应用标记：与 public/favicon.svg / favicon.ico 同源。
+ * 一律为青绿圆角方 + 白色描边 W；不再使用橙底星形。
  */
 const props = withDefaults(
   defineProps<{
+    /** 保留 API；视觉与 ico 一致，不再区分橙星 */
     variant?: 'product' | 'ai'
     size?: 'sm' | 'md' | 'lg'
     /**
-     * 自定义字形；空 / ✦ / ★ 时 AI 变体使用默认星形 SVG。
+     * 自定义字形；空 / ✦ / ★ / W 时使用与 favicon 相同的描边 W。
      */
     glyph?: string
   }>(),
@@ -21,21 +21,29 @@ const props = withDefaults(
 )
 
 /**
- * 是否渲染自定义字形（否则走变体默认标）。
+ * 是否渲染自定义字形（否则走 favicon 同源 W）。
  */
 function hasCustomGlyph(value: string): boolean {
-  return Boolean(value) && value !== '✦' && value !== '★'
+  return Boolean(value) && !['✦', '★', 'W', 'w'].includes(value)
 }
 </script>
 
 <template>
-  <span class="app-mark" :class="[`is-${variant}`, `is-${size}`]" aria-hidden="true">
+  <span
+    class="app-mark"
+    :class="[`is-${props.size}`]"
+    aria-hidden="true"
+  >
     <template v-if="hasCustomGlyph(props.glyph)">{{ props.glyph }}</template>
-    <template v-else-if="variant === 'product'">W</template>
-    <svg v-else viewBox="0 0 16 16" class="star" focusable="false">
+    <!-- 路径与 frontend/public/favicon.svg 保持一致 -->
+    <svg v-else class="mark-svg" viewBox="0 0 32 32" focusable="false">
       <path
-        d="M8 1.8 9.6 5.4l3.8.4-2.9 2.6.9 3.7L8 10.4l-3.4 1.7.9-3.7L2.6 5.8l3.8-.4L8 1.8Z"
-        fill="currentColor"
+        d="M7 9 L11.5 20 L16 12.5 L20.5 20 L25 9"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
     </svg>
   </span>
@@ -47,16 +55,12 @@ function hasCustomGlyph(value: string): boolean {
   place-items: center;
   flex: none;
   color: #fff;
-  border-radius: var(--radius-lg);
+  background: var(--c-primary);
+  border-radius: 22%;
   line-height: 1;
   font-weight: 800;
   user-select: none;
-}
-.app-mark.is-product {
-  background: var(--c-primary);
-}
-.app-mark.is-ai {
-  background: var(--c-accent);
+  overflow: hidden;
 }
 .app-mark.is-sm {
   width: 28px;
@@ -72,11 +76,11 @@ function hasCustomGlyph(value: string): boolean {
   width: 56px;
   height: 56px;
   font-size: 24px;
-  border-radius: 14px;
+  border-radius: 12px;
 }
-.star {
+.mark-svg {
   display: block;
-  width: 52%;
-  height: 52%;
+  width: 100%;
+  height: 100%;
 }
 </style>

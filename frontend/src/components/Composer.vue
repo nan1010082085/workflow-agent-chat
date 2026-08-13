@@ -189,11 +189,14 @@ onBeforeUnmount(() => {
   pending.value.forEach((p) => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl) })
 })
 
-/** WS 状态提示（悬停） */
-const wsTitle = computed(() => {
-  const parts = [platformWsDetail.value, platformWsLastError.value].filter(Boolean)
-  const base = parts.join(' · ') || '平台模型实时通道（Socket.IO）'
-  return `${base}\n点击可重连`
+/** WS 状态悬停文案（圆点仅作状态指示） */
+const wsTooltipLines = computed(() => {
+  const label = platformWsLabel.value || '平台模型实时通道'
+  const lines = [label]
+  const err = platformWsLastError.value
+  if (err && !label.includes(err)) lines.push(err)
+  lines.push('点击可重连')
+  return lines
 })
 
 /**
@@ -277,16 +280,27 @@ function onWsClick() {
         <span v-if="hitlCapable" class="cap-chip">需要确认</span>
       </div>
       <div class="meta-right">
-        <button
-          type="button"
-          class="ws-status"
-          :class="platformWsTone"
-          :title="wsTitle"
-          @click="onWsClick"
-        >
-          <i class="ws-dot" aria-hidden="true" />
-          <span>{{ platformWsLabel }}</span>
-        </button>
+        <el-tooltip placement="top" :show-after="200">
+          <template #content>
+            <div class="ws-tip">
+              <p>{{ wsTooltipLines[0] }}</p>
+              <p
+                v-for="(line, i) in wsTooltipLines.slice(1)"
+                :key="i"
+                class="ws-tip-sub"
+              >{{ line }}</p>
+            </div>
+          </template>
+          <button
+            type="button"
+            class="ws-status"
+            :class="platformWsTone"
+            :aria-label="wsTooltipLines.join('，')"
+            @click="onWsClick"
+          >
+            <i class="ws-dot" aria-hidden="true" />
+          </button>
+        </el-tooltip>
         <small class="hint">Enter 发送 · Shift+Enter 换行</small>
       </div>
     </div>
@@ -307,11 +321,10 @@ function onWsClick() {
   transition: border-color .2s ease, box-shadow .2s ease;
 }
 .composer-field:focus-within {
-  border-color: color-mix(in srgb, var(--c-primary) 72%, var(--c-accent));
+  border-color: var(--c-primary);
   box-shadow:
-    0 0 0 3px rgba(13, 107, 103, .07),
-    0 0 18px rgba(243, 155, 69, .14),
-    0 0 28px rgba(13, 107, 103, .08);
+    0 0 0 3px rgba(13, 107, 103, .08),
+    0 0 20px rgba(94, 184, 176, .16);
 }
 .composer-field.disabled { background: #f4f6f6; }
 .composer-field.disabled:focus-within {
@@ -345,24 +358,24 @@ function onWsClick() {
   stroke-linecap: round;
   stroke-dashoffset: 0;
 }
-/** 拖尾：品牌青绿，长而轻 */
+/** 拖尾：同色青绿，长而轻 */
 .stream-ring-trail {
-  stroke: rgba(13, 107, 103, .32);
-  stroke-width: 1.4;
-  stroke-dasharray: 30 70;
+  stroke: rgba(13, 107, 103, .28);
+  stroke-width: 1.35;
+  stroke-dasharray: 34 66;
 }
-/** 亮头：暖琥珀（呼应 accent），短而亮、不刺眼 */
+/** 亮头：青白高光，沿边框流动、不跳色 */
 .stream-ring-path {
-  stroke: #e8b56a;
-  stroke-width: 2.1;
-  stroke-dasharray: 9 91;
+  stroke: #9fd9d2;
+  stroke-width: 2;
+  stroke-dasharray: 10 90;
   filter:
-    drop-shadow(0 0 2.5px rgba(243, 155, 69, .55))
-    drop-shadow(0 0 7px rgba(232, 181, 106, .35));
+    drop-shadow(0 0 2px rgba(159, 217, 210, .75))
+    drop-shadow(0 0 6px rgba(13, 107, 103, .28));
 }
 .composer-field:focus-within .stream-ring-trail,
 .composer-field:focus-within .stream-ring-path {
-  animation: stream-along-border 2.6s linear infinite;
+  animation: stream-along-border 2.8s linear infinite;
 }
 
 @keyframes stream-along-border {
@@ -533,49 +546,38 @@ textarea:disabled { color: var(--c-text-muted); }
 .ws-status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  max-width: min(52vw, 280px);
-  padding: 2px 8px;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  background: var(--c-surface);
-  color: var(--c-text-muted);
-  font-size: 11px;
-  line-height: 1.3;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
 }
-.ws-status span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.ws-status:hover { background: rgba(13, 107, 103, .06); }
+.ws-tip { margin: 0; line-height: 1.4; }
+.ws-tip p { margin: 0; }
+.ws-tip-sub { margin-top: 2px; opacity: .78; font-size: 12px; }
 .ws-dot {
-  flex: none;
-  width: 7px;
-  height: 7px;
+  display: block;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #b7c2c1;
 }
-.ws-status.ok { color: var(--c-text-secondary); border-color: #cfe3e1; }
 .ws-status.ok .ws-dot { background: #2f9e8f; box-shadow: 0 0 0 3px rgba(47, 158, 143, .16); }
 .ws-status.pending .ws-dot {
   background: #d4a017;
   animation: ws-pulse 1.1s ease-in-out infinite;
 }
-.ws-status.streaming {
-  color: var(--c-primary);
-  border-color: rgba(13, 107, 103, .28);
-}
 .ws-status.streaming .ws-dot {
   background: #5ecfc4;
+  box-shadow: 0 0 0 3px rgba(94, 207, 196, .18);
   animation: ws-pulse 0.9s ease-in-out infinite;
 }
 .ws-status.warn .ws-dot { background: #d4a017; }
-.ws-status.err {
-  color: #a33;
-  border-color: #e8b4b4;
-}
-.ws-status.err .ws-dot { background: #c44; }
+.ws-status.err .ws-dot { background: #c44; box-shadow: 0 0 0 3px rgba(204, 68, 68, .14); }
 .ws-status.idle .ws-dot { background: #b7c2c1; }
 @keyframes ws-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
