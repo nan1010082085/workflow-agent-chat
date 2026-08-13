@@ -11,6 +11,8 @@ import AssistantPicker from '../components/AssistantPicker.vue'
 import MessageList from '../components/MessageList.vue'
 import Composer from '../components/Composer.vue'
 import ProcessingDrawer from '../components/ProcessingDrawer.vue'
+import AppMark from '../components/AppMark.vue'
+import { warmPlatformSocket } from '../api/platformSocket'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,6 +62,8 @@ watch(
 onMounted(() => {
   if (!modelStore.models.length) modelStore.fetchModels()
   if (!agentStore.agents.length) agentStore.fetchAgents()
+  // 预热平台 WS，输入框底部即可看到连接态
+  warmPlatformSocket()
 })
 
 /**
@@ -234,7 +238,7 @@ const processing = computed(() =>
       <div v-if="loadingSession" class="empty-content"><p class="subtle">正在加载会话…</p></div>
       <div v-else-if="!hasMessages" class="empty-content">
         <section class="welcome">
-          <div class="welcome-mark">✦</div>
+          <AppMark class="welcome-mark" variant="ai" size="lg" />
           <h1>今天要完成什么？</h1>
           <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」说明任务，直接开始。` : '先选模型或智能体，再用一句话描述任务。' }}</p>
         </section>
@@ -357,7 +361,7 @@ const processing = computed(() =>
 .conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; background: transparent; }
 .empty-content { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; padding:24px 0; }
 .welcome { width:min(860px,calc(100% - 48px)); padding:0 28px 20px; text-align:center; }
-.welcome-mark { color:var(--c-accent); font-size:28px; }
+.welcome-mark { margin:0 auto; }
 .welcome h1 { margin:12px 0 8px; font-size:30px; }
 .welcome p { margin:0; color:var(--c-text-secondary); }
 .empty-content :deep(.composer) { margin:0; }

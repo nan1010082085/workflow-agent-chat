@@ -3,6 +3,7 @@
  * 生产与澄语同域，path 为 /schema-platform/ws。
  */
 import { io, type Socket } from 'socket.io-client'
+import { computed, readonly, ref, shallowRef } from 'vue'
 import type { Agent, Message } from '../types'
 
 export interface PlatformChatEvent {
@@ -35,8 +36,68 @@ export interface StreamModelChatResult {
   error?: string
 }
 
+/** 平台实时通道连接态 */
+export type PlatformWsPhase =
+  | 'idle'
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'error'
+
+const phase = shallowRef<PlatformWsPhase>('idle')
+const detail = ref('')
+const streaming = shallowRef(false)
+const lastError = ref('')
+const transport = ref('')
+
+/** 只读连接状态（供 Composer 展示） */
+export const platformWsState = readonly(phase)
+export const platformWsDetail = readonly(detail)
+export const platformWsStreaming = readonly(streaming)
+export const platformWsLastError = readonly(lastError)
+export const platformWsTransport = readonly(transport)
+
+/**
+ * 输入框底部展示用文案。
+ */
+export const platformWsLabel = computed(() => {
+  if (streaming.value) return 'WS 流式输出中'
+  switch (phase.value) {
+    case 'connected':
+      return transport.value ? `WS 已连接 · ${transport.value}` : 'WS 已连接'
+    case 'connecting':
+      return 'WS 连接中…'
+    case 'disconnected':
+      return 'WS 已断开'
+    case 'error':
+      return lastError.value ? `WS 异常 · ${lastError.value}` : 'WS 异常'
+    default:
+      return 'WS 未连接'
+  }
+})
+
+/**
+ * 状态点样式类名。
+ */
+export const platformWsTone = computed(() => {
+  if (streaming.value) return 'streaming'
+  switch (phase.value) {
+    case 'connected':
+      return 'ok'
+    case 'connecting':
+      return 'pending'
+    case 'error':
+      return 'err'
+    case 'disconnected':
+      return 'warn'
+    default:
+      return 'idle'
+  }
+})
+
 let socket: Socket | null = null
 let tokenProvider: (() => string | null) | null = null
+let connectPromise: Promise<Socket> | null = null
 
 /** 注入 JWT 提供者（与 Chat auth store 对齐） */
 export function setPlatformSocketTokenProvider(provider: () => string | null): void {
@@ -52,18 +113,65 @@ function resolveSocketTarget(): { url: string; path: string } {
 }
 
 /**
+ * 绑定长生命周期监听，更新底部状态指示。
+ * @param {Socket} s
+ */
+function bindLifecycle(s: Socket): void {
+  s.off('connect', onConnected)
+  s.off('disconnect', onDisconnected)
+  s.off('connect_error', onConnectError)
+  s.on('connect', onConnected)
+  s.on('disconnect', onDisconnected)
+  s.on('connect_error', onConnectError)
+}
+
+function onConnected(): void {
+  phase.value = 'connected'
+  detail.value = '平台实时通道已就绪'
+  lastError.value = ''
+  transport.value = socket?.io?.engine?.transport?.name || 'websocket'
+}
+
+function onDisconnected(reason: string): void {
+  phase.value = 'disconnected'
+  detail.value = reason || '连接已断开'
+  streaming.value = false
+}
+
+function onConnectError(err: Error): void {
+  phase.value = 'error'
+  lastError.value = (err?.message || String(err)).slice(0, 80)
+  detail.value = lastError.value
+  streaming.value = false
+}
+
+/**
  * 确保已连接平台 Socket.IO。
  */
 export function ensurePlatformSocket(): Promise<Socket> {
   const token = tokenProvider?.() || ''
   if (!token) {
+    phase.value = 'error'
+    lastError.value = '未登录'
     return Promise.reject(new Error('未登录，无法连接平台实时通道'))
   }
 
-  if (socket?.connected) return Promise.resolve(socket)
+  if (socket?.connected) {
+    phase.value = 'connected'
+    return Promise.resolve(socket)
+  }
+
+  if (connectPromise) return connectPromise
 
   const { url, path } = resolveSocketTarget()
-  if (!url) return Promise.reject(new Error('平台 WebSocket 地址未配置'))
+  if (!url) {
+    phase.value = 'error'
+    lastError.value = '地址未配置'
+    return Promise.reject(new Error('平台 WebSocket 地址未配置'))
+  }
+
+  phase.value = 'connecting'
+  detail.value = `${path}`
 
   if (socket) {
     socket.removeAllListeners()
@@ -76,33 +184,75 @@ export function ensurePlatformSocket(): Promise<Socket> {
     transports: ['websocket', 'polling'],
     auth: { token },
     autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 8,
+    reconnectionDelay: 800,
   })
+  bindLifecycle(socket)
 
-  return new Promise((resolve, reject) => {
+  connectPromise = new Promise((resolve, reject) => {
     const s = socket!
     const timer = window.setTimeout(() => {
       cleanup()
+      connectPromise = null
+      phase.value = 'error'
+      lastError.value = '连接超时'
       reject(new Error('连接平台实时通道超时'))
     }, 12_000)
 
     function cleanup() {
       window.clearTimeout(timer)
-      s.off('connect', onConnect)
-      s.off('connect_error', onError)
+      s.off('connect', onConnectOnce)
+      s.off('connect_error', onErrorOnce)
     }
 
-    function onConnect() {
+    function onConnectOnce() {
       cleanup()
+      connectPromise = null
+      onConnected()
       resolve(s)
     }
 
-    function onError(err: Error) {
+    function onErrorOnce(err: Error) {
       cleanup()
+      connectPromise = null
+      onConnectError(err)
       reject(err instanceof Error ? err : new Error(String(err)))
     }
 
-    s.once('connect', onConnect)
-    s.once('connect_error', onError)
+    s.once('connect', onConnectOnce)
+    s.once('connect_error', onErrorOnce)
+  })
+
+  return connectPromise
+}
+
+/**
+ * 进入工作区时预热连接（不阻塞 UI）。
+ */
+export function warmPlatformSocket(): void {
+  if (!tokenProvider?.()) {
+    phase.value = 'idle'
+    detail.value = '登录后连接'
+    return
+  }
+  void ensurePlatformSocket().catch(() => {
+    /* 底部状态已更新 */
+  })
+}
+
+/**
+ * 手动重连。
+ */
+export function reconnectPlatformSocket(): void {
+  if (socket) {
+    socket.removeAllListeners()
+    socket.disconnect()
+    socket = null
+  }
+  connectPromise = null
+  void ensurePlatformSocket().catch(() => {
+    /* 底部状态已更新 */
   })
 }
 
@@ -144,12 +294,14 @@ export function buildChengyuHistorySummary(agents: Agent[], priorMessages: Messa
 export async function streamModelChatViaPlatform(input: StreamModelChatInput): Promise<StreamModelChatResult> {
   const s = await ensurePlatformSocket()
   const historySummary = buildChengyuHistorySummary(input.agents, input.priorMessages)
+  streaming.value = true
 
   return new Promise((resolve, reject) => {
     let content = ''
     let thinking = ''
     let conversationId: string | null = input.conversationId || null
     let settled = false
+    let gotDelta = false
 
     const onAbort = () => {
       s.emit('chat:cancel', {})
@@ -159,6 +311,7 @@ export async function streamModelChatViaPlatform(input: StreamModelChatInput): P
     function finish(result: StreamModelChatResult) {
       if (settled) return
       settled = true
+      streaming.value = false
       cleanup()
       if (result.error && !result.content && !result.thinking) {
         reject(new Error(result.error))
@@ -170,9 +323,20 @@ export async function streamModelChatViaPlatform(input: StreamModelChatInput): P
     function onEvent(raw: PlatformChatEvent) {
       input.onEvent(raw)
       const type = raw.type
+      if (type === 'agent_switch' && raw.agent) {
+        detail.value = `专家 · ${String(raw.agent)}`
+      } else if (type === 'task_progress' && raw.description) {
+        detail.value = String(raw.description).slice(0, 48)
+      } else if (type === 'thinker_start') {
+        detail.value = '路由分析中'
+      } else if (type === 'text_delta' || type === 'thinking_delta') {
+        detail.value = '正在生成回复'
+      }
       if (type === 'thinking_delta' && raw.content) {
+        gotDelta = true
         thinking += raw.content
       } else if (type === 'text_delta' && raw.content) {
+        gotDelta = true
         content += raw.content
       } else if (type === 'error') {
         finish({
@@ -185,6 +349,15 @@ export async function streamModelChatViaPlatform(input: StreamModelChatInput): P
         const cid = raw.conversationId
         if (cid != null && String(cid)) {
           conversationId = String(cid)
+        }
+        if (!gotDelta && !content && !thinking) {
+          finish({
+            content,
+            thinking,
+            conversationId,
+            error: 'WS 已连通但未收到流式增量',
+          })
+          return
         }
         finish({ content, thinking, conversationId })
       }

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, nextTick } from 'vue'
 import { api } from '../api/client'
+import {
+  platformWsLabel,
+  platformWsTone,
+  platformWsDetail,
+  platformWsLastError,
+  reconnectPlatformSocket,
+} from '../api/platformSocket'
 import type { MessageAttachment, PendingAttachment } from '../types'
 
 const props = defineProps<{
@@ -181,6 +188,20 @@ onBeforeUnmount(() => {
   clearLeaveTimer()
   pending.value.forEach((p) => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl) })
 })
+
+/** WS 状态提示（悬停） */
+const wsTitle = computed(() => {
+  const parts = [platformWsDetail.value, platformWsLastError.value].filter(Boolean)
+  const base = parts.join(' · ') || '平台模型实时通道（Socket.IO）'
+  return `${base}\n点击可重连`
+})
+
+/**
+ * 点击状态点：异常/断开时手动重连。
+ */
+function onWsClick() {
+  reconnectPlatformSocket()
+}
 </script>
 
 <template>
@@ -255,7 +276,19 @@ onBeforeUnmount(() => {
         <span v-if="supportsFile" class="cap-chip">文件</span>
         <span v-if="hitlCapable" class="cap-chip">需要确认</span>
       </div>
-      <small class="hint">Enter 发送 · Shift+Enter 换行</small>
+      <div class="meta-right">
+        <button
+          type="button"
+          class="ws-status"
+          :class="platformWsTone"
+          :title="wsTitle"
+          @click="onWsClick"
+        >
+          <i class="ws-dot" aria-hidden="true" />
+          <span>{{ platformWsLabel }}</span>
+        </button>
+        <small class="hint">Enter 发送 · Shift+Enter 换行</small>
+      </div>
     </div>
   </form>
 </template>
@@ -486,6 +519,64 @@ textarea:disabled { color: var(--c-text-muted); }
   color: var(--c-text-secondary);
   font-size: 11px;
 }
+.meta-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  min-width: 0;
+}
+.ws-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(52vw, 280px);
+  padding: 2px 8px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.ws-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #b7c2c1;
+}
+.ws-status.ok { color: var(--c-text-secondary); border-color: #cfe3e1; }
+.ws-status.ok .ws-dot { background: #2f9e8f; box-shadow: 0 0 0 3px rgba(47, 158, 143, .16); }
+.ws-status.pending .ws-dot {
+  background: #d4a017;
+  animation: ws-pulse 1.1s ease-in-out infinite;
+}
+.ws-status.streaming {
+  color: var(--c-primary);
+  border-color: rgba(13, 107, 103, .28);
+}
+.ws-status.streaming .ws-dot {
+  background: #5ecfc4;
+  animation: ws-pulse 0.9s ease-in-out infinite;
+}
+.ws-status.warn .ws-dot { background: #d4a017; }
+.ws-status.err {
+  color: #a33;
+  border-color: #e8b4b4;
+}
+.ws-status.err .ws-dot { background: #c44; }
+.ws-status.idle .ws-dot { background: #b7c2c1; }
+@keyframes ws-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .45; transform: scale(.85); }
+}
 .hint {
   flex: none;
   color: var(--c-text-muted);
@@ -500,6 +591,7 @@ textarea:disabled { color: var(--c-text-muted); }
   .composer-panel { max-height: min(56vh, 420px); }
   textarea { min-height: 84px; padding: 14px 14px 8px; }
   .composer-meta { flex-direction: column; align-items: flex-start; }
+  .meta-right { width: 100%; justify-content: space-between; }
   .hint { display: none; }
 }
 </style>
