@@ -54,16 +54,30 @@ function useBaseModel() {
       <p v-if="modelStore.error || chatStore.error" class="status-error">{{ modelStore.error || chatStore.error }}</p>
     </header>
     <main class="conversation" :class="{ empty: !hasMessages }">
-      <section v-if="!hasMessages" class="welcome">
-        <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
-        <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，开始对话。' }}</p>
-      </section>
+      <div v-if="!hasMessages" class="empty-content">
+        <section class="welcome">
+          <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
+          <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，开始对话。' }}</p>
+        </section>
+        <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">
+          <template #tools>
+            <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
+            <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
+            <button class="workflow-toggle" type="button" aria-label="智能体" title="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">+</button>
+          </template>
+          <template #panel>
+            <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
+            <AssistantPicker :model-value="selectedAgent?.id || null" @select="selectAgent" />
+            <p v-if="agentStore.error" class="subtle">智能体暂时不可用，请稍后重试。</p>
+          </template>
+        </Composer>
+      </div>
       <MessageList v-else :messages="activeMessages" :loading="false" :current-run="mode === 'agent' ? chatStore.currentRun : null" @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)" @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)" />
-      <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">
+      <Composer v-if="hasMessages" :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
           <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
-          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起智能体' : '智能体' }}</button>
+          <button class="workflow-toggle" type="button" aria-label="智能体" title="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">+</button>
         </template>
         <template #panel>
           <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
@@ -77,8 +91,8 @@ function useBaseModel() {
 <style scoped>
 .workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:#eef3f4 url('/workflow-agent-chat/chat-canvas.svg') center/cover no-repeat; }
 .topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; background:var(--c-surface); }.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}.status-error{margin:0 0 0 auto;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
-.topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }.mode-action { padding:7px 10px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }
+.topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }.workflow-toggle { display:grid; place-items:center; width:30px; height:30px; padding:0; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); font-size:21px; line-height:1; }.workflow-toggle:hover { border-color:var(--c-primary); background:var(--c-primary-soft); }.mode-action { padding:7px 10px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }
 .panel-title { display:flex; justify-content:space-between; margin-bottom:12px; }
-.conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }.welcome { margin:auto auto 24px; width:min(760px,calc(100% - 48px)); padding:34px 28px 28px; text-align:center; background:rgba(255,255,255,.68); border-radius:16px; box-shadow:0 14px 38px rgba(23,33,43,.06); }.welcome-mark { color:var(--c-accent); font-size:28px; }.welcome h1 { margin:12px 0 8px; font-size:30px; }.welcome p { margin:0 0 20px; color:var(--c-text-secondary); }
+.conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }.empty-content { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; padding:24px 0; }.welcome { width:min(760px,calc(100% - 48px)); padding:0 28px 20px; text-align:center; }.welcome-mark { color:var(--c-accent); font-size:28px; }.welcome h1 { margin:12px 0 8px; font-size:30px; }.welcome p { margin:0; color:var(--c-text-secondary); }.empty-content :deep(.composer) { margin:0; }
 @media(max-width:767px){.topbar{padding:12px 16px}.subtle{display:none}.topbar-controls{margin-left:auto}.status-error{position:absolute;top:70px;left:16px;right:16px;max-width:none;padding:8px 10px;background:var(--c-danger-soft);border:1px solid #f0c4be;border-radius:6px;white-space:normal}.workflow-panel{width:calc(100% - 32px)}.welcome{width:calc(100% - 32px)}.welcome h1{font-size:26px}}
 </style>
