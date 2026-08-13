@@ -21,7 +21,7 @@ public class ModelRestAdapter implements ModelAdapter {
   @Override public ModelCatalog listModels(String tenantId) {
     try {
       JsonNode body = client.get().uri(props.modelCatalogPath()).header("X-Tenant-Id", tenantId)
-          .header(props.modelCredentialHeader(), props.modelCredential()).retrieve().body(JsonNode.class);
+          .header("X-Chat-Internal", props.internalToken()).retrieve().body(JsonNode.class);
       JsonNode items = body == null ? null : body.get("items");
       List<ModelDto> result = new ArrayList<>();
       if (items != null && items.isArray()) for (JsonNode item : items) {
@@ -36,7 +36,7 @@ public class ModelRestAdapter implements ModelAdapter {
   @Override public String complete(String tenantId, String modelId, List<Message> messages) {
     try {
       JsonNode body = client.post().uri(props.modelCompletionPath()).header("X-Tenant-Id", tenantId)
-          .header(props.modelCredentialHeader(), props.modelCredential()).contentType(MediaType.APPLICATION_JSON)
+          .header("X-Chat-Internal", props.internalToken()).contentType(MediaType.APPLICATION_JSON)
           .body(Map.of("modelId", modelId, "messages", messages)).retrieve().body(JsonNode.class);
       return text(body, "content");
     } catch (Exception e) { throw new RuntimeUnavailableException("模型暂时无法响应，请稍后重试", e); }

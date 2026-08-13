@@ -31,6 +31,7 @@ runtime:
   cancel-path-template: ${RUNTIME_CANCEL_PATH:/api/ai/workflows/invoke/executions/{id}/cancel}
   model-catalog-path: ${RUNTIME_MODEL_CATALOG_PATH:/api/ai/chat/models}
   model-completion-path: ${RUNTIME_MODEL_COMPLETION_PATH:/api/ai/chat/completions}
+  internal-token: ${RUNTIME_INTERNAL_TOKEN:}
   connect-timeout-ms: ${RUNTIME_CONNECT_TIMEOUT_MS:5000}
   read-timeout-ms: ${RUNTIME_READ_TIMEOUT_MS:30000}
   poll-interval-ms: ${RUNTIME_POLL_INTERVAL_MS:2000}

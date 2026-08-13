@@ -22,6 +22,7 @@ public record RuntimeProperties(
     String cancelPathTemplate,
     String modelCatalogPath,
     String modelCompletionPath,
+    String internalToken,
     int connectTimeoutMs,
     int readTimeoutMs,
     int pollIntervalMs,
