@@ -283,11 +283,18 @@ export const useChatStore = defineStore('chat', () => {
       if (r.runtimeExecutionId) {
         runIdByExec.value[r.runtimeExecutionId] = r.runId
       }
+      const prevStatus = messages.value.find(
+        (m) => m.runtimeExecutionId === r.runtimeExecutionId,
+      )?.status
       applyRunToMessages(r)
       if (isTerminal(r.status)) {
         stopPolling()
         // 后端已把结果写入 assistant message，终态时回拉消息以展示正文
         if (r.sessionId) await fetchMessages(r.sessionId)
+      } else if (r.status === 'WAITING_INPUT' && prevStatus !== 'WAITING_INPUT') {
+        // 进入确认态：回拉正文（需求分析提问等），避免气泡空白
+        if (r.sessionId) await fetchMessages(r.sessionId)
+        if (!pollTimer) startPolling(runId)
       } else if (!pollTimer) {
         startPolling(runId)
       }

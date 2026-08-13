@@ -289,10 +289,26 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     if (executionId.isBlank()) executionId = text(data, "id");
     ExecutionStatusDto.RunStatusDto status = mapStatus(text(data, "status").toLowerCase());
     JsonNode nodeRecords = data.has("nodeRecords") ? data.get("nodeRecords") : data.get("nodes");
-    String output = firstNonBlank(
-        extractTextFromOutput(data.get("output")),
-        extractNodeText(nodeRecords),
-        streamingText(data.get("streamingOutput")));
+    ExecutionStatusDto.WaitingPayloadDto waiting = resolveWaiting(status, data.get("waiting"), nodeRecords);
+    waiting = enrichWaitingFromAnalyzer(waiting, nodeRecords, status);
+
+    String rawTop = extractTextFromOutput(data.get("output"));
+    if (status == ExecutionStatusDto.RunStatusDto.WAITING_INPUT
+        && isNonProseNodeDump(data.get("output"), rawTop)) {
+      rawTop = null;
+    }
+    String output;
+    if (status == ExecutionStatusDto.RunStatusDto.WAITING_INPUT) {
+      output = firstNonBlank(
+          rawTop,
+          streamingText(data.get("streamingOutput")),
+          buildWaitingVisibleContent(nodeRecords, waiting));
+    } else {
+      output = firstNonBlank(
+          rawTop,
+          extractNodeText(nodeRecords),
+          streamingText(data.get("streamingOutput")));
+    }
     String thinking = firstNonBlank(
         asText(data, "thinking"),
         asText(data, "reasoning"),
@@ -304,11 +320,169 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     }
     String errorMessage = text(data, "error");
     List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(nodeRecords);
-    ExecutionStatusDto.WaitingPayloadDto waiting = resolveWaiting(status, data.get("waiting"), nodeRecords);
     Instant startedAt = parseInstant(data, "startedAt");
     Instant finishedAt = parseInstant(data, "finishedAt");
     return new ExecutionStatusDto(
         executionId, status, blankToNull(output), blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt);
+  }
+
+  /**
+   * 节点结构化 dump（需求分析/路由等）不应直接当用户可见正文。
+   */
+  private boolean isNonProseNodeDump(JsonNode output, String extracted) {
+    if (output != null && output.isObject()) {
+      if (output.has("confirmQuestions") || output.has("completeness")
+          || output.has("recommendedExperts") || output.has("routeReason")
+          || output.has("expertId") || output.has("chainPreview")) {
+        return true;
+      }
+      if (output.has("intent") && !hasNonBlankTextField(output)) {
+        return true;
+      }
+      // HITL 等待壳：仅 message + confirmQuestions，正文由 buildWaitingVisibleContent 组装
+      if (output.has("confirmQuestions") && output.has("message") && !hasNonBlankTextField(output)) {
+        return true;
+      }
+    }
+    if (extracted == null || extracted.isBlank()) return false;
+    String t = extracted.trim();
+    return (t.startsWith("{") && t.endsWith("}")) || (t.startsWith("[") && t.endsWith("]"));
+  }
+
+  private boolean hasNonBlankTextField(JsonNode output) {
+    for (String key : List.of("text", "content", "answer")) {
+      String v = text(output, key);
+      if (v != null && !v.isBlank()) return true;
+    }
+    return false;
+  }
+
+  /**
+   * 将需求分析节点的提问合并进 waiting.fields，供确认卡展示。
+   */
+  private ExecutionStatusDto.WaitingPayloadDto enrichWaitingFromAnalyzer(
+      ExecutionStatusDto.WaitingPayloadDto waiting,
+      JsonNode nodeRecords,
+      ExecutionStatusDto.RunStatusDto status) {
+    if (status != ExecutionStatusDto.RunStatusDto.WAITING_INPUT || waiting == null) {
+      return waiting;
+    }
+    List<ExecutionStatusDto.FieldDto> extra = extractAnalyzerQuestions(nodeRecords);
+    if (extra.isEmpty()) return waiting;
+    List<ExecutionStatusDto.FieldDto> merged = new ArrayList<>();
+    if (waiting.fields() != null) merged.addAll(waiting.fields());
+    java.util.HashSet<String> keys = new java.util.HashSet<>();
+    for (ExecutionStatusDto.FieldDto f : merged) {
+      if (f.key() != null) keys.add(f.key());
+    }
+    for (ExecutionStatusDto.FieldDto f : extra) {
+      if (f.key() != null && keys.add(f.key())) {
+        merged.add(f);
+      }
+    }
+    return new ExecutionStatusDto.WaitingPayloadDto(
+        waiting.prompt(), merged, waiting.actions(), waiting.dangerous());
+  }
+
+  /**
+   * 等待确认时的用户可见正文：分析结果摘要 + 待澄清问题。
+   */
+  private String buildWaitingVisibleContent(
+      JsonNode nodeRecords, ExecutionStatusDto.WaitingPayloadDto waiting) {
+    StringBuilder sb = new StringBuilder();
+    JsonNode analyzer = findNodeOutput(nodeRecords, "requirement-analyzer");
+    if (analyzer != null && analyzer.isObject()) {
+      String intent = text(analyzer, "intent");
+      String completeness = analyzer.has("completeness") && !analyzer.get("completeness").isNull()
+          ? analyzer.get("completeness").asText()
+          : "";
+      sb.append("## 需求理解\n\n");
+      if (!intent.isBlank()) {
+        sb.append("- 意图：").append(intent).append('\n');
+      }
+      if (!completeness.isBlank()) {
+        sb.append("- 完整度：").append(completeness).append("%\n");
+      }
+      List<String> qs = readQuestionTexts(analyzer.get("confirmQuestions"));
+      if (!qs.isEmpty()) {
+        sb.append("\n## 需要你补充\n\n");
+        for (int i = 0; i < qs.size(); i++) {
+          sb.append(i + 1).append(". ").append(qs.get(i)).append('\n');
+        }
+      }
+    }
+    String interrupt = "";
+    JsonNode waitingOut = findWaitingNodeOutput(nodeRecords);
+    if (waitingOut != null) {
+      interrupt = firstNonBlank(
+          text(waitingOut, "interruptQuestion"),
+          text(waitingOut, "message"),
+          text(waitingOut, "prompt"));
+    }
+    if (interrupt != null && !interrupt.isBlank()) {
+      if (sb.length() > 0) sb.append('\n');
+      sb.append("## 待确认\n\n").append(interrupt.trim()).append('\n');
+    } else if (waiting != null && waiting.prompt() != null && !waiting.prompt().isBlank()
+        && sb.indexOf(waiting.prompt()) < 0) {
+      if (sb.length() > 0) sb.append('\n');
+      sb.append("## 待确认\n\n").append(waiting.prompt().trim()).append('\n');
+    }
+    if (waiting != null && waiting.fields() != null && !waiting.fields().isEmpty()) {
+      boolean listed = sb.indexOf("## 需要你补充") >= 0;
+      if (!listed) {
+        sb.append("\n## 确认项\n\n");
+        int i = 1;
+        for (ExecutionStatusDto.FieldDto f : waiting.fields()) {
+          if (f.label() == null || f.label().isBlank()) continue;
+          sb.append(i++).append(". ").append(f.label().trim()).append('\n');
+        }
+      }
+    }
+    return sb.toString().trim();
+  }
+
+  private JsonNode findNodeOutput(JsonNode nodeRecords, String nodeType) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    JsonNode found = null;
+    for (JsonNode n : nodeRecords) {
+      if (nodeType.equalsIgnoreCase(text(n, "nodeType"))) {
+        found = n.get("output");
+      }
+    }
+    return found;
+  }
+
+  private JsonNode findWaitingNodeOutput(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    for (int i = nodeRecords.size() - 1; i >= 0; i--) {
+      JsonNode n = nodeRecords.get(i);
+      if ("waiting".equalsIgnoreCase(text(n, "status"))) {
+        return n.get("output");
+      }
+    }
+    return null;
+  }
+
+  private List<ExecutionStatusDto.FieldDto> extractAnalyzerQuestions(JsonNode nodeRecords) {
+    JsonNode analyzer = findNodeOutput(nodeRecords, "requirement-analyzer");
+    if (analyzer == null) return List.of();
+    return mapConfirmQuestions(analyzer.get("confirmQuestions"));
+  }
+
+  private List<String> readQuestionTexts(JsonNode questions) {
+    List<String> out = new ArrayList<>();
+    if (questions == null || !questions.isArray()) return out;
+    for (JsonNode q : questions) {
+      if (q == null || q.isNull()) continue;
+      if (q.isTextual()) {
+        String t = q.asText().trim();
+        if (!t.isBlank()) out.add(t);
+      } else if (q.isObject()) {
+        String t = firstNonBlank(text(q, "question"), text(q, "label"), text(q, "message"));
+        if (t != null && !t.isBlank()) out.add(t.trim());
+      }
+    }
+    return out;
   }
 
   /**
@@ -343,11 +517,40 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
         text(output, "content"),
         text(output, "answer"));
     if (direct != null && !direct.isBlank()) return direct;
+    // 平台常见空壳 { "text": "" } —— 勿把 JSON 当用户可见正文
+    if (output.isObject() && isEmptyTextEnvelope(output)) {
+      return "";
+    }
     try {
       return objectMapper.writeValueAsString(output);
     } catch (Exception e) {
       return output.toString();
     }
+  }
+
+  /** 仅含空 text/message/content 的输出壳，对用户无意义 */
+  private boolean isEmptyTextEnvelope(JsonNode output) {
+    if (!output.isObject() || output.isEmpty()) return true;
+    int meaningful = 0;
+    var it = output.fields();
+    while (it.hasNext()) {
+      var e = it.next();
+      String key = e.getKey();
+      JsonNode v = e.getValue();
+      if (key.equals("text") || key.equals("message") || key.equals("content") || key.equals("answer")) {
+        if (v != null && v.isTextual() && !v.asText().isBlank()) {
+          meaningful++;
+        }
+        continue;
+      }
+      if (v != null && !v.isNull()) {
+        if (v.isTextual() && v.asText().isBlank()) continue;
+        if (v.isArray() && v.isEmpty()) continue;
+        if (v.isObject() && v.isEmpty()) continue;
+        meaningful++;
+      }
+    }
+    return meaningful == 0;
   }
 
   private String streamingText(JsonNode streaming) {
@@ -460,9 +663,19 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
 
   private List<ExecutionStatusDto.FieldDto> mapConfirmQuestions(JsonNode questions) {
     List<ExecutionStatusDto.FieldDto> fields = new ArrayList<>();
+    if (questions == null || !questions.isArray()) return fields;
     int i = 0;
     for (JsonNode q : questions) {
-      if (q == null || !q.isObject()) continue;
+      if (q == null || q.isNull()) continue;
+      // 需求分析节点常见：字符串数组
+      if (q.isTextual()) {
+        String label = q.asText().trim();
+        if (label.isBlank()) continue;
+        String key = "aq" + (++i);
+        fields.add(new ExecutionStatusDto.FieldDto(key, label, "textarea", List.of()));
+        continue;
+      }
+      if (!q.isObject()) continue;
       String key = firstNonBlank(text(q, "id"), text(q, "key"), "q" + (++i));
       String label = firstNonBlank(text(q, "question"), text(q, "label"), key);
       List<String> options = stringList(q, "options");

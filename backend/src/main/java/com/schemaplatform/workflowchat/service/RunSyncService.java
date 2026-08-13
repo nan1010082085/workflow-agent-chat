@@ -3,6 +3,7 @@ package com.schemaplatform.workflowchat.service;
 import com.schemaplatform.workflowchat.domain.ChatMessage;
 import com.schemaplatform.workflowchat.domain.ChatRun;
 import com.schemaplatform.workflowchat.domain.MessageStatus;
+import com.schemaplatform.workflowchat.domain.RunStatus;
 import com.schemaplatform.workflowchat.runtime.ExecutionStatusDto;
 import com.schemaplatform.workflowchat.runtime.RuntimeAdapter;
 import com.schemaplatform.workflowchat.runtime.RuntimeUnavailableException;
@@ -81,6 +82,11 @@ public class RunSyncService {
         run.getRuntimeExecutionId(), run.getTenantId(),
         new RuntimeAdapter.ResumeRequest(action, payload));
     applyStatus(run, status);
+    // resume HTTP 已成功时，即使平台瞬时仍回 waiting，也推进为 RUNNING，避免前端/测试重复 resume
+    if (run.getStatus() == RunStatus.WAITING_INPUT) {
+      run.markRunning();
+      updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
+    }
     ChatRun saved = runService.save(run);
     return RunStatusView.from(saved, status);
   }
@@ -117,7 +123,8 @@ public class RunSyncService {
       }
       case WAITING_INPUT -> {
         run.markWaiting();
-        updateAssistantMessage(run, null, null, MessageStatus.WAITING_INPUT);
+        // 把需求分析/确认问题写入助手正文，前端气泡不再空白
+        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.WAITING_INPUT);
       }
       case CANCELLED -> {
         run.markCancelled();

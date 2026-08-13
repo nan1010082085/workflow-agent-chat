@@ -292,7 +292,10 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
           <span v-if="waiting.dangerous" class="danger-tag">需谨慎</span>
         </div>
         <p class="prompt">{{ waiting.prompt }}</p>
-        <div v-for="f in waiting.fields" :key="f.key" class="field">
+        <ul v-if="waiting.fields?.length" class="question-list">
+          <li v-for="f in waiting.fields" :key="f.key">{{ f.label }}</li>
+        </ul>
+        <div v-for="f in waiting.fields" :key="'input-' + f.key" class="field">
           <label>{{ f.label }}</label>
           <textarea
             v-if="f.type === 'textarea'"
@@ -458,6 +461,16 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .title { font-weight: 700; font-size: 13px; }
 .danger-tag { font-size: 10px; font-weight: 700; color: #fff; background: var(--c-danger); padding: 1px 6px; border-radius: 3px; }
 .prompt { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--c-text-secondary); }
+.question-list {
+  margin: 0 0 12px;
+  padding: 8px 10px 8px 28px;
+  background: var(--c-bg);
+  border-radius: 8px;
+  color: var(--c-text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.question-list li { margin: 4px 0; }
 .field { margin-bottom: 8px; }
 .field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 3px; }
 .field input, .field textarea, .field select {

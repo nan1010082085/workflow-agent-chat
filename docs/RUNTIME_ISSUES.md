@@ -32,6 +32,16 @@
 - **平台侧处置**：`initExecutionConversation` 已消费 `history`；`agent-loop` 将 `conversationHistory` 注入 LLM 消息，并在结束后回写执行记录。
 - **后续**：可评估 `continueFromExecutionId` 续跑链路（`triggeredBy` 归属需与 `X-Chat-Internal` 对齐）。
 
+### ISS-02c chat-parity HITL resume 丢 message / 空总结盖对话 [已修复·平台]
+
+- **问题**：`gui-chat-parity-assistant` 走 intent→需求分析→HITL 后，resume 的 `input` 仅为 `{approved,...}`，覆盖原始 `message`；expert 吃到 task-chain JSON；summarizer 在空任务链时用「无可总结」话术盖住专家回复。
+- **平台侧处置（2026-08-13）**：
+  1. resume 合并执行文档 / trigger 输出中的原始 `message`
+  2. expert / intent-router 优先读 `ctx.input.message`
+  3. `dispatchAgent` 注入 `conversationHistory`
+  4. summarizer 无有效步骤时透传上游专家文本（从 `nodeOutputs` 回找）
+- **验证**：白盒 `TAG-probe-parity-*` R1 确认记住、R2 原样复述 PASS。
+
 - **来源**：TASKS C-02；ARCHITECTURE §4 §5
 - **问题**：架构文档列出了 Runtime 现有接口路径（`POST /api/ai/workflows/invoke/{slug}`、`GET .../executions/{id}`、`POST .../resume`、`POST .../cancel`），但请求体、响应体、状态枚举、错误码、超时、幂等键的精确契约未提供。
 - **Chat 侧影响**：`RuntimeRestAdapter` 的请求/响应 DTO 与状态映射无法最终定型。
