@@ -67,6 +67,7 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     }
     if (request.history() != null && !request.history().isEmpty()) {
       List<Map<String, String>> turns = new ArrayList<>();
+      StringBuilder historyText = new StringBuilder();
       for (RuntimeAdapter.HistoryTurn turn : request.history()) {
         if (turn == null || turn.content() == null || turn.content().isBlank()) continue;
         String role = turn.role() == null ? "user" : turn.role().trim().toLowerCase();
@@ -74,9 +75,17 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
           role = "user";
         }
         turns.add(Map.of("role", role, "content", turn.content().trim()));
+        String label = switch (role) {
+          case "assistant" -> "助手";
+          case "system" -> "系统";
+          default -> "用户";
+        };
+        historyText.append(label).append("：").append(turn.content().trim()).append('\n');
       }
       if (!turns.isEmpty()) {
         input.put("history", turns);
+        input.put("conversationHistory", turns);
+        input.put("historyText", historyText.toString().trim());
       }
     }
     Map<String, Object> requestBody = new java.util.LinkedHashMap<>();
@@ -135,16 +144,45 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
   @Override
   public ExecutionStatusDto resume(String runtimeExecutionId, String tenantId, ResumeRequest request) {
     String path = props.resumePathTemplate().replace("{id}", runtimeExecutionId);
+    // 平台契约：body 为 approved/comment；Chat 侧 action=approve|reject
+    String action = request.action() == null ? "approve" : request.action().trim().toLowerCase();
+    boolean approved = !(action.equals("reject") || action.equals("deny") || action.equals("cancel"));
+    Map<String, Object> body = new java.util.LinkedHashMap<>();
+    body.put("approved", approved);
+    body.put("action", action);
+    body.put("answers", Map.of());
+    if (request.payload() != null && !request.payload().isBlank()) {
+      body.put("comment", request.payload());
+      body.put("payload", request.payload());
+      Map<String, String> answers = tryParseAnswers(request.payload());
+      if (answers != null) {
+        body.put("answers", answers);
+      }
+    }
     try {
-      JsonNode body = applyCredentials(
+      JsonNode resp = applyCredentials(
           restClient.post()
               .uri(path)
               .header("X-Tenant-Id", tenantId)
               .contentType(MediaType.APPLICATION_JSON)
-              .body(Map.of("action", request.action(), "payload", request.payload())))
+              .body(body))
           .retrieve()
           .body(JsonNode.class);
-      return parseExecutionStatus(body);
+      ExecutionStatusDto parsed = parseExecutionStatus(resp);
+      // resume 成功后平台多为 async running；若仍解析为 waiting 则按 running 推进 Chat 状态
+      if (parsed != null && parsed.status() == ExecutionStatusDto.RunStatusDto.WAITING_INPUT) {
+        return new ExecutionStatusDto(
+            parsed.executionId(),
+            ExecutionStatusDto.RunStatusDto.RUNNING,
+            parsed.output(),
+            parsed.thinking(),
+            parsed.errorMessage(),
+            null,
+            parsed.nodes(),
+            parsed.startedAt(),
+            parsed.finishedAt());
+      }
+      return parsed;
     } catch (Exception e) {
       log.error("resume 失败 executionId={}", runtimeExecutionId, e);
       throw new RuntimeUnavailableException("恢复执行失败", e);
@@ -265,8 +303,8 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       output = split.content();
     }
     String errorMessage = text(data, "error");
-    ExecutionStatusDto.WaitingPayloadDto waiting = parseWaiting(data.get("waiting"));
     List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(nodeRecords);
+    ExecutionStatusDto.WaitingPayloadDto waiting = resolveWaiting(status, data.get("waiting"), nodeRecords);
     Instant startedAt = parseInstant(data, "startedAt");
     Instant finishedAt = parseInstant(data, "finishedAt");
     return new ExecutionStatusDto(
@@ -329,9 +367,35 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     return value == null || value.isBlank() ? null : value;
   }
 
-  private ExecutionStatusDto.WaitingPayloadDto parseWaiting(JsonNode waiting) {
+  /**
+   * 解析 HITL 载荷。平台真实结构在 waiting 节点的 output（message + confirmQuestions），
+   * 而非顶层 waiting 字段；兼容顶层 waiting，并在 WAITING_INPUT 时兜底默认审批动作。
+   */
+  private ExecutionStatusDto.WaitingPayloadDto resolveWaiting(
+      ExecutionStatusDto.RunStatusDto status, JsonNode topLevelWaiting, JsonNode nodeRecords) {
+    if (status != ExecutionStatusDto.RunStatusDto.WAITING_INPUT) {
+      return parseWaitingNode(topLevelWaiting);
+    }
+    ExecutionStatusDto.WaitingPayloadDto fromTop = parseWaitingNode(topLevelWaiting);
+    if (fromTop != null && hasUsableWaiting(fromTop)) {
+      return ensureDefaultActions(fromTop);
+    }
+    ExecutionStatusDto.WaitingPayloadDto fromNodes = parseWaitingFromNodeRecords(nodeRecords);
+    if (fromNodes != null) {
+      return ensureDefaultActions(fromNodes);
+    }
+    return defaultWaitingPayload("智能体正在等待你的确认。");
+  }
+
+  private static boolean hasUsableWaiting(ExecutionStatusDto.WaitingPayloadDto waiting) {
+    return (waiting.prompt() != null && !waiting.prompt().isBlank())
+        || (waiting.actions() != null && !waiting.actions().isEmpty())
+        || (waiting.fields() != null && !waiting.fields().isEmpty());
+  }
+
+  private ExecutionStatusDto.WaitingPayloadDto parseWaitingNode(JsonNode waiting) {
     if (waiting == null || waiting.isMissingNode() || waiting.isNull()) return null;
-    String prompt = text(waiting, "prompt");
+    String prompt = firstNonBlank(text(waiting, "prompt"), text(waiting, "message"));
     List<ExecutionStatusDto.FieldDto> fields = new ArrayList<>();
     JsonNode fieldsNode = waiting.get("fields");
     if (fieldsNode != null && fieldsNode.isArray()) {
@@ -339,6 +403,10 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
         fields.add(new ExecutionStatusDto.FieldDto(
             text(f, "key"), text(f, "label"), text(f, "type"), stringList(f, "options")));
       }
+    }
+    JsonNode questions = waiting.get("confirmQuestions");
+    if (questions != null && questions.isArray()) {
+      fields.addAll(mapConfirmQuestions(questions));
     }
     List<ExecutionStatusDto.ActionDto> actions = new ArrayList<>();
     JsonNode actionsNode = waiting.get("actions");
@@ -349,7 +417,100 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       }
     }
     boolean dangerous = waiting.has("dangerous") && waiting.get("dangerous").asBoolean();
-    return new ExecutionStatusDto.WaitingPayloadDto(prompt, fields, actions, dangerous);
+    if ((prompt == null || prompt.isBlank()) && fields.isEmpty() && actions.isEmpty()) {
+      return null;
+    }
+    return new ExecutionStatusDto.WaitingPayloadDto(
+        prompt == null ? "" : prompt, fields, actions, dangerous);
+  }
+
+  /**
+   * 对齐平台 extractWorkflowWaitingHitl：从 status=waiting 的节点 output 取 message/confirmQuestions。
+   */
+  private ExecutionStatusDto.WaitingPayloadDto parseWaitingFromNodeRecords(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    for (JsonNode n : nodeRecords) {
+      String nodeStatus = text(n, "status").toLowerCase();
+      if (!"waiting".equals(nodeStatus)) continue;
+      JsonNode output = n.get("output");
+      String prompt = "";
+      List<ExecutionStatusDto.FieldDto> fields = List.of();
+      if (output != null && !output.isNull()) {
+        prompt = firstNonBlank(
+            text(output, "message"),
+            text(output, "prompt"),
+            text(output, "text"),
+            text(output, "content"));
+        if (prompt == null) prompt = "";
+        JsonNode questions = output.get("confirmQuestions");
+        if (questions != null && questions.isArray()) {
+          fields = mapConfirmQuestions(questions);
+        }
+      }
+      if (prompt.isBlank()) {
+        String nodeName = firstNonBlank(text(n, "nodeName"), text(n, "nodeId"));
+        prompt = nodeName == null || nodeName.isBlank()
+            ? "智能体正在等待你的确认。"
+            : "「" + nodeName + "」需要你的确认。";
+      }
+      return new ExecutionStatusDto.WaitingPayloadDto(prompt, fields, List.of(), false);
+    }
+    return null;
+  }
+
+  private List<ExecutionStatusDto.FieldDto> mapConfirmQuestions(JsonNode questions) {
+    List<ExecutionStatusDto.FieldDto> fields = new ArrayList<>();
+    int i = 0;
+    for (JsonNode q : questions) {
+      if (q == null || !q.isObject()) continue;
+      String key = firstNonBlank(text(q, "id"), text(q, "key"), "q" + (++i));
+      String label = firstNonBlank(text(q, "question"), text(q, "label"), key);
+      List<String> options = stringList(q, "options");
+      String type = options.isEmpty() ? "textarea" : "select";
+      fields.add(new ExecutionStatusDto.FieldDto(key, label, type, options));
+    }
+    return fields;
+  }
+
+  private ExecutionStatusDto.WaitingPayloadDto ensureDefaultActions(
+      ExecutionStatusDto.WaitingPayloadDto waiting) {
+    if (waiting.actions() != null && !waiting.actions().isEmpty()) {
+      return waiting;
+    }
+    return new ExecutionStatusDto.WaitingPayloadDto(
+        waiting.prompt(),
+        waiting.fields() == null ? List.of() : waiting.fields(),
+        defaultActions(),
+        waiting.dangerous());
+  }
+
+  private ExecutionStatusDto.WaitingPayloadDto defaultWaitingPayload(String prompt) {
+    return new ExecutionStatusDto.WaitingPayloadDto(prompt, List.of(), defaultActions(), false);
+  }
+
+  private static List<ExecutionStatusDto.ActionDto> defaultActions() {
+    return List.of(
+        new ExecutionStatusDto.ActionDto("approve", "确认继续", "primary"),
+        new ExecutionStatusDto.ActionDto("reject", "拒绝", "danger"));
+  }
+
+  /** 前端若把多字段答案序列化为 JSON，则转成平台 answers map。 */
+  private Map<String, String> tryParseAnswers(String payload) {
+    String trimmed = payload.trim();
+    if (!trimmed.startsWith("{")) return null;
+    try {
+      JsonNode node = objectMapper.readTree(trimmed);
+      if (node == null || !node.isObject()) return null;
+      Map<String, String> answers = new java.util.LinkedHashMap<>();
+      node.fields().forEachRemaining(e -> {
+        if (e.getValue() != null && !e.getValue().isNull()) {
+          answers.put(e.getKey(), e.getValue().asText());
+        }
+      });
+      return answers.isEmpty() ? null : answers;
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private List<ExecutionStatusDto.NodeTimelineDto> parseNodes(JsonNode nodes) {

@@ -75,6 +75,13 @@ public class ChatRun {
     this.status = RunStatus.WAITING_INPUT;
   }
 
+  /** HITL resume 后回到运行中 */
+  public void markRunning() {
+    this.status = RunStatus.RUNNING;
+    this.finishedAt = null;
+    this.errorMessage = null;
+  }
+
   public void markCancelled() {
     this.status = RunStatus.CANCELLED;
     this.finishedAt = Instant.now();

@@ -72,12 +72,42 @@ function updateTime(a: Agent): string {
 .page-head h1 { font-size: 22px; margin: 0 0 6px; }
 .page-head p { color: var(--c-text-muted); margin: 0 0 22px; font-size: 14px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-.card-head { display: flex; align-items: center; gap: 12px; }
-.icon { font-size: 28px; color: var(--c-accent); }
-.card-head b { display: block; font-size: 15px; }
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+.card-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.icon { flex: none; font-size: 28px; color: var(--c-accent); }
+.card-head > div { min-width: 0; }
+.card-head b {
+  display: block;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .card-head small { display: block; font-size: 11px; color: var(--c-text-muted); margin-top: 2px; }
-.desc { margin: 0; font-size: 13px; line-height: 1.6; color: var(--c-text-secondary); flex: 1; }
+.desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--c-text-secondary);
+  flex: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
 .caps { display: flex; gap: 6px; }
 .cap { font-size: 11px; padding: 2px 8px; background: var(--c-bg); border-radius: 3px; color: var(--c-text-muted); }
 .cap.confirm { color: var(--c-warning); background: #fdf2df; }

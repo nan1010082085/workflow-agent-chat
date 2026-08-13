@@ -151,6 +151,9 @@ export const api = {
   },
 
   getRun: (runId: string) => request<any>(`/chat/runs/${runId}`),
+  /** 按 Runtime executionId 反查并同步 Chat run（刷新恢复 HITL） */
+  getRunByExecution: (executionId: string) =>
+    request<any>(`/chat/runs/by-execution/${encodeURIComponent(executionId)}`),
   resumeRun: (runId: string, data: { action: string; payload?: string }) =>
     request<any>(`/chat/runs/${runId}/resume`, { method: 'POST', body: JSON.stringify(data) }),
   cancelRun: (runId: string) =>

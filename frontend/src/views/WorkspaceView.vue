@@ -276,7 +276,8 @@ const processing = computed(() =>
         :messages="chatStore.messages"
         :loading="false"
         :current-run="mode === 'agent' ? chatStore.currentRun : null"
-        @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)"
+        :sending="chatStore.sending"
+        @resume="(action, payload) => chatStore.resumeWaiting(action, payload)"
         @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)"
         @open-process="openProcess"
       />

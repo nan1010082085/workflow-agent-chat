@@ -35,10 +35,32 @@ function statusClass(status: string): string {
   }[status] || 'chip-cancelled'
 }
 
+/** 平台未下发 waiting 动作时的默认审批按钮 */
+const DEFAULT_WAITING_ACTIONS: WaitingPayload['actions'] = [
+  { action: 'approve', label: '确认继续', style: 'primary' },
+  { action: 'reject', label: '拒绝', style: 'danger' },
+]
+
 /** inline approval：waiting 卡片紧邻助手消息（F-04） */
 const waiting = computed<WaitingPayload | null>(() => {
   if (props.message.status !== 'WAITING_INPUT') return null
-  return props.run?.waiting || null
+  const fromRun = props.run?.waiting
+  if (fromRun) {
+    const actions = fromRun.actions?.length ? fromRun.actions : DEFAULT_WAITING_ACTIONS
+    return {
+      prompt: fromRun.prompt || '智能体正在等待你的确认。',
+      fields: fromRun.fields || [],
+      actions,
+      dangerous: Boolean(fromRun.dangerous),
+    }
+  }
+  // run 尚未回填时仍展示可操作卡片，避免流程卡死
+  return {
+    prompt: '智能体正在等待你的确认。',
+    fields: [],
+    actions: DEFAULT_WAITING_ACTIONS,
+    dangerous: false,
+  }
 })
 
 const hasProcessMeta = computed(() =>
@@ -48,10 +70,35 @@ const hasProcessMeta = computed(() =>
 )
 
 let inputValue = ''
-function onInput(e: Event) { inputValue = (e.target as HTMLTextAreaElement).value }
+/** 多字段确认答案（confirmQuestions → fields） */
+const fieldAnswers: Record<string, string> = {}
+
+/**
+ * 记录补充字段输入。
+ * @param {Event} e
+ * @param {string} [key]
+ */
+function onInput(e: Event, key?: string) {
+  const value = (e.target as HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement).value
+  if (key) fieldAnswers[key] = value
+  inputValue = value
+}
+
+/**
+ * 提交审批动作；有字段时附带 JSON answers 供平台 resume。
+ * @param {string} action
+ */
 function submit(action: string) {
-  emit('resume', action, inputValue || undefined)
+  const keys = Object.keys(fieldAnswers)
+  let payload: string | undefined
+  if (keys.length > 0) {
+    payload = JSON.stringify(fieldAnswers)
+  } else if (inputValue.trim()) {
+    payload = inputValue.trim()
+  }
+  emit('resume', action, payload)
   inputValue = ''
+  for (const k of keys) delete fieldAnswers[k]
 }
 
 const showTyping = computed(() =>
@@ -65,7 +112,7 @@ const showContent = computed(() =>
 )
 
 const showWaitingHint = computed(() =>
-  isAssistant.value && props.message.status === 'WAITING_INPUT' && !props.message.content,
+  isAssistant.value && props.message.status === 'WAITING_INPUT' && !props.message.content && !waiting.value,
 )
 
 const showFailedHint = computed(() =>
@@ -251,9 +298,16 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
             v-if="f.type === 'textarea'"
             rows="2"
             :placeholder="'请输入' + f.label"
-            @input="onInput"
+            @input="onInput($event, f.key)"
           />
-          <input v-else :placeholder="'请输入' + f.label" @input="onInput" />
+          <select
+            v-else-if="f.type === 'select' && f.options?.length"
+            @change="onInput($event, f.key)"
+          >
+            <option value="" disabled selected>请选择</option>
+            <option v-for="o in f.options" :key="o" :value="o">{{ o }}</option>
+          </select>
+          <input v-else :placeholder="'请输入' + f.label" @input="onInput($event, f.key)" />
         </div>
         <div class="actions">
           <button
@@ -406,7 +460,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .prompt { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--c-text-secondary); }
 .field { margin-bottom: 8px; }
 .field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 3px; }
-.field input, .field textarea {
+.field input, .field textarea, .field select {
   display: block;
   width: 100%;
   padding: 7px 10px;

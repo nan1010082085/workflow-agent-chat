@@ -25,6 +25,11 @@ public class RunController {
     this.runSyncService = runSyncService;
   }
 
+  @GetMapping("/by-execution/{executionId}")
+  public RunSyncService.RunStatusView getByExecution(@PathVariable String executionId) {
+    return runSyncService.syncByExecutionId(executionId);
+  }
+
   @GetMapping("/{runId}")
   public RunSyncService.RunStatusView getRun(@PathVariable String runId) {
     return runSyncService.syncRun(runId);

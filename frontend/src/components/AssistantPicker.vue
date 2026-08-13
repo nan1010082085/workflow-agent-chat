@@ -55,13 +55,49 @@ function pick(a: Agent) {
 
 <style scoped>
 .picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.agent-item { position: relative; display: flex; gap: 12px; width: 100%; min-height: 108px; text-align: left; border: 1px solid var(--c-border); background: var(--c-surface); padding: 14px; border-radius: var(--radius); cursor: pointer; color: var(--c-text); transition: border-color .15s ease, box-shadow .15s ease; }
+.agent-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 108px;
+  text-align: left;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  padding: 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--c-text);
+  overflow: hidden;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
 .agent-item:hover { background: var(--c-bg); }
 .agent-item.active { border-color: var(--c-primary); background: var(--c-primary-soft); color: var(--c-primary); box-shadow: 0 0 0 2px rgba(13, 107, 103, .08); }
 .icon { flex: none; font-size: 22px; line-height: 1.4; color: var(--c-accent); }
-.info b { display: block; font-size: 14px; font-weight: 600; }
-.info small { display: block; font-size: 12px; color: var(--c-text-muted); margin-top: 3px; line-height: 1.4; }
-.caps { display: flex; gap: 5px; margin-top: 6px; }
+.info { flex: 1; min-width: 0; overflow: hidden; }
+.info b {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.info small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.caps { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .cap { font-size: 10px; padding: 1px 6px; background: var(--c-bg); border-radius: 3px; color: var(--c-text-muted); }
 .cap.confirm { color: var(--c-warning); background: #fdf2df; }
 .choose-state { display: block; margin-top: 8px; color: var(--c-primary); font-size: 11px; font-weight: 650; }

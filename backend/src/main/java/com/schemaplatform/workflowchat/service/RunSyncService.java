@@ -60,6 +60,18 @@ public class RunSyncService {
   }
 
   /**
+   * 按 Runtime executionId 反查并同步（刷新恢复 waiting / running）。
+   */
+  @Transactional
+  public RunStatusView syncByExecutionId(String runtimeExecutionId) {
+    ChatRun run = runService.findByExecutionId(runtimeExecutionId);
+    if (run == null) {
+      throw new java.util.NoSuchElementException("运行不存在或无权访问: " + runtimeExecutionId);
+    }
+    return syncRun(run.getId());
+  }
+
+  /**
    * HITL resume。对应 TASKS B-08。
    */
   @Transactional
@@ -112,7 +124,8 @@ public class RunSyncService {
         updateAssistantMessage(run, null, null, MessageStatus.CANCELLED);
       }
       case RUNNING -> {
-        // 继续等待
+        run.markRunning();
+        updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
       }
       case UNKNOWN -> log.warn("Runtime 返回未知状态 run={}", run.getId());
     }

@@ -105,7 +105,10 @@ export const useChatStore = defineStore('chat', () => {
         assistant.status = result.status
       }
       runIdByExec.value[result.runtimeExecutionId] = result.runId
-      if (result.status === 'RUNNING' || result.status === 'WAITING_INPUT') {
+      if (result.status === 'WAITING_INPUT') {
+        // 已进入确认态：立即拉 run（含 waiting 载荷），避免等轮询空隙无审批卡
+        await fetchRun(result.runId)
+      } else if (result.status === 'RUNNING') {
         startPolling(result.runId)
       } else if (result.status === 'COMPLETED' || result.status === 'FAILED') {
         await fetchRun(result.runId)
@@ -277,6 +280,9 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const r: RunStatusView = await api.getRun(runId)
       currentRun.value = r
+      if (r.runtimeExecutionId) {
+        runIdByExec.value[r.runtimeExecutionId] = r.runId
+      }
       applyRunToMessages(r)
       if (isTerminal(r.status)) {
         stopPolling()
@@ -306,12 +312,19 @@ export const useChatStore = defineStore('chat', () => {
   function startPolling(runId: string) {
     stopPolling()
     const tick = async () => {
+      // 先占位，避免 fetchRun 内再次 startPolling 造成重入
+      pollTimer = setTimeout(() => {}, 1 << 30)
       const r = await fetchRun(runId)
+      if (pollTimer) {
+        clearTimeout(pollTimer)
+        pollTimer = null
+      }
       if (r && !isTerminal(r.status)) {
-        pollTimer = setTimeout(tick, 2000)
+        pollTimer = setTimeout(tick, r.status === 'WAITING_INPUT' ? 4000 : 2000)
       }
     }
-    pollTimer = setTimeout(tick, 1500)
+    // 立刻查一次，避免首屏卡在「请在下方操作」却无按钮
+    void tick()
   }
 
   function stopPolling() {
@@ -321,12 +334,28 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  /** 切换会话时停止旧 polling（F-07） */
+  /** 切换会话时停止旧 polling（F-07）；未完成任务按 execution 恢复 */
   async function resumeFromSession(sessionId: string) {
     stopPolling()
     currentRun.value = null
     runIdByExec.value = {}
     await fetchMessages(sessionId)
+    const pending = messages.value.find(
+      (m) =>
+        m.role === 'assistant'
+        && (m.status === 'RUNNING' || m.status === 'WAITING_INPUT')
+        && m.runtimeExecutionId,
+    )
+    if (!pending?.runtimeExecutionId) return
+    try {
+      const r: RunStatusView = await api.getRunByExecution(pending.runtimeExecutionId)
+      currentRun.value = r
+      runIdByExec.value[r.runtimeExecutionId || pending.runtimeExecutionId] = r.runId
+      applyRunToMessages(r)
+      if (!isTerminal(r.status)) startPolling(r.runId)
+    } catch (e: any) {
+      console.warn('[chat] 恢复处理状态失败', e?.message || e)
+    }
   }
 
   async function resumeRun(runId: string, action: string, payload?: string) {
@@ -343,6 +372,37 @@ export const useChatStore = defineStore('chat', () => {
     } finally {
       sending.value = false
     }
+  }
+
+  /**
+   * 对当前等待确认的消息提交审批；优先 currentRun，否则按 executionId 反查。
+   */
+  async function resumeWaiting(action: string, payload?: string) {
+    let runId = currentRun.value?.runId
+    if (!runId) {
+      const pending = messages.value.find(
+        (m) => m.role === 'assistant' && m.status === 'WAITING_INPUT' && m.runtimeExecutionId,
+      )
+      if (pending?.runtimeExecutionId) {
+        runId = runIdByExec.value[pending.runtimeExecutionId]
+        if (!runId) {
+          try {
+            const r: RunStatusView = await api.getRunByExecution(pending.runtimeExecutionId)
+            runId = r.runId
+            currentRun.value = r
+            runIdByExec.value[pending.runtimeExecutionId] = r.runId
+          } catch (e: any) {
+            error.value = e?.message || '找不到待确认的任务'
+            return null
+          }
+        }
+      }
+    }
+    if (!runId) {
+      error.value = '找不到待确认的任务，请刷新后重试'
+      return null
+    }
+    return resumeRun(runId, action, payload)
   }
 
   async function cancelRun(runId: string) {
@@ -391,7 +451,7 @@ export const useChatStore = defineStore('chat', () => {
 
   return {
     messages, modelMessages, currentRun, sending, error, loadingMessages,
-    fetchMessages, sendMessage, fetchRun, resumeRun, cancelRun, reset, stopPolling,
+    fetchMessages, sendMessage, fetchRun, resumeRun, resumeWaiting, cancelRun, reset, stopPolling,
     resumeFromSession, runForMessage, sendModelMessage, clearAgentConversation,
   }
 })

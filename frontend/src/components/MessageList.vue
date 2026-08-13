@@ -7,6 +7,7 @@ const props = defineProps<{
   messages: Message[]
   loading: boolean
   currentRun: RunStatusView | null
+  sending?: boolean
 }>()
 const emit = defineEmits<{
   (e: 'resume', action: string, payload?: string): void
@@ -40,7 +41,7 @@ function runForMessage(m: Message): RunStatusView | null {
       <MessageBubble
         :message="m"
         :run="runForMessage(m)"
-        :sending="false"
+        :sending="Boolean(sending)"
         @resume="(a, p) => emit('resume', a, p)"
         @cancel="emit('cancel')"
         @retry="emit('retry')"

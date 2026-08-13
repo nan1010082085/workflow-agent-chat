@@ -85,17 +85,20 @@
 1. Runtime 是否提供 `GET .../executions/{id}/events` 或 SSE 端点 → **模型对话不采用 SSE**。
 2. 轮询频率与终态保证 → 助手路径仍适用。
 
-### ISS-05 HITL waiting 载荷 schema 未提供 [未确认]
+### ISS-05 HITL waiting 载荷 schema 未提供 [部分确认]
 
 - **来源**：PRD §11 waiting 状态；UIUX §4 审批卡片；TASKS B-08
 - **问题**：`waiting` 状态下 Runtime 返回的「审批/补充信息」载荷结构未提供，Chat 无法精确渲染 ApprovalCard 的字段、选项与动作。
 - **Chat 侧影响**：`ApprovalCard` 组件与 `RuntimeRestAdapter.parseWaitingPayload` 的映射。
-- **待确认项**：
-  1. waiting 载荷是否为 `{ type: 'approval'|'form'|'choice', prompt, fields[], actions[] }` 结构。
-  2. 动作标识（approve/reject/answer）与 Runtime `resume` action 的对应。
-  3. 是否支持多轮 waiting（一次 run 多次等待）。
-  4. 危险动作的标记字段。
-- **当前 Chat 侧处置**：Adapter 定义宽松的 `WaitingPayload` 解析，兼容未知字段；ApprovalCard 按 `{prompt, fields, actions}` 通用结构渲染，待 schema 冻结后细化。
+- **已确认（2026-08-13）**：
+  1. 平台执行快照**没有**稳定的顶层 `waiting` 对象；HITL 信息在 `nodeRecords` 中 `status=waiting` 的节点 `output`。
+  2. `output.message` 为提示文案；`output.confirmQuestions[]` 为 `{ id, question, options?, required? }`。
+  3. `resume` body 为 `{ approved, comment?, answers? }`（Chat 已映射 approve/reject → approved）。
+- **仍待确认项**：
+  1. 是否还会提供顶层 `waiting` / `humanInputRequest` 聚合字段。
+  2. 危险动作标记字段。
+  3. 多轮 waiting（一次 run 多次等待）的幂等与消息关联。
+- **当前 Chat 侧处置**：`RuntimeRestAdapter` 从 waiting 节点解析并映射为 `{prompt, fields, actions}`；缺动作时兜底「确认继续 / 拒绝」。
 
 ### ISS-06 Agent Catalog 与 Workflow 的多租户权限边界 [未确认]
 
@@ -131,3 +134,4 @@
 |---|---|
 | 2026-08-13 | 初始建立，登记 ISS-01 ~ ISS-08 共 8 项待确认问题 |
 | 2026-08-13 | 对齐新 TASKS P-05：ISS-01(Catalog 字段/租户过滤) + ISS-02(invoke/status/resume/cancel/错误码/幂等) + ISS-05(waiting payload) 共同构成 P-05 待确认集合；Chat 侧不擅自确定底层契约，待 Runtime 团队提供示例 JSON 与 contract fixture |
+| 2026-08-13 | ISS-05 部分对齐：平台 HITL 实际在 `nodeRecords[status=waiting].output`（message + confirmQuestions）；Chat adapter 已按此解析并兜底 approve/reject；顶层 `waiting` 仍兼容 |
