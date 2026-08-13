@@ -199,6 +199,14 @@ export const useChatStore = defineStore('chat', () => {
     modelMessages.value = []
   }
 
+  function clearAgentConversation() {
+    messages.value = []
+    currentRun.value = null
+    error.value = null
+    runIdByExec.value = {}
+    stopPolling()
+  }
+
   /** 根据消息的 execId 找到关联的 run（用于 inline approval） */
   function runForMessage(execId: string | null): RunStatusView | null {
     if (!execId || !currentRun.value) return null
@@ -208,6 +216,6 @@ export const useChatStore = defineStore('chat', () => {
   return {
     messages, modelMessages, currentRun, sending, error, loadingMessages,
     fetchMessages, sendMessage, fetchRun, resumeRun, cancelRun, reset, stopPolling,
-    resumeFromSession, runForMessage, sendModelMessage,
+    resumeFromSession, runForMessage, sendModelMessage, clearAgentConversation,
   }
 })
