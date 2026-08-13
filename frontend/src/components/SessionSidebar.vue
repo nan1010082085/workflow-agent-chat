@@ -43,7 +43,6 @@ function formatTime(iso: string): string {
         <small>把事情交给合适的助手</small>
       </div>
     </div>
-    <button class="new-chat btn btn-primary" @click="newChat">+ 新建会话</button>
     <div class="session-list">
       <div v-if="sessionStore.loading" class="empty-state" style="padding: 30px;">
         <p>加载会话…</p>
@@ -60,6 +59,9 @@ function formatTime(iso: string): string {
         <small>{{ s.agentName || '' }} · {{ formatTime(s.updatedAt) }}</small>
       </button>
     </div>
+    <div class="sidebar-footer">
+      <button class="new-chat btn btn-primary" type="button" @click="newChat">+ 新建会话</button>
+    </div>
   </div>
 </template>
 
@@ -69,7 +71,8 @@ function formatTime(iso: string): string {
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; color: #fff; background: var(--c-primary); font-weight: 800; border-radius: var(--radius-lg); }
 .brand strong, .brand small { display: block; }
 .brand small { color: var(--c-text-muted); font-size: 12px; margin-top: 2px; }
-.new-chat { margin: 0 14px 14px; justify-content: center; }
+.sidebar-footer { flex: none; padding: 12px 14px 16px; background: var(--c-surface); }
+.new-chat { width: 100%; justify-content: center; }
 .session-list { flex: 1; overflow-y: auto; padding: 0 8px; }
 .session-item { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; color: var(--c-text); margin-bottom: 2px; }
 .session-item:hover { background: var(--c-bg); }
