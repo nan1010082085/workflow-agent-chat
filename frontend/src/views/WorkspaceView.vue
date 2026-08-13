@@ -75,10 +75,10 @@ function useBaseModel() {
   </div>
 </template>
 <style scoped>
-.workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:var(--c-bg); }
+.workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:#eef3f4; }
 .topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; background:var(--c-surface); }.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}.status-error{margin:0 0 0 auto;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 .topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }.mode-action { padding:7px 10px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }
 .panel-title { display:flex; justify-content:space-between; margin-bottom:12px; }
-.conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }.welcome { margin:auto auto 24px; width:min(720px,calc(100% - 48px)); text-align:center; }.welcome-mark { color:var(--c-accent); font-size:28px; }.welcome h1 { margin:12px 0 8px; font-size:30px; }.welcome p { margin:0 0 20px; color:var(--c-text-secondary); }
+.conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }.welcome { margin:auto auto 24px; width:min(760px,calc(100% - 48px)); padding:34px 28px 28px; text-align:center; background:rgba(255,255,255,.68); border-radius:16px; box-shadow:0 14px 38px rgba(23,33,43,.06); }.welcome-mark { color:var(--c-accent); font-size:28px; }.welcome h1 { margin:12px 0 8px; font-size:30px; }.welcome p { margin:0 0 20px; color:var(--c-text-secondary); }
 @media(max-width:767px){.topbar{padding:12px 16px}.subtle{display:none}.topbar-controls{margin-left:auto}.status-error{position:absolute;top:70px;left:16px;right:16px;max-width:none;padding:8px 10px;background:var(--c-danger-soft);border:1px solid #f0c4be;border-radius:6px;white-space:normal}.workflow-panel{width:calc(100% - 32px)}.welcome{width:calc(100% - 32px)}.welcome h1{font-size:26px}}
 </style>
