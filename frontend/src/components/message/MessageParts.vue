@@ -161,7 +161,31 @@ function downloadPart(part: EnrichedPart) {
 .md-block :deep(h1),
 .md-block :deep(h2),
 .md-block :deep(h3) { margin: 12px 0 6px; line-height: 1.35; font-weight: 700; }
+.md-block :deep(h2) {
+  margin-top: 14px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--c-border-soft, #e9efef);
+  font-size: 14px;
+  color: var(--c-text);
+}
+.md-block :deep(h2:first-child) { margin-top: 0; }
+.md-block :deep(ol) {
+  margin: 8px 0 10px;
+  padding-left: 1.35em;
+}
+.md-block :deep(ol li) {
+  margin: 6px 0;
+  padding-left: 2px;
+  line-height: 1.65;
+}
 .md-block :deep(a) { color: var(--c-primary); text-decoration: underline; text-underline-offset: 2px; }
+.md-block :deep(code) {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #eef3f3;
+  font-size: 0.92em;
+}
+.md-block :deep(pre code) { padding: 0; background: transparent; }
 .code-wrap { margin-top: 10px; border: 1px solid #2a3842; border-radius: var(--radius); overflow: hidden; }
 .code-wrap:first-child { margin-top: 0; }
 .code-head, .artifact-head {

@@ -24,6 +24,16 @@ watch(() => props.messages.length, async () => {
   if (container.value) container.value.scrollTop = container.value.scrollHeight
 }, { flush: 'post' })
 
+/** 正文/状态变化时也滚到底，避免确认态内容回填后看不见 */
+watch(
+  () => props.messages.map((m) => `${m.id}:${m.status}:${(m.content || '').length}`).join('|'),
+  async () => {
+    await nextTick()
+    if (container.value) container.value.scrollTop = container.value.scrollHeight
+  },
+  { flush: 'post' },
+)
+
 // 把当前 run 关联到对应消息（用于 inline approval）
 function runForMessage(m: Message): RunStatusView | null {
   if (!props.currentRun || !m.runtimeExecutionId) return null

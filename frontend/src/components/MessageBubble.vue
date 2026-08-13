@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Message, RunStatusView, WaitingPayload } from '../types'
+import { computed, reactive, ref } from 'vue'
+import type { Message, RunStatusView, WaitingField, WaitingPayload } from '../types'
 import MessageParts from './message/MessageParts.vue'
 import DocumentSummaryList from './message/DocumentSummaryList.vue'
 import MessageAttachmentList from './message/MessageAttachmentList.vue'
+import {
+  contentHasQuestionSection,
+  normalizeAssistantContent,
+} from '../utils/messageContent'
 
 const props = defineProps<{
   message: Message
@@ -23,19 +27,25 @@ const isAssistant = computed(() => props.message.role === 'assistant')
 /** 轻量处理状态文案（F-05） */
 function statusLabel(status: string): string {
   return {
-    PENDING: '排队中', RUNNING: '正在处理', WAITING_INPUT: '等待你的确认',
-    COMPLETED: '已完成', FAILED: '处理失败', CANCELLED: '已取消',
+    PENDING: '排队中',
+    RUNNING: '正在处理',
+    WAITING_INPUT: '等待你的确认',
+    COMPLETED: '已完成',
+    FAILED: '处理失败',
+    CANCELLED: '已取消',
   }[status] || status
 }
 
 function statusClass(status: string): string {
   return {
-    RUNNING: 'chip-running', WAITING_INPUT: 'chip-waiting',
-    COMPLETED: 'chip-success', FAILED: 'chip-failed', CANCELLED: 'chip-cancelled',
+    RUNNING: 'chip-running',
+    WAITING_INPUT: 'chip-waiting',
+    COMPLETED: 'chip-success',
+    FAILED: 'chip-failed',
+    CANCELLED: 'chip-cancelled',
   }[status] || 'chip-cancelled'
 }
 
-/** 平台未下发 waiting 动作时的默认审批按钮 */
 const DEFAULT_WAITING_ACTIONS: WaitingPayload['actions'] = [
   { action: 'approve', label: '确认继续', style: 'primary' },
   { action: 'reject', label: '拒绝', style: 'danger' },
@@ -48,19 +58,24 @@ const waiting = computed<WaitingPayload | null>(() => {
   if (fromRun) {
     const actions = fromRun.actions?.length ? fromRun.actions : DEFAULT_WAITING_ACTIONS
     return {
-      prompt: fromRun.prompt || '智能体正在等待你的确认。',
+      prompt: fromRun.prompt || '请确认后继续。',
       fields: fromRun.fields || [],
       actions,
       dangerous: Boolean(fromRun.dangerous),
     }
   }
-  // run 尚未回填时仍展示可操作卡片，避免流程卡死
   return {
-    prompt: '智能体正在等待你的确认。',
+    prompt: '请确认后继续。',
     fields: [],
     actions: DEFAULT_WAITING_ACTIONS,
     dangerous: false,
   }
+})
+
+/** 规范化后的助手正文（过滤节点 JSON dump） */
+const displayContent = computed(() => {
+  if (isUser.value) return props.message.content || ''
+  return normalizeAssistantContent(props.message.content)
 })
 
 const hasProcessMeta = computed(() =>
@@ -69,9 +84,33 @@ const hasProcessMeta = computed(() =>
     || Boolean(props.message.workflowExecution),
 )
 
-let inputValue = ''
-/** 多字段确认答案（confirmQuestions → fields） */
-const fieldAnswers: Record<string, string> = {}
+interface ActionField extends WaitingField {
+  shortLabel: string
+  hint: string
+}
+
+/** 确认卡可填写字段：长问题压缩标签，完整文案作提示 */
+const actionFields = computed<ActionField[]>(() => {
+  const fields = waiting.value?.fields || []
+  return fields.map((f, i) => {
+    const label = (f.label || f.key || `字段 ${i + 1}`).trim()
+    const isLong = label.length > 36 || f.type === 'textarea'
+    return {
+      ...f,
+      shortLabel: isLong && f.type !== 'select' ? `补充 ${i + 1}` : label,
+      hint: isLong && f.type !== 'select' ? label : '',
+    }
+  })
+})
+
+/** 正文已含提问区块时，确认卡不再重复列表 */
+const showFieldHints = computed(() => {
+  if (!waiting.value?.fields?.length) return false
+  return !contentHasQuestionSection(displayContent.value)
+})
+
+const inputValue = ref('')
+const fieldAnswers = reactive<Record<string, string>>({})
 
 /**
  * 记录补充字段输入。
@@ -81,7 +120,7 @@ const fieldAnswers: Record<string, string> = {}
 function onInput(e: Event, key?: string) {
   const value = (e.target as HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement).value
   if (key) fieldAnswers[key] = value
-  inputValue = value
+  inputValue.value = value
 }
 
 /**
@@ -92,47 +131,81 @@ function submit(action: string) {
   const keys = Object.keys(fieldAnswers)
   let payload: string | undefined
   if (keys.length > 0) {
-    payload = JSON.stringify(fieldAnswers)
-  } else if (inputValue.trim()) {
-    payload = inputValue.trim()
+    payload = JSON.stringify({ ...fieldAnswers })
+  } else if (inputValue.value.trim()) {
+    payload = inputValue.value.trim()
   }
   emit('resume', action, payload)
-  inputValue = ''
+  inputValue.value = ''
   for (const k of keys) delete fieldAnswers[k]
 }
 
 const showTyping = computed(() =>
-  isAssistant.value && props.message.status === 'RUNNING' && !props.message.content,
+  isAssistant.value
+    && props.message.status === 'RUNNING'
+    && !displayContent.value
+    && !props.message.attachments?.length
+    && !props.message.documentSummaries?.length,
 )
 
-const showContent = computed(() =>
-  Boolean(props.message.content)
+/** WAITING 且尚无正文时，用确认说明兜底，避免气泡空洞 */
+const waitingFallbackContent = computed(() => {
+  if (!waiting.value || displayContent.value) return ''
+  const lines = ['## 待确认', '', waiting.value.prompt || '请确认后继续。']
+  if (waiting.value.fields?.length) {
+    lines.push('', '## 需要你补充', '')
+    waiting.value.fields.forEach((f, i) => {
+      if (f.label) lines.push(`${i + 1}. ${f.label}`)
+    })
+  }
+  return lines.join('\n')
+})
+
+const bodyContent = computed(() => displayContent.value || waitingFallbackContent.value)
+
+const showBody = computed(() =>
+  Boolean(bodyContent.value)
     || Boolean(props.message.documentSummaries?.length)
     || Boolean(props.message.attachments?.length),
 )
 
 const showWaitingHint = computed(() =>
-  isAssistant.value && props.message.status === 'WAITING_INPUT' && !props.message.content && !waiting.value,
+  isAssistant.value
+    && props.message.status === 'WAITING_INPUT'
+    && !showBody.value
+    && !waiting.value,
 )
 
 const showFailedHint = computed(() =>
-  isAssistant.value && props.message.status === 'FAILED' && !props.message.content,
+  isAssistant.value && props.message.status === 'FAILED' && !showBody.value,
 )
 
 const showCancelledHint = computed(() =>
-  isAssistant.value && props.message.status === 'CANCELLED' && !props.message.content,
+  isAssistant.value && props.message.status === 'CANCELLED' && !showBody.value,
 )
 
+const bubbleTone = computed(() => {
+  if (isUser.value) return 'user'
+  if (props.message.status === 'WAITING_INPUT') return 'waiting'
+  if (props.message.status === 'FAILED') return 'failed'
+  return ''
+})
+
+/**
+ * 复制当前可见正文。
+ */
 function copyContent() {
-  if (props.message.content) navigator.clipboard?.writeText(props.message.content)
+  const text = bodyContent.value || props.message.content
+  if (text) navigator.clipboard?.writeText(text)
 }
 
 /**
  * 下载整段助手正文。
  */
 function downloadContent() {
-  if (!props.message.content) return
-  const blob = new Blob([props.message.content], { type: 'text/markdown;charset=utf-8' })
+  const text = bodyContent.value || props.message.content
+  if (!text) return
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -149,7 +222,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 </script>
 
 <template>
-  <div class="message" :class="message.role">
+  <div class="message" :class="[message.role, message.status && isAssistant ? `st-${message.status}` : '']">
     <span v-if="isAssistant" class="avatar" aria-hidden="true">
       <svg viewBox="0 0 16 16" width="14" height="14">
         <path
@@ -161,23 +234,31 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
     <div class="bubble-wrap">
       <p v-if="isAssistant && message.tip" class="tip">{{ message.tip }}</p>
 
+      <!-- 1. 正文层：始终优先展示可读内容 -->
       <div v-if="showTyping" class="typing">
         <span class="status-text">正在处理</span>
-        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="dots"><i /><i /><i /></span>
       </div>
 
-      <div v-else-if="showContent" class="result-wrap">
-        <div class="bubble message-content" :class="{ user: isUser }">
+      <div v-else-if="showBody" class="result-wrap">
+        <div class="bubble message-content" :class="bubbleTone">
           <MessageAttachmentList
             v-if="message.attachments?.length"
             :attachments="message.attachments"
           />
-          <MessageParts v-if="message.content" :content="message.content" />
+          <MessageParts v-if="bodyContent" :content="bodyContent" />
           <DocumentSummaryList
             v-if="message.documentSummaries?.length"
             :summaries="message.documentSummaries"
           />
+          <p
+            v-if="isAssistant && message.status === 'RUNNING' && displayContent"
+            class="inline-progress"
+          >
+            仍在处理…
+          </p>
         </div>
+
         <div v-if="isAssistant && message.status === 'COMPLETED'" class="result-actions">
           <el-tooltip content="复制全文" placement="top" :show-after="200">
             <button class="icon-btn" type="button" aria-label="复制" @click="copyContent">
@@ -198,6 +279,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
             <button class="text-link" type="button" @click="emit('open-process')">处理信息</button>
           </el-tooltip>
         </div>
+
         <div v-if="isAssistant && message.status === 'FAILED'" class="fail-actions">
           <el-tooltip content="重试" placement="top" :show-after="200">
             <button class="icon-btn" type="button" aria-label="重试" @click="emit('retry')">
@@ -221,7 +303,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
       </div>
 
       <div v-else-if="showWaitingHint" class="bubble waiting-hint">
-        智能体正在等待你的确认，请在下方操作。
+        请在下方确认后继续。
       </div>
       <div v-else-if="showFailedHint" class="bubble failed-hint">
         处理失败
@@ -248,7 +330,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
-      <!-- 过程信息默认折叠，避免淹没结果 -->
+      <!-- 2. 过程信息：默认折叠 -->
       <details
         v-if="isAssistant && message.thinking"
         class="detail-block"
@@ -264,43 +346,36 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
           <span :class="{ err: Boolean(tool.error) }">{{ toolStatus(tool) }}</span>
         </div>
       </details>
-      <details v-if="isAssistant && message.workflowExecution" class="detail-block">
-        <summary>处理摘要 · {{ message.workflowExecution.status }}</summary>
-        <div class="detail-content">
-          <div>{{ message.workflowExecution.workflowName || '任务处理' }}</div>
-          <div v-if="message.workflowExecution.durationMs != null">
-            耗时 {{ Math.round(message.workflowExecution.durationMs / 1000) }} 秒
-          </div>
-          <div v-if="message.workflowExecution.error" class="err">{{ message.workflowExecution.error }}</div>
-        </div>
-      </details>
 
+      <!-- 3. 状态芯片 -->
       <span
         v-if="isAssistant && message.status !== 'COMPLETED' && message.status !== 'CANCELLED'"
         class="chip"
         :class="statusClass(message.status)"
       >
-        <i></i>{{ statusLabel(message.status) }}
+        <i />{{ statusLabel(message.status) }}
       </span>
       <span v-else-if="isAssistant && message.status === 'COMPLETED'" class="chip chip-success">
-        <i></i>已完成
+        <i />已完成
       </span>
 
+      <!-- 4. 确认操作层：只负责填写与提交，不重复淹没正文 -->
       <div v-if="waiting" class="inline-approval" :class="{ dangerous: waiting.dangerous }">
         <div class="approval-head">
           <span class="title">需要你的确认</span>
           <span v-if="waiting.dangerous" class="danger-tag">需谨慎</span>
         </div>
         <p class="prompt">{{ waiting.prompt }}</p>
-        <ul v-if="waiting.fields?.length" class="question-list">
+        <ul v-if="showFieldHints" class="question-list">
           <li v-for="f in waiting.fields" :key="f.key">{{ f.label }}</li>
         </ul>
-        <div v-for="f in waiting.fields" :key="'input-' + f.key" class="field">
-          <label>{{ f.label }}</label>
+        <div v-for="f in actionFields" :key="'input-' + f.key" class="field">
+          <label>{{ f.shortLabel }}</label>
+          <p v-if="f.hint" class="field-hint">{{ f.hint }}</p>
           <textarea
             v-if="f.type === 'textarea'"
             rows="2"
-            :placeholder="'请输入' + f.label"
+            :placeholder="f.hint ? '在此补充…' : `请输入${f.shortLabel}`"
             @input="onInput($event, f.key)"
           />
           <select
@@ -310,7 +385,11 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
             <option value="" disabled selected>请选择</option>
             <option v-for="o in f.options" :key="o" :value="o">{{ o }}</option>
           </select>
-          <input v-else :placeholder="'请输入' + f.label" @input="onInput($event, f.key)" />
+          <input
+            v-else
+            :placeholder="`请输入${f.shortLabel}`"
+            @input="onInput($event, f.key)"
+          />
         </div>
         <div class="actions">
           <button
@@ -344,7 +423,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   background: var(--c-accent);
   border-radius: 8px;
 }
-.bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 760px; min-width: 0; }
+.bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 760px; min-width: 0; width: 100%; }
 .message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
 .result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
 .message.user .result-wrap { align-items: flex-end; }
@@ -370,8 +449,21 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   background: #e8f3f2;
   border-color: #cfe3e1;
 }
+.bubble.waiting {
+  border-color: #f0d9a8;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff 48%);
+}
+.bubble.failed {
+  border-color: #f0c4be;
+  background: #fff8f7;
+}
 .message-content > :first-child { margin-top: 0; }
 .message-content > :last-child { margin-bottom: 0; }
+.inline-progress {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--c-running);
+}
 .detail-block {
   max-width: 100%;
   color: var(--c-text-muted);
@@ -451,10 +543,12 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .inline-approval {
   margin-top: 4px;
   padding: 14px;
+  width: min(100%, 520px);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  border-left: 3px solid var(--c-primary);
+  border-left: 3px solid var(--c-warning);
   border-radius: var(--radius);
+  box-shadow: 0 4px 14px rgba(40, 30, 10, .04);
 }
 .inline-approval.dangerous { border-left-color: var(--c-danger); background: var(--c-danger-soft); }
 .approval-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -471,19 +565,29 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   line-height: 1.55;
 }
 .question-list li { margin: 4px 0; }
-.field { margin-bottom: 8px; }
-.field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 3px; }
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--c-text); margin-bottom: 4px; }
+.field-hint {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text-secondary);
+}
 .field input, .field textarea, .field select {
   display: block;
   width: 100%;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
   font-size: 13px;
   outline: none;
   background: var(--c-surface);
 }
-.actions { display: flex; gap: 8px; justify-content: flex-end; }
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(13, 107, 103, .12);
+}
+.actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .chip {
   display: inline-flex;
   align-items: center;
