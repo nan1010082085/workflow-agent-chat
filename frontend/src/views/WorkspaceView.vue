@@ -62,7 +62,7 @@ function useBaseModel() {
       <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send">
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
-          <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">返回基础模型</button>
+          <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
           <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起专用能力' : '选择专用能力' }}</button>
         </template>
         <template #panel>
