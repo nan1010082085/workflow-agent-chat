@@ -65,8 +65,8 @@ public record RuntimeProperties(
   }
 
   /**
-   * workflow-key 为空或 mockEnabled=true 时，Adapter 走 mock fallback。
-   * 用于前端联调阶段，避免强依赖 Runtime。见 ISS-07。
+   * workflow-key 为空时不再强制 mock；执行面可用 X-Chat-Internal（与 catalog 同源）。
+   * 仅当 mockEnabled=true 时走 mock fallback。见 ISS-07。
    */
   public boolean useMock() {
     return mockEnabled;

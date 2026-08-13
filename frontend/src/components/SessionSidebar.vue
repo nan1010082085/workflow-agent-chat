@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useChatStore } from '../stores/chat'
+import UserMenu from './UserMenu.vue'
 
 const emit = defineEmits<{ (e: 'navigate'): void }>()
 const route = useRoute()
@@ -179,6 +180,7 @@ function formatTime(iso: string): string {
       <button class="folder-action" type="button" @click="showFolderInput = !showFolderInput">+ 新建目录</button>
       <button class="new-chat btn btn-primary" type="button" @click="newChat">+ 新建会话</button>
     </div>
+    <UserMenu />
   </div>
 </template>
 
@@ -188,7 +190,7 @@ function formatTime(iso: string): string {
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; color: #fff; background: var(--c-primary); font-weight: 800; border-radius: var(--radius-lg); }
 .brand strong, .brand small { display: block; }
 .brand small { color: var(--c-text-muted); font-size: 12px; margin-top: 2px; }
-.sidebar-footer { flex: none; padding: 12px 14px 16px; background: var(--c-surface); }
+.sidebar-footer { flex: none; padding: 12px 14px 8px; background: var(--c-surface); }
 .folder-action { width: 100%; padding: 6px; margin-bottom: 6px; border: 0; background: transparent; color: var(--c-primary); cursor: pointer; font-size: 12px; text-align: left; }
 .folder-create { display: flex; gap: 5px; margin-bottom: 8px; }
 .folder-create input { min-width: 0; flex: 1; padding: 7px 8px; border: 1px solid var(--c-border); border-radius: var(--radius); }

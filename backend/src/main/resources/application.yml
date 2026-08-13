@@ -22,6 +22,12 @@ server:
 chat:
   cors:
     allowed-origins: ${CHAT_CORS_ORIGINS:*}
+  auth:
+    # 与 Schema Platform 共用；生产必填
+    jwt-secret: ${JWT_SECRET:}
+    required: ${CHAT_AUTH_REQUIRED:true}
+    allow-header-fallback: ${CHAT_AUTH_HEADER_FALLBACK:false}
+    platform-base-url: ${CHAT_AUTH_PLATFORM_URL:}
   upload:
     # 宿主机默认 ~/payflow/agentChat；Docker 内用 /data/agentChat
     root-dir: ${CHAT_UPLOAD_ROOT:~/payflow/agentChat}

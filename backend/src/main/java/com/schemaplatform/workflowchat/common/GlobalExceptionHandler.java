@@ -20,6 +20,13 @@ public class GlobalExceptionHandler {
 
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  @ExceptionHandler(com.schemaplatform.workflowchat.auth.UnauthorizedException.class)
+  public ResponseEntity<ErrorResponse> handleUnauthorized(
+      com.schemaplatform.workflowchat.auth.UnauthorizedException ex) {
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(ErrorResponse.of("UNAUTHORIZED", ex.getMessage()));
+  }
+
   @ExceptionHandler(NoSuchElementException.class)
   public ResponseEntity<ErrorResponse> handleNotFound(NoSuchElementException ex) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND)

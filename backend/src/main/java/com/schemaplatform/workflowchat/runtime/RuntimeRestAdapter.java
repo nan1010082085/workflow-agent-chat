@@ -59,22 +59,23 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
 
   @Override
   public InvokeResult invoke(InvokeRequest request) {
+    // 平台节点普遍读 input.message；纯字符串会导致 Agent 节点拿不到用户输入
     Map<String, Object> requestBody = Map.of(
-        "input", request.input(),
+        "input", Map.of("message", request.input()),
         "sessionId", request.sessionId(),
         "trigger", "chat"
     );
     String path = props.invokePathTemplate().replace("{slug}", request.slug());
     String correlationId = request.idempotencyKey();
     try {
-      JsonNode body = restClient.post()
-          .uri(path)
-          .header("X-Tenant-Id", request.tenantId())
-          .header(props.credentialHeader(), props.executionCredential())
-          .header("Idempotency-Key", request.idempotencyKey())
-          .header("X-Correlation-Id", correlationId)
-          .contentType(MediaType.APPLICATION_JSON)
-          .body(requestBody)
+      JsonNode body = applyCredentials(
+          restClient.post()
+              .uri(path)
+              .header("X-Tenant-Id", request.tenantId())
+              .header("Idempotency-Key", request.idempotencyKey())
+              .header("X-Correlation-Id", correlationId)
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(requestBody))
           .retrieve()
           .body(JsonNode.class);
       return parseInvokeResult(body);
@@ -91,11 +92,11 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     String path = props.executionPathTemplate().replace("{id}", runtimeExecutionId);
     String correlationId = UUID.randomUUID().toString();
     try {
-      JsonNode body = restClient.get()
-          .uri(path)
-          .header("X-Tenant-Id", tenantId)
-          .header(props.credentialHeader(), props.executionCredential())
-          .header("X-Correlation-Id", correlationId)
+      JsonNode body = applyCredentials(
+          restClient.get()
+              .uri(path)
+              .header("X-Tenant-Id", tenantId)
+              .header("X-Correlation-Id", correlationId))
           .retrieve()
           .body(JsonNode.class);
       return parseExecutionStatus(body);
@@ -113,12 +114,12 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
   public ExecutionStatusDto resume(String runtimeExecutionId, String tenantId, ResumeRequest request) {
     String path = props.resumePathTemplate().replace("{id}", runtimeExecutionId);
     try {
-      JsonNode body = restClient.post()
-          .uri(path)
-          .header("X-Tenant-Id", tenantId)
-          .header(props.credentialHeader(), props.executionCredential())
-          .contentType(MediaType.APPLICATION_JSON)
-          .body(Map.of("action", request.action(), "payload", request.payload()))
+      JsonNode body = applyCredentials(
+          restClient.post()
+              .uri(path)
+              .header("X-Tenant-Id", tenantId)
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(Map.of("action", request.action(), "payload", request.payload())))
           .retrieve()
           .body(JsonNode.class);
       return parseExecutionStatus(body);
@@ -132,10 +133,10 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
   public ExecutionStatusDto cancel(String runtimeExecutionId, String tenantId) {
     String path = props.cancelPathTemplate().replace("{id}", runtimeExecutionId);
     try {
-      JsonNode body = restClient.post()
-          .uri(path)
-          .header("X-Tenant-Id", tenantId)
-          .header(props.credentialHeader(), props.executionCredential())
+      JsonNode body = applyCredentials(
+          restClient.post()
+              .uri(path)
+              .header("X-Tenant-Id", tenantId))
           .retrieve()
           .body(JsonNode.class);
       return parseExecutionStatus(body);
@@ -143,6 +144,22 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       log.error("cancel 失败 executionId={}", runtimeExecutionId, e);
       throw new RuntimeUnavailableException("取消执行失败", e);
     }
+  }
+
+  /**
+   * 执行面凭证：优先 X-Chat-Internal（与 catalog 同源）；
+   * 若配置了 workflow/API key 则额外附带，便于过渡期兼容。
+   */
+  private RestClient.RequestHeadersSpec<?> applyCredentials(RestClient.RequestHeadersSpec<?> spec) {
+    String internal = props.internalToken();
+    if (internal != null && !internal.isBlank()) {
+      spec = spec.header("X-Chat-Internal", internal);
+    }
+    String credential = props.executionCredential();
+    if (credential != null && !credential.isBlank()) {
+      spec = spec.header(props.credentialHeader(), credential);
+    }
+    return spec;
   }
 
   // ---- 字段映射（契约未冻结，宽松解析）----
@@ -211,7 +228,11 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     String executionId = text(data, "executionId");
     if (executionId.isBlank()) executionId = text(data, "id");
     ExecutionStatusDto.RunStatusDto status = mapStatus(text(data, "status").toLowerCase());
-    String output = asText(data, "output");
+    JsonNode nodeRecords = data.has("nodeRecords") ? data.get("nodeRecords") : data.get("nodes");
+    String output = firstNonBlank(
+        extractTextFromOutput(data.get("output")),
+        extractNodeText(nodeRecords),
+        streamingText(data.get("streamingOutput")));
     String thinking = firstNonBlank(
         asText(data, "thinking"),
         asText(data, "reasoning"),
@@ -223,11 +244,55 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     }
     String errorMessage = text(data, "error");
     ExecutionStatusDto.WaitingPayloadDto waiting = parseWaiting(data.get("waiting"));
-    List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(data.get("nodes"));
+    List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(nodeRecords);
     Instant startedAt = parseInstant(data, "startedAt");
     Instant finishedAt = parseInstant(data, "finishedAt");
     return new ExecutionStatusDto(
-        executionId, status, output, blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt);
+        executionId, status, blankToNull(output), blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt);
+  }
+
+  /**
+   * 平台 toExecution 常不带顶层 output；从 end / 末个成功节点提取可读文本。
+   */
+  private String extractNodeText(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray() || nodeRecords.isEmpty()) return "";
+    String endText = "";
+    String lastSuccess = "";
+    for (JsonNode n : nodeRecords) {
+      String nodeType = text(n, "nodeType").toLowerCase();
+      String nodeName = text(n, "nodeName");
+      String status = text(n, "status").toLowerCase();
+      String extracted = extractTextFromOutput(n.get("output"));
+      if (extracted.isBlank()) continue;
+      if ("success".equals(status) || "completed".equals(status)) {
+        lastSuccess = extracted;
+      }
+      if (nodeType.contains("end") || "结束".equals(nodeName) || "end".equalsIgnoreCase(nodeName)) {
+        endText = extracted;
+      }
+    }
+    return firstNonBlank(endText, lastSuccess);
+  }
+
+  private String extractTextFromOutput(JsonNode output) {
+    if (output == null || output.isNull()) return "";
+    if (output.isTextual()) return output.asText();
+    String direct = firstNonBlank(
+        text(output, "text"),
+        text(output, "message"),
+        text(output, "content"),
+        text(output, "answer"));
+    if (direct != null && !direct.isBlank()) return direct;
+    try {
+      return objectMapper.writeValueAsString(output);
+    } catch (Exception e) {
+      return output.toString();
+    }
+  }
+
+  private String streamingText(JsonNode streaming) {
+    if (streaming == null || streaming.isNull()) return "";
+    return text(streaming, "text");
   }
 
   private static String firstNonBlank(String... values) {

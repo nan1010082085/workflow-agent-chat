@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({
     RuntimeProperties.class,
     UploadProperties.class,
-    RateLimitProperties.class
+    RateLimitProperties.class,
+    com.schemaplatform.workflowchat.auth.AuthProperties.class
 })
 public class PropertiesConfig {
 }

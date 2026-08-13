@@ -1,13 +1,29 @@
-// API client。基于 fetch，统一处理 base url、租户头、loading/error。
-// 后端地址通过 VITE_API_BASE_URL 配置；租户头 X-Tenant-Id / X-User-Id 在开发态注入。
+// API client：Bearer JWT + 可选开发态租户头；401 时尝试 refresh 一次。
 
 import type { MessageAttachment } from '../types'
 
-// Resolve API relative to the deployed Vite base path.
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
   || (import.meta.env.PROD ? `${import.meta.env.BASE_URL}api` : '/api')
-const TENANT_ID = import.meta.env.VITE_TENANT_ID || '000000'
-const USER_ID = import.meta.env.VITE_USER_ID || 'dev-user'
+
+let accessTokenProvider: (() => string | null) | null = null
+let unauthorizedHandler: (() => void) | null = null
+let refreshHandler: (() => Promise<boolean>) | null = null
+let refreshing: Promise<boolean> | null = null
+
+/** 注入 access token 读取器 */
+export function setAccessTokenProvider(provider: () => string | null) {
+  accessTokenProvider = provider
+}
+
+/** 注入 401 最终处理（清会话并跳登录） */
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  unauthorizedHandler = handler
+}
+
+/** 注入 refresh；返回 true 表示已换新 token */
+export function setRefreshHandler(handler: (() => Promise<boolean>) | null) {
+  refreshHandler = handler
+}
 
 export class ApiError extends Error {
   constructor(public code: string, message: string, public details?: string[]) {
@@ -23,23 +39,30 @@ export function attachmentContentUrl(att: Pick<MessageAttachment, 'id' | 'url'>)
   return `${BASE_URL}/chat/uploads/${att.id}/content`
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
   const url = path.startsWith('http') ? path : `${BASE_URL}${path}`
   const headers: Record<string, string> = {
-    'X-Tenant-Id': TENANT_ID,
-    'X-User-Id': USER_ID,
     ...(options.headers as Record<string, string> || {}),
   }
-  // JSON 默认 Content-Type；FormData 交给浏览器设置 boundary
-  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+  const token = accessTokenProvider?.()
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  if (!(options.body instanceof FormData) && !headers['Content-Type'] && options.body) {
     headers['Content-Type'] = 'application/json'
   }
+
   const res = await fetch(url, { ...options, headers })
+  if (res.status === 401 && retry && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+    const ok = await runRefresh()
+    if (ok) return request<T>(path, options, false)
+    unauthorizedHandler?.()
+    throw new ApiError('UNAUTHORIZED', '请先登录')
+  }
   if (!res.ok) {
     let body: any = null
     try { body = await res.json() } catch { /* ignore */ }
     const code = body?.code || `HTTP_${res.status}`
-    const message = userMessage(code, res.status)
+    const message = body?.message || userMessage(code, res.status)
     throw new ApiError(code, message, body?.details)
   }
   if (res.status === 204) return null as T
@@ -49,8 +72,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>
 }
 
+async function runRefresh(): Promise<boolean> {
+  if (!refreshHandler) return false
+  if (!refreshing) {
+    refreshing = refreshHandler().finally(() => { refreshing = null })
+  }
+  return refreshing
+}
+
 function userMessage(code: string, status: number): string {
   const messages: Record<string, string> = {
+    UNAUTHORIZED: '请先登录',
     CATALOG_UNAVAILABLE: '智能体暂时不可用，请稍后重试',
     MODEL_LIST_UNAVAILABLE: '模型列表暂时不可用，请稍后重试',
     MODEL_UNAVAILABLE: '当前模型暂时不可用，请换一个模型',
@@ -60,10 +92,23 @@ function userMessage(code: string, status: number): string {
     BAD_REQUEST: '请求无效，请检查文件或内容后重试',
   }
   if (code === 'RATE_LIMITED' || status === 429) return messages.RATE_LIMITED
+  if (code === 'UNAUTHORIZED' || status === 401) return messages.UNAUTHORIZED
   return messages[code] || (status >= 500 ? '服务暂时不可用，请稍后重试' : '请求未完成，请稍后重试')
 }
 
 export const api = {
+  login: (data: { username: string; password: string; tenantCode?: string }) =>
+    request<Record<string, unknown>>('/chat/auth/login', { method: 'POST', body: JSON.stringify(data) }, false),
+  register: (data: { username: string; password: string; displayName?: string; phone?: string }) =>
+    request<Record<string, unknown>>('/chat/auth/register', { method: 'POST', body: JSON.stringify(data) }, false),
+  refresh: (refreshToken: string) =>
+    request<Record<string, unknown>>('/chat/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }, false),
+  me: () => request<Record<string, unknown>>('/chat/auth/me'),
+  logout: () => request<null>('/chat/auth/logout', { method: 'POST' }),
+
   listModels: () => request<{ items: any[]; defaultModelId: string | null }>('/chat/models'),
   complete: (data: { modelId: string; messages: Array<{ role: string; content: string }> }) =>
     request<{ modelId: string; content: string }>('/chat/models/completions', { method: 'POST', body: JSON.stringify(data) }),

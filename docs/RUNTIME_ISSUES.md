@@ -41,18 +41,20 @@
   8. 超时建议：invoke / status 轮询的推荐超时。
 - **当前 Chat 侧处置**：Adapter 使用可配置的 DTO + 字段映射，状态映射按 ARCHITECTURE §5 的映射表实现，待 Runtime 契约冻结后对齐字段名。已预留 `RuntimeContractProperties` 配置类。
 
-### ISS-03 认证与凭证链路未明确 [未确认]
+### ISS-03 认证与凭证链路未明确 [部分确认]
 
 - **来源**：TASKS C-03；ARCHITECTURE §1 §1.2
 - **问题**：PRD P0 要求「登录态接入，第一阶段支持 Chat Backend 代理现有 JWT」。架构要求「Runtime 的认证凭证只在后端配置，前端不持有 Workflow Key」。但用户 JWT → Chat Backend → Runtime 的具体凭证流转链路未确认。
 - **Chat 侧影响**：无法确定 `TenantContextFilter` 如何解析租户、`RuntimeRestAdapter` 如何携带凭证。
-- **待确认项**：
-  1. 用户 JWT 的签发方、claims 结构（`tenantId` / `userId` / `roles` 字段名）。
-  2. Chat Backend 是直接透传用户 JWT，还是用服务凭证（service credential）换 Runtime 调用权限。
-  3. `X-Tenant-Id` 与 `X-Workflow-Key` 的下发与轮换机制。
-  4. 第一阶段是否需要在 Chat 内置 JWT 校验，还是由网关卸载。
-  5. 匿名/未登录访问是否允许（PRD P0 似乎要求登录态）。
-- **当前 Chat 侧处置**：`TenantContextFilter` 预留为可插拔，默认从 `X-Tenant-Id` / `X-User-Id` 头注入（开发态），生产态替换为 JWT 解析。凭证通过 `application.yml` 配置，不进入前端。
+- **已确认（2026-08-13）**：
+  1. Catalog / model / **invoke / status / resume / cancel** 均可用服务凭证 `X-Chat-Internal`（与平台 `CHAT_INTERNAL_TOKEN` 对齐）。
+  2. 第三方仍可用 `X-Workflow-Key` 或 `X-API-Key`；Chat BFF 不依赖 per-workflow invokeKey。
+  3. Chat invoke 入参统一为 `{ message: string }`。
+  4. **用户登录**：Chat 代理平台 `POST /api/auth/login`（及 refresh/me）；业务 API 校验平台 access JWT（共用 `JWT_SECRET`），`tenantId`/`userId` 取自 JWT，`chat_session` 按用户隔离。
+- **仍待确认项**：
+  1. SSO cookie 跨子路径共享是否需要（当前为 Chat 独立存 access/refresh）。
+  2. 匿名/未登录访问是否允许（现默认 `CHAT_AUTH_REQUIRED=true` 禁止）。
+- **当前 Chat 侧处置**：`TenantContextFilter` 解析 `Authorization: Bearer`；无 token 且未开 header fallback 时返回 401。凭证通过 `application.yml` / `.env` 配置，不进入前端构建产物。
 
 ---
 
