@@ -189,6 +189,11 @@ onBeforeUnmount(() => {
       <slot name="panel" />
     </div>
     <div class="composer-field" :class="{ disabled }">
+      <!-- 聚焦时沿边框路径绕行的流光 -->
+      <svg class="stream-ring" aria-hidden="true" focusable="false">
+        <rect class="stream-ring-trail" pathLength="100" />
+        <rect class="stream-ring-path" pathLength="100" />
+      </svg>
       <div v-if="pending.length" class="pending-list">
         <div
           v-for="att in pending"
@@ -259,18 +264,81 @@ onBeforeUnmount(() => {
 .composer { position: relative; flex: none; width: min(840px, calc(100% - 48px)); margin: 0 auto 20px; padding-top: 14px; }
 .composer::before { content: none; }
 .composer-field {
+  position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--c-border);
+  border: 1.5px solid var(--c-border);
   border-radius: var(--radius-lg);
   background: var(--c-surface);
   overflow: hidden;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 .composer-field:focus-within {
   border-color: var(--c-primary);
-  box-shadow: 0 0 0 3px rgba(13, 107, 103, .12);
+  box-shadow:
+    0 0 0 3px rgba(13, 107, 103, .1),
+    0 0 16px rgba(94, 207, 196, .18);
 }
 .composer-field.disabled { background: #f4f6f6; }
+.composer-field.disabled:focus-within {
+  border-color: var(--c-border);
+  box-shadow: none;
+}
+
+/** 贴合边框的流光层（仅描边，不挡交互） */
+.stream-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0;
+  z-index: 2;
+  transition: opacity .2s ease;
+}
+.composer-field:focus-within .stream-ring { opacity: 1; }
+.composer-field.disabled:focus-within .stream-ring { opacity: 0; }
+.stream-ring-trail,
+.stream-ring-path {
+  x: 0.75px;
+  y: 0.75px;
+  width: calc(100% - 1.5px);
+  height: calc(100% - 1.5px);
+  rx: 7px;
+  ry: 7px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-dashoffset: 0;
+}
+.stream-ring-trail {
+  stroke: rgba(13, 107, 103, .35);
+  stroke-width: 1.5;
+  /* 拖尾：更长、更淡 */
+  stroke-dasharray: 28 72;
+}
+.stream-ring-path {
+  stroke: #5ecfc4;
+  stroke-width: 2;
+  /* 亮头：短而亮，沿边框匀速绕行 */
+  stroke-dasharray: 12 88;
+  filter: drop-shadow(0 0 3px rgba(94, 207, 196, .9));
+}
+.composer-field:focus-within .stream-ring-trail,
+.composer-field:focus-within .stream-ring-path {
+  animation: stream-along-border 2.4s linear infinite;
+}
+
+@keyframes stream-along-border {
+  to { stroke-dashoffset: -100; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-field:focus-within {
+    box-shadow: 0 0 0 3px rgba(13, 107, 103, .12);
+  }
+  .stream-ring { display: none; }
+}
 .composer-panel {
   position: absolute;
   right: 0;
