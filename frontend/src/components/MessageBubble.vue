@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Message, RunStatusView, WaitingPayload } from '../types'
-import { renderMarkdown, splitTextAndCodeBlocks } from '../utils/textParser'
+import MessageParts from './message/MessageParts.vue'
+import DocumentSummaryList from './message/DocumentSummaryList.vue'
 
 const props = defineProps<{
   message: Message
@@ -45,13 +46,13 @@ function submit(action: string) {
   inputValue = ''
 }
 
-const contentParts = computed(() => splitTextAndCodeBlocks(props.message.content || ''))
-
 const showTyping = computed(() =>
   isAssistant.value && props.message.status === 'RUNNING' && !props.message.content,
 )
 
-const showContent = computed(() => Boolean(props.message.content))
+const showContent = computed(() =>
+  Boolean(props.message.content) || Boolean(props.message.documentSummaries?.length),
+)
 
 const showWaitingHint = computed(() =>
   isAssistant.value && props.message.status === 'WAITING_INPUT' && !props.message.content,
@@ -68,17 +69,19 @@ const showCancelledHint = computed(() =>
 function copyContent() {
   if (props.message.content) navigator.clipboard?.writeText(props.message.content)
 }
-
-function fenceLabel(part: { language?: string; artifactType?: string; type: string }): string {
-  if (part.type === 'artifact') return part.artifactType || 'artifact'
-  if (part.language && part.language !== 'text') return part.language
-  return ''
-}
 </script>
 
 <template>
   <div class="message" :class="message.role">
-    <span class="avatar">{{ isUser ? '你' : 'AI' }}</span>
+    <!-- 仅助手保留左侧标识；用户消息不再显示右侧头像 -->
+    <span v-if="isAssistant" class="avatar" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="14" height="14">
+        <path
+          d="M8 1.8 9.6 5.4l3.8.4-2.9 2.6.9 3.7L8 10.4l-3.4 1.7.9-3.7L2.6 5.8l3.8-.4L8 1.8Z"
+          fill="currentColor"
+        />
+      </svg>
+    </span>
     <div class="bubble-wrap">
       <!-- 处理中 -->
       <div v-if="showTyping" class="typing">
@@ -89,21 +92,41 @@ function fenceLabel(part: { language?: string; artifactType?: string; type: stri
       <!-- 正文（用户 / 助手结果） -->
       <div v-else-if="showContent" class="result-wrap">
         <div class="bubble message-content">
-          <template v-for="(part, index) in contentParts" :key="index">
-            <div v-if="part.type === 'text'" class="md-block" v-html="renderMarkdown(part.content)" />
-            <div v-else class="code-wrap">
-              <div v-if="fenceLabel(part)" class="code-lang">{{ fenceLabel(part) }}</div>
-              <pre class="code-block"><code>{{ part.content }}</code></pre>
-            </div>
-          </template>
+          <MessageParts v-if="message.content" :content="message.content" />
+          <DocumentSummaryList
+            v-if="message.documentSummaries?.length"
+            :summaries="message.documentSummaries"
+          />
         </div>
         <div v-if="isAssistant && message.status === 'COMPLETED'" class="result-actions">
-          <button class="link-btn" type="button" @click="copyContent">复制</button>
+          <el-tooltip content="复制" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="复制" @click="copyContent">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4" />
+                <path d="M3.5 10.5V3.5h7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+            </button>
+          </el-tooltip>
         </div>
         <div v-if="isAssistant && message.status === 'FAILED'" class="fail-actions">
-          <button class="link-btn" type="button" @click="emit('retry')">重试</button>
-          <span class="sep">·</span>
-          <button class="link-btn" type="button" @click="emit('cancel')">换一个智能体</button>
+          <el-tooltip content="重试" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="重试" @click="emit('retry')">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="M3.2 8a4.8 4.8 0 0 1 8.3-3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                <path d="M12.8 8a4.8 4.8 0 0 1-8.3 3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                <path d="M11.2 2.6v2.6h-2.6M4.8 13.4v-2.6h2.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </el-tooltip>
+          <el-tooltip content="换一个智能体" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="换一个智能体" @click="emit('cancel')">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <circle cx="5.2" cy="5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4" />
+                <circle cx="10.8" cy="5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4" />
+                <path d="M2.4 12.4c.4-1.8 1.6-2.8 2.8-2.8h.6c.7 0 1.3.3 1.8.8M13.6 12.4c-.4-1.8-1.6-2.8-2.8-2.8h-.6c-.7 0-1.3.3-1.8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+            </button>
+          </el-tooltip>
         </div>
       </div>
 
@@ -114,9 +137,24 @@ function fenceLabel(part: { language?: string; artifactType?: string; type: stri
       <div v-else-if="showFailedHint" class="bubble failed-hint">
         处理失败
         <div class="fail-actions">
-          <button class="link-btn" type="button" @click="emit('retry')">重试</button>
-          <span class="sep">·</span>
-          <button class="link-btn" type="button" @click="emit('cancel')">换一个智能体</button>
+          <el-tooltip content="重试" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="重试" @click="emit('retry')">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="M3.2 8a4.8 4.8 0 0 1 8.3-3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                <path d="M12.8 8a4.8 4.8 0 0 1-8.3 3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                <path d="M11.2 2.6v2.6h-2.6M4.8 13.4v-2.6h2.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </el-tooltip>
+          <el-tooltip content="换一个智能体" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="换一个智能体" @click="emit('cancel')">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <circle cx="5.2" cy="5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4" />
+                <circle cx="10.8" cy="5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4" />
+                <path d="M2.4 12.4c.4-1.8 1.6-2.8 2.8-2.8h.6c.7 0 1.3.3 1.8.8M13.6 12.4c-.4-1.8-1.6-2.8-2.8-2.8h-.6c-.7 0-1.3.3-1.8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+            </button>
+          </el-tooltip>
         </div>
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
@@ -183,10 +221,18 @@ function fenceLabel(part: { language?: string; artifactType?: string; type: stri
 <style scoped>
 .message { display: flex; gap: 12px; max-width: 860px; margin: 0 auto 20px; align-items: flex-start; }
 .message.user { justify-content: flex-end; }
-.message.user .avatar { order: 2; background: var(--c-primary); }
-.avatar { flex: none; display: grid; place-items: center; width: 30px; height: 30px; color: #fff; background: var(--c-accent); border-radius: var(--radius); font-size: 11px; font-weight: 700; }
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #fff;
+  background: var(--c-accent);
+  border-radius: 8px;
+}
 .bubble-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 720px; min-width: 0; }
-.message.user .bubble-wrap { align-items: flex-end; }
+.message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
 .bubble { margin: 0; padding: 12px 15px; line-height: 1.65; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); word-break: break-word; }
 .bubble :deep(code) { background: #eef2f2; padding: 1px 5px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, monospace; }
 .bubble :deep(pre) { background: #1e2a33; color: #e8efef; padding: 12px; border-radius: var(--radius); overflow-x: auto; margin: 8px 0; }
@@ -200,23 +246,8 @@ function fenceLabel(part: { language?: string; artifactType?: string; type: stri
 .bubble :deep(h1) { font-size: 1.2em; }
 .bubble :deep(h2) { font-size: 1.1em; }
 .bubble :deep(h3) { font-size: 1.05em; }
-.md-block { min-width: 0; }
 .message-content > :first-child { margin-top: 0; }
 .message-content > :last-child { margin-bottom: 0; }
-.code-wrap { margin-top: 10px; }
-.code-wrap:first-child { margin-top: 0; }
-.code-lang {
-  display: inline-block;
-  margin-bottom: 4px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: #eef2f2;
-  color: var(--c-text-muted);
-  font-size: 10px;
-  font-weight: 650;
-  text-transform: lowercase;
-}
-.code-block { margin: 0; padding: 12px; overflow-x: auto; border-radius: var(--radius); background: #1e2a33; color: #e8efef; white-space: pre; }
 .detail-block { color: var(--c-text-muted); font-size: 12px; }
 .detail-block summary { cursor: pointer; }
 .detail-content { margin-top: 6px; padding: 8px 10px; background: var(--c-bg); white-space: pre-wrap; line-height: 1.5; }
@@ -231,10 +262,20 @@ function fenceLabel(part: { language?: string; artifactType?: string; type: stri
 .dots i:nth-child(2) { animation-delay: .2s; }
 .dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
-.result-actions, .fail-actions { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-.link-btn { border: 0; background: transparent; color: var(--c-primary); cursor: pointer; font-size: 12px; padding: 2px 4px; border-radius: 3px; }
-.link-btn:hover { text-decoration: underline; }
-.sep { color: var(--c-text-muted); font-size: 12px; }
+.result-actions, .fail-actions { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+.icon-btn:hover { color: var(--c-primary); background: var(--c-primary-soft); }
 .inline-approval { margin-top: 8px; padding: 14px; background: var(--c-surface); border: 1px solid var(--c-border); border-left: 3px solid var(--c-primary); border-radius: var(--radius); }
 .inline-approval.dangerous { border-left-color: var(--c-danger); background: var(--c-danger-soft); }
 .approval-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }

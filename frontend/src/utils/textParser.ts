@@ -1,8 +1,35 @@
+import { marked } from 'marked'
+import purify from 'dompurify'
+
+/** ESM/CJS 互操作：拿到带 sanitize 的 DOMPurify 实例。 */
+const DOMPurify = (
+  typeof (purify as { sanitize?: unknown }).sanitize === 'function'
+    ? purify
+    : (purify as unknown as { default: typeof purify }).default
+)
+
 export interface TextPart {
   type: 'text' | 'code' | 'artifact'
   content: string
   language?: string
   artifactType?: 'code' | 'json' | 'html' | 'form'
+}
+
+/**
+ * 判断 schema 标签后是否为 LLM 多余总结（对齐 ai/app textParser）。
+ */
+function isRedundantSummary(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+  const patterns = [
+    /^(好的|已|我|现在|以上|这就是|这是|根据|基于)/,
+    /^(表单|流程|Schema|JSON|数据)\s*(已|已经|已生成|已创建|已更新)/,
+    /已(生成|创建|更新|完成|应用)(好|了)?/,
+    /以上(就是|是)/,
+    /请(查看|确认|检查|参考)/,
+    /希望(这|这个)/,
+  ]
+  return trimmed.length < 100 && patterns.some((p) => p.test(trimmed))
 }
 
 /**
@@ -13,15 +40,17 @@ export function splitTextAndCodeBlocks(content: string): TextPart[] {
   if (!content) return [{ type: 'text', content: '' }]
 
   const parts: TextPart[] = []
-  // 支持：```lang\n...\n```、```\n...\n```、单行 ```code```、以及 <schema>...</schema>
+  // 多行围栏 / 单行围栏 / schema（语言支持 word:sub 形式，对齐 ai/app）
   const blockRegex =
-    /```([^\n`]*)\r?\n([\s\S]*?)```|```([^\n`]*?)```|<schema>([\s\S]*?)<\/schema>/g
+    /```([\w:+#.-]*)\r?\n([\s\S]*?)```|```([^\n`]*?)```|<schema>([\s\S]*?)<\/schema>/g
 
   let lastIndex = 0
   let match: RegExpExecArray | null
+  let hasSchemaTag = false
+
   while ((match = blockRegex.exec(content)) !== null) {
     const before = content.slice(lastIndex, match.index)
-    if (before) parts.push({ type: 'text', content: before })
+    if (before.trim()) parts.push({ type: 'text', content: before })
 
     if (match[0].startsWith('<schema>')) {
       parts.push({
@@ -29,13 +58,12 @@ export function splitTextAndCodeBlocks(content: string): TextPart[] {
         content: (match[4] || '').trim(),
         language: 'json',
       })
+      hasSchemaTag = true
     } else if (match[1] !== undefined) {
-      // 多行围栏：```lang\ncode\n```
       const language = (match[1] || 'text').trim() || 'text'
       const code = (match[2] || '').replace(/^\n/, '').replace(/\n$/, '')
       pushFencedPart(parts, language, code)
     } else {
-      // 单行围栏：```code```
       pushFencedPart(parts, 'text', (match[3] || '').trim())
     }
 
@@ -43,13 +71,17 @@ export function splitTextAndCodeBlocks(content: string): TextPart[] {
   }
 
   const rest = content.slice(lastIndex)
-  if (rest) parts.push({ type: 'text', content: rest })
+  if (rest.trim()) {
+    if (hasSchemaTag && isRedundantSummary(rest)) {
+      // 过滤 schema 后的冗余总结
+    } else {
+      parts.push({ type: 'text', content: rest })
+    }
+  }
 
-  // 去掉首尾空文本段，但保留中间段落里的换行语义
   const normalized = parts.filter((p, i) => {
     if (p.type !== 'text') return true
     if (p.content.trim()) return true
-    // 保留夹在两个非文本块之间的换行
     return i > 0 && i < parts.length - 1
   })
 
@@ -66,64 +98,17 @@ function pushFencedPart(parts: TextPart[], language: string, code: string) {
 }
 
 /**
- * 轻量 Markdown → HTML（文本段专用；代码块已由 split 拆出）。
- * 支持：转义、行内 code、粗体、标题、无序/有序列表、换行。
+ * Markdown → 安全 HTML（对齐 ai/app TextRenderer：marked + DOMPurify）。
+ * DOMPurify 依赖 window；无 DOM 环境时仅返回 marked 结果（构建期/测试兜底）。
  */
 export function renderMarkdown(content: string): string {
   if (!content) return ''
-
-  let html = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-  // 残留围栏兜底（未被 split 吃掉时）；语言标签做属性转义，避免 XSS
-  html = html.replace(/```([^\n`]*)\r?\n([\s\S]*?)```/g, (_m, lang: string, code: string) => {
-    const label = (lang || '')
-      .trim()
-      .replace(/[^a-zA-Z0-9_+#.-]/g, '')
-      .slice(0, 32)
-    const body = code.replace(/^\n/, '').replace(/\n$/, '')
-    return `<pre><code data-lang="${label}">${body}</code></pre>`
-  })
-
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
-
-  // 连续无序列表 → 单个 <ul>
-  html = html.replace(/(?:^|\n)((?:[-*] .+(?:\n|$))+)/g, (_m, block: string) => {
-    const items = block
-      .trim()
-      .split(/\n/)
-      .map((line: string) => line.replace(/^[-*] /, '').trim())
-      .filter(Boolean)
-      .map((item: string) => `<li>${item}</li>`)
-      .join('')
-    return `\n<ul>${items}</ul>\n`
-  })
-
-  // 连续有序列表 → 单个 <ol>
-  html = html.replace(/(?:^|\n)((?:\d+\. .+(?:\n|$))+)/g, (_m, block: string) => {
-    const items = block
-      .trim()
-      .split(/\n/)
-      .map((line: string) => line.replace(/^\d+\. /, '').trim())
-      .filter(Boolean)
-      .map((item: string) => `<li>${item}</li>`)
-      .join('')
-    return `\n<ol>${items}</ol>\n`
-  })
-
-  html = html.replace(/\n/g, '<br>')
-  html = html
-    .replace(/<br>\s*(<(?:ul|ol|h[1-3]|pre)>)/g, '$1')
-    .replace(/(<\/(?:ul|ol|h[1-3]|pre)>)\s*<br>/g, '$1')
-    .replace(/(<(?:ul|ol)>)<br>/g, '$1')
-    .replace(/<br>(<\/(?:ul|ol)>)/g, '$1')
-
-  return html
+  const rawHtml = marked.parse(content, { breaks: true, gfm: true }) as string
+  const wrapped = rawHtml
+    .replace(/<table>/g, '<div class="table-scroll"><table>')
+    .replace(/<\/table>/g, '</table></div>')
+  if (typeof window === 'undefined' || typeof DOMPurify?.sanitize !== 'function') {
+    return wrapped
+  }
+  return DOMPurify.sanitize(wrapped, { ADD_ATTR: ['class'] })
 }
