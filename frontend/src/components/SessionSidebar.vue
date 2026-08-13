@@ -18,6 +18,9 @@ const collapsed = ref<Record<string, boolean>>(JSON.parse(localStorage.getItem('
 const showFolderInput = ref(false)
 const folderName = ref('')
 
+/** 有目录时才允许移动会话 */
+const hasFolders = computed(() => folders.value.length > 0)
+
 watch(folders, (value) => localStorage.setItem('chat-folders', JSON.stringify(value)), { deep: true })
 watch(sessionFolders, (value) => localStorage.setItem('chat-session-folders', JSON.stringify(value)), { deep: true })
 watch(collapsed, (value) => localStorage.setItem('chat-collapsed-folders', JSON.stringify(value)), { deep: true })
@@ -30,6 +33,9 @@ function addFolder() {
   folderName.value = ''
   showFolderInput.value = false
 }
+/**
+ * 移动会话到目录；空字符串表示移出目录。
+ */
 function moveSession(id: string, folder: string) {
   if (folder) sessionFolders.value[id] = folder
   else delete sessionFolders.value[id]
@@ -73,7 +79,7 @@ function formatTime(iso: string): string {
       <span class="brand-mark">W</span>
       <div>
         <strong>任务对话</strong>
-        <small>把事情交给合适的智能体</small>
+        <small>选助手，用对话把事情做完</small>
       </div>
     </div>
     <div class="session-list">
@@ -85,27 +91,91 @@ function formatTime(iso: string): string {
       </div>
       <template v-if="unfiledSessions.length">
         <div class="section-label">最近会话</div>
-        <button v-for="s in unfiledSessions" :key="s.id" class="session-item" :class="{ active: s.id === currentId }" @click="select(s.id)">
-          <b>{{ s.title || '未命名会话' }}</b><small>{{ s.agentName || '基础模型' }} · {{ formatTime(s.updatedAt) }}</small>
-          <select class="move-select" aria-label="移动会话" @click.stop @change="moveSession(s.id, ($event.target as HTMLSelectElement).value)">
-            <option value="">移动到…</option><option v-for="folder in folders" :key="folder" :value="folder">{{ folder }}</option>
-          </select>
-        </button>
+        <div
+          v-for="s in unfiledSessions"
+          :key="s.id"
+          class="session-item"
+          :class="{ active: s.id === currentId }"
+          role="button"
+          tabindex="0"
+          @click="select(s.id)"
+          @keydown.enter.prevent="select(s.id)"
+        >
+          <div class="session-main">
+            <b>{{ s.title || '未命名会话' }}</b>
+            <small>{{ s.agentName || '基础模型' }} · {{ formatTime(s.updatedAt) }}</small>
+          </div>
+          <el-dropdown
+            v-if="hasFolders"
+            trigger="click"
+            @command="(folder: string) => moveSession(s.id, folder)"
+          >
+            <button class="move-btn" type="button" aria-label="移动会话" @click.stop>
+              移动
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  v-for="folder in folders"
+                  :key="folder"
+                  :command="folder"
+                >
+                  {{ folder }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </template>
       <section v-for="folder in folders" :key="folder" class="folder-section">
-        <button class="folder-header" type="button" @click="toggleFolder(folder)"><span>{{ collapsed[folder] ? '▸' : '▾' }} {{ folder }}</span><small>{{ folderSessions(folder).length }}</small></button>
+        <button class="folder-header" type="button" @click="toggleFolder(folder)">
+          <span>{{ collapsed[folder] ? '▸' : '▾' }} {{ folder }}</span>
+          <small>{{ folderSessions(folder).length }}</small>
+        </button>
         <template v-if="!collapsed[folder]">
-          <button v-for="s in folderSessions(folder)" :key="s.id" class="session-item" :class="{ active: s.id === currentId }" @click="select(s.id)">
-            <b>{{ s.title || '未命名会话' }}</b><small>{{ s.agentName || '基础模型' }} · {{ formatTime(s.updatedAt) }}</small>
-            <select class="move-select" aria-label="移动会话" @click.stop @change="moveSession(s.id, ($event.target as HTMLSelectElement).value)">
-              <option value="">移出目录</option><option v-for="target in folders" :key="target" :value="target">{{ target }}</option>
-            </select>
-          </button>
+          <div
+            v-for="s in folderSessions(folder)"
+            :key="s.id"
+            class="session-item"
+            :class="{ active: s.id === currentId }"
+            role="button"
+            tabindex="0"
+            @click="select(s.id)"
+            @keydown.enter.prevent="select(s.id)"
+          >
+            <div class="session-main">
+              <b>{{ s.title || '未命名会话' }}</b>
+              <small>{{ s.agentName || '基础模型' }} · {{ formatTime(s.updatedAt) }}</small>
+            </div>
+            <el-dropdown
+              trigger="click"
+              @command="(target: string) => moveSession(s.id, target)"
+            >
+              <button class="move-btn" type="button" aria-label="移动会话" @click.stop>
+                移动
+              </button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    v-for="target in folders.filter((f) => f !== folder)"
+                    :key="target"
+                    :command="target"
+                  >
+                    {{ target }}
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="">移出目录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </template>
       </section>
     </div>
     <div class="sidebar-footer">
-      <div v-if="showFolderInput" class="folder-create"><input v-model="folderName" placeholder="目录名称" @keyup.enter="addFolder" /><button type="button" @click="addFolder">创建</button></div>
+      <div v-if="showFolderInput" class="folder-create">
+        <input v-model="folderName" placeholder="目录名称" @keyup.enter="addFolder" />
+        <button type="button" @click="addFolder">创建</button>
+      </div>
       <button class="folder-action" type="button" @click="showFolderInput = !showFolderInput">+ 新建目录</button>
       <button class="new-chat btn btn-primary" type="button" @click="newChat">+ 新建会话</button>
     </div>
@@ -129,11 +199,38 @@ function formatTime(iso: string): string {
 .folder-section { margin-top: 8px; }
 .folder-header { display: flex; justify-content: space-between; width: 100%; padding: 7px 12px; border: 0; background: transparent; color: var(--c-text-secondary); cursor: pointer; font-size: 12px; text-align: left; }
 .folder-header small { color: var(--c-text-muted); }
-.session-item { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; color: var(--c-text); margin-bottom: 2px; }
+.session-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--c-text);
+  margin-bottom: 2px;
+}
 .session-item:hover { background: var(--c-bg); }
 .session-item.active { background: var(--c-primary-soft); color: var(--c-primary); }
+.session-main { min-width: 0; flex: 1; }
 .session-item b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .session-item small { display: block; font-size: 11px; color: var(--c-text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.move-select { display: block; width: 100%; margin-top: 7px; padding: 3px 5px; border: 1px solid var(--c-border-soft); border-radius: 4px; background: transparent; color: var(--c-text-muted); font-size: 10px; opacity: 0; }
-.session-item:hover .move-select, .session-item:focus-within .move-select { opacity: 1; }
+.move-btn {
+  flex: none;
+  margin-top: 1px;
+  padding: 2px 8px;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+}
+.session-item:hover .move-btn,
+.session-item:focus-within .move-btn { opacity: 1; }
+.move-btn:hover { color: var(--c-primary); border-color: var(--c-primary); }
 </style>

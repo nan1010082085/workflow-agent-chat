@@ -233,7 +233,21 @@ function copyContent() {
 }
 .bubble-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 720px; min-width: 0; }
 .message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
-.bubble { margin: 0; padding: 12px 15px; line-height: 1.65; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); word-break: break-word; }
+.result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
+.message.user .result-wrap { align-items: flex-end; }
+.bubble {
+  margin: 0;
+  padding: 10px 14px;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.65;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  word-break: break-word;
+}
+.bubble :deep(p) { margin: 0 0 0.45em; }
+.bubble :deep(p:last-child) { margin-bottom: 0; }
 .bubble :deep(code) { background: #eef2f2; padding: 1px 5px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, monospace; }
 .bubble :deep(pre) { background: #1e2a33; color: #e8efef; padding: 12px; border-radius: var(--radius); overflow-x: auto; margin: 8px 0; }
 .bubble :deep(pre code) { background: transparent; color: inherit; padding: 0; }

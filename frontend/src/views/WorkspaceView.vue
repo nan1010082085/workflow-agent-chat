@@ -27,6 +27,12 @@ const selectedModel = computed({
 })
 const hasMessages = computed(() => chatStore.messages.length > 0)
 const loadingSession = ref(false)
+/** 顶栏标题：有会话用会话名，否则新对话 */
+const pageHeading = computed(() => {
+  if (sessionStore.current?.title) return sessionStore.current.title
+  if (hasMessages.value) return '当前对话'
+  return '新对话'
+})
 /** 当前接话能力：助手优先，否则默认文本 */
 const composerInputs = computed(() =>
   mode.value === 'agent' && selectedAgent.value?.supportedInputs?.length
@@ -35,6 +41,17 @@ const composerInputs = computed(() =>
 )
 const composerHitl = computed(() =>
   mode.value === 'agent' ? Boolean(selectedAgent.value?.hitlCapable) : false,
+)
+
+watch(
+  [pageHeading, () => mode.value, selectedAgent],
+  () => {
+    const agent = mode.value === 'agent' && selectedAgent.value?.name
+      ? ` · ${selectedAgent.value.name}`
+      : ''
+    document.title = `${pageHeading.value}${agent} · 任务对话`
+  },
+  { immediate: true },
 )
 
 onMounted(() => {
@@ -174,8 +191,8 @@ function useBaseModel() {
   <div class="workspace">
     <header class="topbar">
       <div class="topbar-copy">
-        <strong>对话</strong>
-        <span class="subtle">{{ mode === 'agent' ? `当前使用：${selectedAgent?.name}` : '当前使用：基础模型' }}</span>
+        <strong>{{ pageHeading }}</strong>
+        <span class="subtle">{{ mode === 'agent' ? `当前助手：${selectedAgent?.name}` : '当前：基础模型对话' }}</span>
       </div>
       <p v-if="modelStore.error || chatStore.error || sessionStore.error" class="status-error">
         {{ modelStore.error || chatStore.error || sessionStore.error }}
@@ -185,8 +202,9 @@ function useBaseModel() {
       <div v-if="loadingSession" class="empty-content"><p class="subtle">正在加载会话…</p></div>
       <div v-else-if="!hasMessages" class="empty-content">
         <section class="welcome">
-          <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
-          <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，开始对话。' }}</p>
+          <div class="welcome-mark">✦</div>
+          <h1>今天要完成什么？</h1>
+          <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」说明任务，直接开始。` : '先选模型或智能体，再用一句话描述任务。' }}</p>
         </section>
         <Composer
           :disabled="chatStore.sending"

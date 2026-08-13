@@ -62,9 +62,11 @@ function copyPart(text: string) {
 </template>
 
 <style scoped>
-.message-parts { min-width: 0; }
-.md-block { min-width: 0; }
-.md-block :deep(.table-scroll) { overflow-x: auto; margin: 8px 0; }
+.message-parts { min-width: 0; width: fit-content; max-width: 100%; }
+.md-block { min-width: 0; width: fit-content; max-width: 100%; }
+.md-block :deep(p) { margin: 0 0 0.45em; }
+.md-block :deep(p:last-child) { margin-bottom: 0; }
+.md-block :deep(.table-scroll) { overflow-x: auto; margin: 8px 0; max-width: min(100%, 640px); }
 .md-block :deep(table) { border-collapse: collapse; width: 100%; font-size: 13px; }
 .md-block :deep(th),
 .md-block :deep(td) { border: 1px solid var(--c-border); padding: 6px 8px; text-align: left; }
