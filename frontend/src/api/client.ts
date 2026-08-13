@@ -4,7 +4,7 @@
 // Resolve API relative to the deployed Vite base path.
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
   || (import.meta.env.PROD ? `${import.meta.env.BASE_URL}api` : '/api')
-const TENANT_ID = import.meta.env.VITE_TENANT_ID || 'dev-tenant'
+const TENANT_ID = import.meta.env.VITE_TENANT_ID || '000000'
 const USER_ID = import.meta.env.VITE_USER_ID || 'dev-user'
 
 export class ApiError extends Error {

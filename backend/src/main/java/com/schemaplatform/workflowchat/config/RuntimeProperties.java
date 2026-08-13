@@ -69,8 +69,7 @@ public record RuntimeProperties(
    * 用于前端联调阶段，避免强依赖 Runtime。见 ISS-07。
    */
   public boolean useMock() {
-    return mockEnabled || ((workflowKey == null || workflowKey.isBlank())
-        && (apiKey == null || apiKey.isBlank()));
+    return mockEnabled;
   }
 
   /** Platform invoke accepts X-Workflow-Key or X-API-Key, never Bearer. */
@@ -95,4 +94,6 @@ public record RuntimeProperties(
   }
   public String modelCredential() { return catalogCredential(); }
   public String modelCredentialHeader() { return catalogCredentialHeader(); }
+
+  public String internalToken() { return internalToken == null ? "" : internalToken; }
 }

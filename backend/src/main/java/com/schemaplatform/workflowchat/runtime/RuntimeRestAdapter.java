@@ -44,7 +44,7 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       JsonNode body = restClient.get()
           .uri(props.catalogPath())
           .header("X-Tenant-Id", tenantId)
-          .header(props.catalogCredentialHeader(), props.catalogCredential())
+          .header("X-Chat-Internal", props.internalToken())
           .retrieve()
           .body(JsonNode.class);
       return parseAgentCatalog(body);
