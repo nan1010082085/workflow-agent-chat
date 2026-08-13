@@ -74,7 +74,7 @@ public class RunSyncService {
 
   /**
    * HITL resume。对应 TASKS B-08。
-   * <p>平台对 approved=false 会终止执行；澄语在拒绝后补一条引导，避免对话「停住」。
+   * <p>平台对 approved=false 会异步 cancelled；澄语立即本地收口并写引导，避免对话停住。
    */
   @Transactional
   public RunStatusView resume(String runId, String action, String payload) {
@@ -84,14 +84,19 @@ public class RunSyncService {
         run.getRuntimeExecutionId(), run.getTenantId(),
         new RuntimeAdapter.ResumeRequest(action, payload));
     applyStatus(run, status);
-    // resume HTTP 已成功时，即使平台瞬时仍回 waiting，也推进为 RUNNING，避免前端/测试重复 resume
-    if (run.getStatus() == RunStatus.WAITING_INPUT) {
+
+    if (rejected) {
+      // 平台取消常晚于 resume 响应；本地立即 CANCELLED + 引导，会话可继续发消息
+      if (!run.isTerminal() || run.getStatus() != RunStatus.CANCELLED) {
+        run.markCancelled();
+      }
+      appendHitlRejectFollowUp(run, payload);
+    } else if (run.getStatus() == RunStatus.WAITING_INPUT) {
+      // resume HTTP 已成功时，即使平台瞬时仍回 waiting，也推进为 RUNNING，避免重复 resume
       run.markRunning();
       updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
     }
-    if (rejected && run.getStatus() == RunStatus.CANCELLED) {
-      appendHitlRejectFollowUp(run, payload);
-    }
+
     ChatRun saved = runService.save(run);
     return RunStatusView.from(saved, status);
   }
@@ -116,11 +121,15 @@ public class RunSyncService {
     ChatMessage placeholder = messageService.findAssistantByExecutionId(run.getRuntimeExecutionId());
     if (placeholder != null) {
       String existing = placeholder.getContent() == null ? "" : placeholder.getContent().trim();
-      String marked = existing.isEmpty()
-          ? "**本次确认已取消。**"
-          : existing + "\n\n---\n\n**本次确认已取消。**";
-      messageService.updateAssistantResult(
-          placeholder.getId(), marked, placeholder.getThinking(), MessageStatus.CANCELLED);
+      if (!existing.contains("本次确认已取消")) {
+        String marked = existing.isEmpty()
+            ? "**本次确认已取消。**"
+            : existing + "\n\n---\n\n**本次确认已取消。**";
+        messageService.updateAssistantResult(
+            placeholder.getId(), marked, placeholder.getThinking(), MessageStatus.CANCELLED);
+      } else {
+        messageService.updateMessageStatus(placeholder.getId(), MessageStatus.CANCELLED);
+      }
     }
 
     String revision = extractHumanRevision(payload);
@@ -128,8 +137,16 @@ public class RunSyncService {
         ? "好的，已取消本次确认。请直接告诉我你真正想做的事，我会重新开始。"
         : "好的，已取消上次确认。请确认或继续补充下面的需求，也可直接发送新的说明：\n\n> "
             + revision;
-    messageService.saveAssistantResult(
-        run.getSessionId(), followUp, null, MessageStatus.COMPLETED);
+    // 避免重复 resume 写多条相同引导
+    boolean alreadyGuided = messageService.listMessages(run.getSessionId()).stream()
+        .anyMatch(m -> m.getRole() == ChatMessage.MessageRole.ASSISTANT
+            && m.getContent() != null
+            && m.getContent().contains("已取消本次确认")
+            && m.getStatus() == MessageStatus.COMPLETED);
+    if (!alreadyGuided) {
+      messageService.saveAssistantResult(
+          run.getSessionId(), followUp, null, MessageStatus.COMPLETED);
+    }
     log.info("HITL 拒绝后续已写入 session={} run={} hasRevision={}",
         run.getSessionId(), run.getId(), !revision.isEmpty());
   }
