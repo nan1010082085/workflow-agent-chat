@@ -27,6 +27,15 @@ const selectedModel = computed({
 })
 const hasMessages = computed(() => chatStore.messages.length > 0)
 const loadingSession = ref(false)
+/** 当前接话能力：助手优先，否则默认文本 */
+const composerInputs = computed(() =>
+  mode.value === 'agent' && selectedAgent.value?.supportedInputs?.length
+    ? selectedAgent.value.supportedInputs
+    : ['text'],
+)
+const composerHitl = computed(() =>
+  mode.value === 'agent' ? Boolean(selectedAgent.value?.hitlCapable) : false,
+)
 
 onMounted(() => {
   if (!modelStore.models.length) modelStore.fetchModels()
@@ -179,13 +188,23 @@ function useBaseModel() {
           <div class="welcome-mark">✦</div><h1>你想聊点什么？</h1>
           <p>{{ mode === 'agent' ? `向「${selectedAgent?.name}」描述你要完成的任务。` : '直接输入问题，开始对话。' }}</p>
         </section>
-        <Composer :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send" @close-panel="showWorkflows = false">
+        <Composer
+          :disabled="chatStore.sending"
+          :panel-open="showWorkflows"
+          :supported-inputs="composerInputs"
+          :hitl-capable="composerHitl"
+          :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')"
+          @send="send"
+          @close-panel="showWorkflows = false"
+        >
           <template #tools>
             <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
             <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
-            <button class="workflow-toggle" type="button" aria-label="智能体" title="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
-              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </button>
+            <el-tooltip content="智能体" placement="top" :show-after="200">
+              <button class="workflow-toggle" type="button" aria-label="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </el-tooltip>
           </template>
           <template #panel>
             <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
@@ -195,13 +214,24 @@ function useBaseModel() {
         </Composer>
       </div>
       <MessageList v-else :messages="chatStore.messages" :loading="false" :current-run="mode === 'agent' ? chatStore.currentRun : null" @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)" @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)" />
-      <Composer v-if="hasMessages" :disabled="chatStore.sending" :panel-open="showWorkflows" :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')" @send="send" @close-panel="showWorkflows = false">
+      <Composer
+        v-if="hasMessages"
+        :disabled="chatStore.sending"
+        :panel-open="showWorkflows"
+        :supported-inputs="composerInputs"
+        :hitl-capable="composerHitl"
+        :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')"
+        @send="send"
+        @close-panel="showWorkflows = false"
+      >
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
           <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
-          <button class="workflow-toggle" type="button" aria-label="智能体" title="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
+          <el-tooltip content="智能体" placement="top" :show-after="200">
+            <button class="workflow-toggle" type="button" aria-label="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </el-tooltip>
         </template>
         <template #panel>
           <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
