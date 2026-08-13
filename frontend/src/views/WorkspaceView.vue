@@ -5,11 +5,12 @@ import { useModelStore } from '../stores/model'
 import { useAgentStore } from '../stores/agent'
 import { useChatStore } from '../stores/chat'
 import { titleFromContent, useSessionStore } from '../stores/session'
-import type { Agent } from '../types'
+import type { Agent, Message } from '../types'
 import ModelPicker from '../components/ModelPicker.vue'
 import AssistantPicker from '../components/AssistantPicker.vue'
 import MessageList from '../components/MessageList.vue'
 import Composer from '../components/Composer.vue'
+import ProcessingDrawer from '../components/ProcessingDrawer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +20,8 @@ const chatStore = useChatStore()
 const sessionStore = useSessionStore()
 
 const showWorkflows = ref(false)
+const showProcess = ref(false)
+const processMessage = ref<Message | null>(null)
 const mode = ref<'model' | 'agent'>('model')
 const selectedAgent = ref<Agent | null>(null)
 const selectedModel = computed({
@@ -33,11 +36,11 @@ const pageHeading = computed(() => {
   if (hasMessages.value) return '当前对话'
   return '新对话'
 })
-/** 当前接话能力：助手优先，否则默认文本 */
+/** 当前接话能力：助手优先；基础模型默认文本+文件 */
 const composerInputs = computed(() =>
   mode.value === 'agent' && selectedAgent.value?.supportedInputs?.length
     ? selectedAgent.value.supportedInputs
-    : ['text'],
+    : ['text', 'file', 'image'],
 )
 const composerHitl = computed(() =>
   mode.value === 'agent' ? Boolean(selectedAgent.value?.hitlCapable) : false,
@@ -123,15 +126,17 @@ async function ensureSession(title?: string, agentId?: string, agentName?: strin
   return { sessionId: session.id, created: true }
 }
 
-async function send(content: string) {
+async function send(content: string, attachmentIds: string[] = []) {
   showWorkflows.value = false
   if (mode.value === 'agent' && selectedAgent.value) {
     const { sessionId, created } = await ensureSession(
-      titleFromContent(content),
+      titleFromContent(content || '附件'),
       selectedAgent.value.id,
       selectedAgent.value.name,
     )
-    const result = await chatStore.sendMessage(sessionId, selectedAgent.value.id, content)
+    const result = await chatStore.sendMessage(
+      sessionId, selectedAgent.value.id, content, attachmentIds,
+    )
     if (result?.sessionTitle) {
       sessionStore.bumpSession(sessionId, { title: result.sessionTitle })
     } else {
@@ -147,12 +152,14 @@ async function send(content: string) {
   }
   const model = modelStore.selected()
   const { sessionId, created } = await ensureSession(
-    titleFromContent(content),
+    titleFromContent(content || '附件'),
     undefined,
     model?.name || '基础模型',
   )
   try {
-    const result = await chatStore.sendModelMessage(sessionId, modelStore.selectedId, content)
+    const result = await chatStore.sendModelMessage(
+      sessionId, modelStore.selectedId, content, attachmentIds,
+    )
     if (result?.sessionTitle) {
       sessionStore.bumpSession(sessionId, { title: result.sessionTitle })
     } else {
@@ -186,6 +193,20 @@ function useBaseModel() {
   chatStore.reset()
   if (route.params.sessionId) void router.replace('/chat')
 }
+
+/**
+ * 打开处理信息抽屉（可带入某条消息的思考/步骤）。
+ */
+function openProcess(message?: Message) {
+  processMessage.value = message || null
+  showProcess.value = true
+}
+
+const processing = computed(() =>
+  chatStore.sending
+    || chatStore.currentRun?.status === 'RUNNING'
+    || chatStore.currentRun?.status === 'WAITING_INPUT',
+)
 </script>
 <template>
   <div class="workspace">
@@ -194,9 +215,20 @@ function useBaseModel() {
         <strong>{{ pageHeading }}</strong>
         <span class="subtle">{{ mode === 'agent' ? `当前助手：${selectedAgent?.name}` : '当前：基础模型对话' }}</span>
       </div>
-      <p v-if="modelStore.error || chatStore.error || sessionStore.error" class="status-error">
-        {{ modelStore.error || chatStore.error || sessionStore.error }}
-      </p>
+      <div class="topbar-actions">
+        <span v-if="processing" class="processing-label"><i></i>正在处理</span>
+        <button
+          v-if="hasMessages"
+          class="text-action"
+          type="button"
+          @click="openProcess()"
+        >
+          处理信息
+        </button>
+        <p v-if="modelStore.error || chatStore.error || sessionStore.error" class="status-error">
+          {{ modelStore.error || chatStore.error || sessionStore.error }}
+        </p>
+      </div>
     </header>
     <main class="conversation" :class="{ empty: !hasMessages }">
       <div v-if="loadingSession" class="empty-content"><p class="subtle">正在加载会话…</p></div>
@@ -211,6 +243,7 @@ function useBaseModel() {
           :panel-open="showWorkflows"
           :supported-inputs="composerInputs"
           :hitl-capable="composerHitl"
+          :session-id="sessionStore.currentSessionId"
           :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')"
           @send="send"
           @close-panel="showWorkflows = false"
@@ -238,13 +271,22 @@ function useBaseModel() {
           </template>
         </Composer>
       </div>
-      <MessageList v-else :messages="chatStore.messages" :loading="false" :current-run="mode === 'agent' ? chatStore.currentRun : null" @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)" @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)" />
+      <MessageList
+        v-else
+        :messages="chatStore.messages"
+        :loading="false"
+        :current-run="mode === 'agent' ? chatStore.currentRun : null"
+        @resume="(action, payload) => chatStore.currentRun && chatStore.resumeRun(chatStore.currentRun.runId, action, payload)"
+        @cancel="() => chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId)"
+        @open-process="openProcess"
+      />
       <Composer
         v-if="hasMessages"
         :disabled="chatStore.sending"
         :panel-open="showWorkflows"
         :supported-inputs="composerInputs"
         :hitl-capable="composerHitl"
+        :session-id="sessionStore.currentSessionId"
         :placeholder="mode === 'agent' ? `使用 ${selectedAgent?.name} 处理任务…` : (modelStore.selected() ? `使用 ${modelStore.selected()!.name} 对话…` : '输入消息…')"
         @send="send"
         @close-panel="showWorkflows = false"
@@ -272,11 +314,26 @@ function useBaseModel() {
         </template>
       </Composer>
     </main>
+    <ProcessingDrawer
+      :open="showProcess"
+      :run="mode === 'agent' ? chatStore.currentRun : null"
+      :agent="selectedAgent"
+      :message="processMessage"
+      @close="showProcess = false"
+      @cancel="() => { showProcess = false; chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId) }"
+    />
   </div>
 </template>
 <style scoped>
 .workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:#eef3f4 url('/workflow-agent-chat/chat-canvas.svg') center / cover no-repeat; }
-.topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; background:var(--c-surface); }.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}.status-error{margin:0 0 0 auto;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
+.topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; background:var(--c-surface); }
+.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}
+.topbar-actions{display:flex;align-items:center;gap:10px;margin-left:auto;min-width:0}
+.text-action{border:0;border-radius:6px;background:transparent;color:var(--c-text-secondary);cursor:pointer;font-size:12px;padding:7px 8px}
+.text-action:hover{background:var(--c-bg);color:var(--c-primary)}
+.processing-label{display:inline-flex;align-items:center;gap:6px;color:var(--c-running);font-size:12px}
+.processing-label i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-error{margin:0;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 .topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }
 .workflow-toggle {
   display: inline-flex;

@@ -37,11 +37,11 @@ public class MessageService {
 
   /** 保存已完成的助手回复（基础模型对话用）。 */
   @Transactional
-  public ChatMessage saveAssistantResult(String sessionId, String content, MessageStatus status) {
+  public ChatMessage saveAssistantResult(String sessionId, String content, String thinking, MessageStatus status) {
     String tenantId = TenantContext.tenantId();
     return messageRepository.save(
         ChatMessage.assistantResult(
-            UUID.randomUUID().toString(), tenantId, sessionId, content, null, status));
+            UUID.randomUUID().toString(), tenantId, sessionId, content, thinking, null, status));
   }
 
   @Transactional(readOnly = true)
@@ -58,7 +58,6 @@ public class MessageService {
 
   /**
    * 根据 runtimeExecutionId 找到对应的 assistant placeholder，用于轮询回填结果。
-   * 避免 duplicate：只更新已有的 placeholder，不新建消息。
    */
   @Transactional(readOnly = true)
   public ChatMessage findAssistantByExecutionId(String runtimeExecutionId) {
@@ -69,10 +68,10 @@ public class MessageService {
   }
 
   @Transactional
-  public ChatMessage updateAssistantResult(String messageId, String content, MessageStatus status) {
+  public ChatMessage updateAssistantResult(String messageId, String content, String thinking, MessageStatus status) {
     ChatMessage msg = messageRepository.findById(messageId)
         .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
-    msg.updateResult(content, status);
+    msg.updateResult(content, thinking, status);
     return messageRepository.save(msg);
   }
 

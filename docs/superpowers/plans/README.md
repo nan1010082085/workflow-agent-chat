@@ -11,7 +11,10 @@
 
 ## 活跃计划
 
-（当前无）
+| 计划 | 摘要 |
+|---|---|
+| [内容展示优化](2026-08-13-content-display-optimization.md) | Result 可读性、处理信息抽屉、附件预览 |
+| [文件上传、附件展示与限流](2026-08-13-upload-attachments-ratelimit.md) | 上传落盘 `~/payflow/agentChat`、消息附件展示、租户+用户限流 |
 
 ## 已归档
 
@@ -21,5 +24,5 @@
 
 ## 仍开放（产品路线图，非本目录计划）
 
-- 真实文件/图片上传闭环 → PRD P1 / TASKS O-06
 - SSE、自动路由等 → `docs/DEVELOPMENT_PLAN.md` Phase 3+
+- 搜索/收藏等 O-06 其余子项

@@ -33,6 +33,10 @@ public class ChatMessage {
   @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
   private String content;
 
+  /** 助手思考过程（可选）。 */
+  @Column(name = "thinking", columnDefinition = "LONGTEXT")
+  private String thinking;
+
   @Column(name = "runtime_execution_id", length = 128)
   private String runtimeExecutionId;
 
@@ -65,6 +69,7 @@ public class ChatMessage {
     m.sessionId = sessionId;
     m.role = MessageRole.ASSISTANT;
     m.content = "";
+    m.thinking = null;
     m.runtimeExecutionId = runtimeExecutionId;
     m.status = MessageStatus.RUNNING;
     m.createdAt = Instant.now();
@@ -72,13 +77,14 @@ public class ChatMessage {
   }
 
   public static ChatMessage assistantResult(String id, String tenantId, String sessionId,
-      String content, String runtimeExecutionId, MessageStatus status) {
+      String content, String thinking, String runtimeExecutionId, MessageStatus status) {
     ChatMessage m = new ChatMessage();
     m.id = id;
     m.tenantId = tenantId;
     m.sessionId = sessionId;
     m.role = MessageRole.ASSISTANT;
-    m.content = content;
+    m.content = content == null ? "" : content;
+    m.thinking = blankToNull(thinking);
     m.runtimeExecutionId = runtimeExecutionId;
     m.status = status;
     m.createdAt = Instant.now();
@@ -97,8 +103,11 @@ public class ChatMessage {
     return m;
   }
 
-  public void updateResult(String content, MessageStatus status) {
-    this.content = content;
+  public void updateResult(String content, String thinking, MessageStatus status) {
+    this.content = content == null ? "" : content;
+    if (thinking != null && !thinking.isBlank()) {
+      this.thinking = thinking;
+    }
     this.status = status;
   }
 
@@ -106,16 +115,21 @@ public class ChatMessage {
     this.status = status;
   }
 
-  // getters
+  private static String blankToNull(String value) {
+    return value == null || value.isBlank() ? null : value;
+  }
+
   public String getId() { return id; }
   public String getTenantId() { return tenantId; }
   public String getSessionId() { return sessionId; }
   public MessageRole getRole() { return role; }
   public String getContent() { return content; }
+  public String getThinking() { return thinking; }
   public String getRuntimeExecutionId() { return runtimeExecutionId; }
   public MessageStatus getStatus() { return status; }
   public Instant getCreatedAt() { return createdAt; }
   public void setContent(String content) { this.content = content; }
+  public void setThinking(String thinking) { this.thinking = blankToNull(thinking); }
 
   public enum MessageRole {
     USER, ASSISTANT, SYSTEM

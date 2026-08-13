@@ -8,7 +8,7 @@ REMOTE_DIR="${DEPLOY_REMOTE_DIR:-/home/ubuntu/workflow-agent-chat}"
 OLD_REMOTE_DIR="/home/ubuntu/schema-platform/apps/workflow-agent-chat"
 
 echo "[deploy] upload source to ${SERVER}:${REMOTE_DIR}"
-ssh "${SERVER}" "mkdir -p '${REMOTE_DIR}'"
+ssh "${SERVER}" "mkdir -p '${REMOTE_DIR}' /home/ubuntu/payflow/agentChat"
 rsync -az --delete \
   --exclude '.git/' \
   --exclude '.playwright-cli/' \
@@ -50,6 +50,7 @@ text = path.read_text()
 block = r'''
     # ==================== Workflow Agent Chat ====================
     location /workflow-agent-chat/api/ {
+        client_max_body_size 32m;
         rewrite ^/workflow-agent-chat/(.*) /$1 break;
         proxy_pass http://127.0.0.1:5301;
         proxy_http_version 1.1;
@@ -78,6 +79,11 @@ if not text.rstrip().endswith('}'):
     raise SystemExit('nginx config does not end with a server block')
 path.write_text(text.rstrip()[:-1] + block + '}\n')
 PY
+fi
+# 已有 location 时补齐上传体积限制
+if sudo grep -qF 'location /workflow-agent-chat/api/' "$NGINX_CONF" \
+  && ! sudo grep -qF 'client_max_body_size 32m;' "$NGINX_CONF"; then
+  sudo sed -i '/location \/workflow-agent-chat\/api\//a\        client_max_body_size 32m;' "$NGINX_CONF"
 fi
 sudo nginx -t
 sudo systemctl reload nginx

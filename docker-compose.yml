@@ -34,7 +34,11 @@ services:
       RUNTIME_WORKFLOW_KEY: ${RUNTIME_WORKFLOW_KEY:-}
       RUNTIME_INTERNAL_TOKEN: ${RUNTIME_INTERNAL_TOKEN:-}
       RUNTIME_MOCK_ENABLED: ${RUNTIME_MOCK_ENABLED:-false}
+      CHAT_UPLOAD_ROOT: /data/agentChat
+      CHAT_RATE_LIMIT_ENABLED: ${CHAT_RATE_LIMIT_ENABLED:-true}
       JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError}
+    volumes:
+      - ${CHAT_UPLOAD_HOST_PATH:-/home/ubuntu/payflow/agentChat}:/data/agentChat
     depends_on:
       mysql:
         condition: service_healthy

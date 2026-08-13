@@ -47,6 +47,29 @@ export interface Message {
   toolCalls?: ToolCallInfo[]
   documentSummaries?: MessageDocumentSummary[]
   workflowExecution?: WorkflowMessageExecution
+  attachments?: MessageAttachment[]
+}
+
+/** 消息附件（上传落盘后的元数据） */
+export interface MessageAttachment {
+  id: string
+  filename: string
+  mimetype: string
+  size?: number
+  excerpt?: string | null
+  url?: string
+  createdAt?: string
+}
+
+/** Composer 待发送附件（含本地预览） */
+export interface PendingAttachment {
+  id: string
+  filename: string
+  mimetype: string
+  size: number
+  status: 'uploading' | 'done' | 'error'
+  error?: string
+  previewUrl?: string
 }
 
 export interface ToolCallInfo {
@@ -121,6 +144,7 @@ export interface ModelTurnResult {
   messageId: string
   assistantMessageId: string
   content: string
+  thinking?: string | null
   status: MessageStatus
   sessionTitle?: string
 }

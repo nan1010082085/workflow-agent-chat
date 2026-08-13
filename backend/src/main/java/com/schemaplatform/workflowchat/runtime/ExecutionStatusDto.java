@@ -1,6 +1,5 @@
 package com.schemaplatform.workflowchat.runtime;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
 import java.util.List;
 
@@ -12,6 +11,7 @@ public record ExecutionStatusDto(
     String executionId,
     RunStatusDto status,
     String output,
+    String thinking,
     String errorMessage,
     WaitingPayloadDto waiting,
     List<NodeTimelineDto> nodes,

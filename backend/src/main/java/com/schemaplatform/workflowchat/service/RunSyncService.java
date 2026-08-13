@@ -97,19 +97,19 @@ public class RunSyncService {
     switch (status.status()) {
       case COMPLETED -> {
         run.markCompleted();
-        updateAssistantMessage(run, status.output(), MessageStatus.COMPLETED);
+        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.COMPLETED);
       }
       case FAILED -> {
         run.markFailed(status.errorMessage());
-        updateAssistantMessage(run, status.errorMessage(), MessageStatus.FAILED);
+        updateAssistantMessage(run, status.errorMessage(), null, MessageStatus.FAILED);
       }
       case WAITING_INPUT -> {
         run.markWaiting();
-        updateAssistantMessage(run, null, MessageStatus.WAITING_INPUT);
+        updateAssistantMessage(run, null, null, MessageStatus.WAITING_INPUT);
       }
       case CANCELLED -> {
         run.markCancelled();
-        updateAssistantMessage(run, null, MessageStatus.CANCELLED);
+        updateAssistantMessage(run, null, null, MessageStatus.CANCELLED);
       }
       case RUNNING -> {
         // 继续等待
@@ -118,11 +118,11 @@ public class RunSyncService {
     }
   }
 
-  private void updateAssistantMessage(ChatRun run, String content, MessageStatus status) {
+  private void updateAssistantMessage(ChatRun run, String content, String thinking, MessageStatus status) {
     ChatMessage placeholder = messageService.findAssistantByExecutionId(run.getRuntimeExecutionId());
     if (placeholder != null) {
       if (content != null) {
-        messageService.updateAssistantResult(placeholder.getId(), content, status);
+        messageService.updateAssistantResult(placeholder.getId(), content, thinking, status);
       } else {
         messageService.updateMessageStatus(placeholder.getId(), status);
       }

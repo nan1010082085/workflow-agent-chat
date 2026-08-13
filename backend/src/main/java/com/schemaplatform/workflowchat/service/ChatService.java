@@ -1,5 +1,6 @@
 package com.schemaplatform.workflowchat.service;
 
+import com.schemaplatform.workflowchat.domain.ChatAttachment;
 import com.schemaplatform.workflowchat.domain.ChatMessage;
 import com.schemaplatform.workflowchat.domain.ChatRun;
 import com.schemaplatform.workflowchat.domain.ChatSession;
@@ -35,16 +36,18 @@ public class ChatService {
   private final AgentCatalogService agentCatalogService;
   private final RuntimeAdapter runtimeAdapter;
   private final ModelAdapter modelAdapter;
+  private final UploadService uploadService;
 
   public ChatService(SessionService sessionService, MessageService messageService,
       RunService runService, AgentCatalogService agentCatalogService,
-      RuntimeAdapter runtimeAdapter, ModelAdapter modelAdapter) {
+      RuntimeAdapter runtimeAdapter, ModelAdapter modelAdapter, UploadService uploadService) {
     this.sessionService = sessionService;
     this.messageService = messageService;
     this.runService = runService;
     this.agentCatalogService = agentCatalogService;
     this.runtimeAdapter = runtimeAdapter;
     this.modelAdapter = modelAdapter;
+    this.uploadService = uploadService;
   }
 
   /**
@@ -52,51 +55,48 @@ public class ChatService {
    * 返回 messageId/runId/status 给前端立即渲染。
    */
   @Transactional
-  public SendMessageResult sendMessage(String sessionId, String agentId, String content) {
+  public SendMessageResult sendMessage(
+      String sessionId, String agentId, String content, List<String> attachmentIds) {
     ChatSession session = sessionService.getSession(sessionId);
     AgentDto agent = agentCatalogService.getAgent(agentId);
 
-    // B-01：session-agent 绑定校验
     if (session.getAgentId() == null || session.getAgentId().isBlank()) {
-      // 新会话首次发送：绑定助手并快照名称
       session.setAgentId(agent.id());
       session.setAgentNameSnapshot(agent.name());
     } else if (!session.getAgentId().equals(agent.id())) {
-      // 已绑定助手，不允许跨助手续聊
       throw new IllegalStateException(
           "该对话已绑定助手「" + session.getAgentNameSnapshot() + "」，请创建新对话使用其他助手");
     }
 
-    // B-06：幂等/串行校验——一个会话同时只允许一个进行中的任务
     if (runService.hasActiveRun(sessionId)) {
       throw new IllegalStateException("当前对话有任务正在处理，请等待完成后再发送");
     }
     sessionService.save(session);
 
-    // 1. 落 user message
+    String normalized = normalizeContent(content, attachmentIds);
     boolean firstMessage = messageService.countMessages(sessionId) == 0;
-    ChatMessage userMsg = messageService.saveUserMessage(sessionId, content);
+    ChatMessage userMsg = messageService.saveUserMessage(sessionId, normalized);
+    List<ChatAttachment> attachments =
+        uploadService.bindToMessage(userMsg.getId(), sessionId, attachmentIds);
+    String runtimeInput = normalized + UploadService.formatAttachmentContext(attachments);
+
     if (firstMessage) {
-      session = sessionService.applyAutoTitleIfNeeded(sessionId, content);
+      session = sessionService.applyAutoTitleIfNeeded(sessionId, normalized);
     }
 
-    // 2. 调 Runtime invoke
     String idempotencyKey = UUID.randomUUID().toString();
     RuntimeAdapter.InvokeResult invokeResult;
     try {
       invokeResult = runtimeAdapter.invoke(new RuntimeAdapter.InvokeRequest(
-          agent.slug(), content, session.getTenantId(), session.getUserId(),
+          agent.slug(), runtimeInput, session.getTenantId(), session.getUserId(),
           sessionId, idempotencyKey));
     } catch (Exception e) {
-      // invoke 失败，事务回滚 user message，不产生幽灵消息
       throw e;
     }
 
-    // 3. 落 run + assistant placeholder
     ChatRun run = runService.startRun(sessionId, agentId, invokeResult.runtimeExecutionId());
     ChatMessage placeholder = messageService.saveAssistantPlaceholder(sessionId, invokeResult.runtimeExecutionId());
 
-    // 4. 同步初始状态（HITL 可能立即 waiting）
     MessageStatus initialMsgStatus = mapToMessageStatus(invokeResult.initialStatus());
     if (initialMsgStatus != MessageStatus.RUNNING) {
       messageService.updateMessageStatus(placeholder.getId(), initialMsgStatus);
@@ -106,11 +106,11 @@ public class ChatService {
       }
     }
 
-    // 5. touch session
     sessionService.touch(sessionId);
 
-    log.info("消息发送闭环完成 session={} agent={} run={} execution={} status={}",
-        sessionId, agentId, run.getId(), invokeResult.runtimeExecutionId(), invokeResult.initialStatus());
+    log.info("消息发送闭环完成 session={} agent={} run={} execution={} status={} attachments={}",
+        sessionId, agentId, run.getId(), invokeResult.runtimeExecutionId(),
+        invokeResult.initialStatus(), attachments.size());
 
     return new SendMessageResult(userMsg.getId(), placeholder.getId(), run.getId(),
         invokeResult.runtimeExecutionId(), initialMsgStatus, session.getTitle());
@@ -120,31 +120,46 @@ public class ChatService {
    * 基础模型对话：落库 user/assistant，并在首条消息时自动生成标题。
    */
   @Transactional
-  public ModelTurnResult completeModelTurn(String sessionId, String modelId, String content) {
+  public ModelTurnResult completeModelTurn(
+      String sessionId, String modelId, String content, List<String> attachmentIds) {
     ChatSession session = sessionService.getSession(sessionId);
     if (session.getAgentId() != null && !session.getAgentId().isBlank()) {
       throw new IllegalStateException(
           "该对话已绑定助手「" + session.getAgentNameSnapshot() + "」，请新建对话使用基础模型");
     }
 
+    String normalized = normalizeContent(content, attachmentIds);
     List<ChatMessage> history = messageService.listMessages(sessionId);
     boolean firstMessage = history.isEmpty();
-    ChatMessage userMsg = messageService.saveUserMessage(sessionId, content);
+    ChatMessage userMsg = messageService.saveUserMessage(sessionId, normalized);
+    List<ChatAttachment> attachments =
+        uploadService.bindToMessage(userMsg.getId(), sessionId, attachmentIds);
+    String userPayload = normalized + UploadService.formatAttachmentContext(attachments);
+
     if (firstMessage) {
-      session = sessionService.applyAutoTitleIfNeeded(sessionId, content);
+      session = sessionService.applyAutoTitleIfNeeded(sessionId, normalized);
     }
 
     List<ModelAdapter.Message> llmMessages = new ArrayList<>();
     for (ChatMessage m : history) {
       if (m.getContent() == null || m.getContent().isBlank()) continue;
-      llmMessages.add(new ModelAdapter.Message(m.getRole().name().toLowerCase(), m.getContent()));
+      String hist = m.getContent();
+      if (m.getRole() == ChatMessage.MessageRole.USER) {
+        List<ChatAttachment> histAtt = uploadService.listByMessage(m.getId());
+        hist = hist + UploadService.formatAttachmentContext(histAtt);
+      }
+      llmMessages.add(new ModelAdapter.Message(m.getRole().name().toLowerCase(), hist));
     }
-    llmMessages.add(new ModelAdapter.Message("user", content));
+    llmMessages.add(new ModelAdapter.Message("user", userPayload));
 
     String reply;
+    String thinking = null;
     MessageStatus status = MessageStatus.COMPLETED;
     try {
-      reply = modelAdapter.complete(TenantContext.tenantId(), modelId, llmMessages);
+      ModelAdapter.CompletionResult result =
+          modelAdapter.complete(TenantContext.tenantId(), modelId, llmMessages);
+      reply = result.content();
+      thinking = result.thinking();
       if (reply == null || reply.isBlank()) {
         reply = "（模型返回了空内容）";
       }
@@ -154,12 +169,24 @@ public class ChatService {
       status = MessageStatus.FAILED;
     }
 
-    ChatMessage assistant = messageService.saveAssistantResult(sessionId, reply, status);
+    ChatMessage assistant = messageService.saveAssistantResult(sessionId, reply, thinking, status);
     sessionService.touch(sessionId);
     session = sessionService.getSession(sessionId);
 
     return new ModelTurnResult(
-        userMsg.getId(), assistant.getId(), reply, status, session.getTitle());
+        userMsg.getId(), assistant.getId(), reply, thinking, status, session.getTitle());
+  }
+
+  private static String normalizeContent(String content, List<String> attachmentIds) {
+    String text = content == null ? "" : content.trim();
+    boolean hasFiles = attachmentIds != null && !attachmentIds.isEmpty();
+    if (text.isEmpty() && !hasFiles) {
+      throw new IllegalArgumentException("请输入消息或添加附件");
+    }
+    if (text.isEmpty()) {
+      return "（见附件）";
+    }
+    return text;
   }
 
   private MessageStatus mapToMessageStatus(ExecutionStatusDto.RunStatusDto runtimeStatus) {
@@ -187,6 +214,7 @@ public class ChatService {
       String messageId,
       String assistantMessageId,
       String content,
+      String thinking,
       MessageStatus status,
       String sessionTitle
   ) {}

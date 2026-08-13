@@ -3,6 +3,7 @@ package com.schemaplatform.workflowchat.controller;
 import com.schemaplatform.workflowchat.domain.ChatMessage;
 import com.schemaplatform.workflowchat.service.ChatService;
 import com.schemaplatform.workflowchat.service.MessageService;
+import com.schemaplatform.workflowchat.service.UploadService;
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.List;
@@ -24,43 +25,77 @@ public class MessageController {
 
   private final MessageService messageService;
   private final ChatService chatService;
+  private final UploadService uploadService;
 
-  public MessageController(MessageService messageService, ChatService chatService) {
+  public MessageController(MessageService messageService, ChatService chatService,
+      UploadService uploadService) {
     this.messageService = messageService;
     this.chatService = chatService;
+    this.uploadService = uploadService;
   }
 
   @GetMapping("/{sessionId}/messages")
   public List<MessageDto> listMessages(@PathVariable String sessionId) {
     return messageService.listMessages(sessionId).stream()
-        .map(MessageDto::from).toList();
+        .map(this::toDto).toList();
   }
 
   @PostMapping("/{sessionId}/messages")
   public ChatService.SendMessageResult sendMessage(
       @PathVariable String sessionId,
       @RequestBody SendMessageRequest request) {
-    return chatService.sendMessage(sessionId, request.agentId(), request.content());
+    return chatService.sendMessage(
+        sessionId, request.agentId(), request.content(), request.attachmentIds());
   }
 
   @PostMapping("/{sessionId}/completions")
   public ChatService.ModelTurnResult completeModelTurn(
       @PathVariable String sessionId,
       @RequestBody ModelTurnRequest request) {
-    return chatService.completeModelTurn(sessionId, request.modelId(), request.content());
+    return chatService.completeModelTurn(
+        sessionId, request.modelId(), request.content(), request.attachmentIds());
   }
 
-  public record SendMessageRequest(@NotBlank String agentId, @NotBlank String content) {}
+  private MessageDto toDto(ChatMessage m) {
+    List<UploadController.AttachmentDto> attachments = uploadService.listByMessage(m.getId())
+        .stream()
+        .map(UploadController.AttachmentDto::from)
+        .toList();
+    return MessageDto.from(m, attachments);
+  }
 
-  public record ModelTurnRequest(@NotBlank String modelId, @NotBlank String content) {}
+  public record SendMessageRequest(
+      @NotBlank String agentId,
+      String content,
+      List<String> attachmentIds
+  ) {}
+
+  public record ModelTurnRequest(
+      @NotBlank String modelId,
+      String content,
+      List<String> attachmentIds
+  ) {}
 
   public record MessageDto(
-      String id, String role, String content, String runtimeExecutionId,
-      String status, Instant createdAt
+      String id,
+      String role,
+      String content,
+      String thinking,
+      String runtimeExecutionId,
+      String status,
+      Instant createdAt,
+      List<UploadController.AttachmentDto> attachments
   ) {
-    static MessageDto from(ChatMessage m) {
-      return new MessageDto(m.getId(), m.getRole().name().toLowerCase(),
-          m.getContent(), m.getRuntimeExecutionId(), m.getStatus().name(), m.getCreatedAt());
+    static MessageDto from(ChatMessage m, List<UploadController.AttachmentDto> attachments) {
+      return new MessageDto(
+          m.getId(),
+          m.getRole().name().toLowerCase(),
+          m.getContent(),
+          m.getThinking(),
+          m.getRuntimeExecutionId(),
+          m.getStatus().name(),
+          m.getCreatedAt(),
+          attachments == null ? List.of() : attachments);
     }
   }
 }

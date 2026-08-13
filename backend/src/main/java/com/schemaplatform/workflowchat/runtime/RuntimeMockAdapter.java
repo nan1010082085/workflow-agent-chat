@@ -22,13 +22,13 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
   private static final List<AgentDto> MOCK_AGENTS = List.of(
       new AgentDto("expense-audit", "expense-audit", "报销审核",
           "审核报销材料并识别风险项，输出结构化结论", "📋",
-          List.of("text"), true, "1.0.0", "2026-08-10", true),
+          List.of("text", "file", "image"), true, "1.0.0", "2026-08-10", true),
       new AgentDto("document-summary", "document-summary", "文档摘要",
           "提取长文档中的重点结论与待办", "📄",
-          List.of("text"), false, "1.0.0", "2026-08-10", true),
+          List.of("text", "file", "document"), false, "1.0.0", "2026-08-10", true),
       new AgentDto("contract-check", "contract-check", "合同检查",
           "校验合同条款合规性与风险点", "📑",
-          List.of("text"), true, "1.0.0", "2026-08-11", true)
+          List.of("text", "file"), true, "1.0.0", "2026-08-11", true)
   );
 
   // 内存态执行记录，模拟 Runtime
@@ -59,12 +59,13 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
     MockExecution exec = executions.get(runtimeExecutionId);
     if (exec == null) {
       return new ExecutionStatusDto(runtimeExecutionId,
-          ExecutionStatusDto.RunStatusDto.UNKNOWN, null, "执行不存在: " + runtimeExecutionId,
+          ExecutionStatusDto.RunStatusDto.UNKNOWN, null, null, "执行不存在: " + runtimeExecutionId,
           null, List.of(), Instant.now(), null);
     }
     // 非 HITL 的 running 推进到 completed
     if (exec.status == ExecutionStatusDto.RunStatusDto.RUNNING) {
       exec.status = ExecutionStatusDto.RunStatusDto.COMPLETED;
+      exec.thinking = "1. 解析用户输入\n2. 匹配规则库\n3. 汇总结论（mock）";
       exec.output = "已根据输入「" + truncate(exec.input, 30) + "」完成任务。\n\n**执行摘要**\n- 解析输入材料\n- 匹配规则库\n- 生成结论\n\n结论：该任务正常完成。";
     }
     ExecutionStatusDto.WaitingPayloadDto waiting = null;
@@ -83,7 +84,7 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
       waiting = exec.waitingPayload;
     }
     return new ExecutionStatusDto(runtimeExecutionId, exec.status,
-        exec.output, exec.error, waiting, List.of(), exec.startedAt, exec.finishedAt);
+        exec.output, exec.thinking, exec.error, waiting, List.of(), exec.startedAt, exec.finishedAt);
   }
 
   @Override
@@ -99,6 +100,7 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
     } else {
       exec.status = ExecutionStatusDto.RunStatusDto.COMPLETED;
       exec.finishedAt = Instant.now();
+      exec.thinking = "用户已确认「" + request.action() + "」，继续生成最终结论（mock）。";
       exec.output = "已根据用户「" + request.action() + "」继续执行，任务已完成。\n\n**最终结论**\n审核通过，报销单合规。";
     }
     return getExecutionStatus(runtimeExecutionId, tenantId);
@@ -126,6 +128,7 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
     ExecutionStatusDto.RunStatusDto status;
     String input;
     String output;
+    String thinking;
     String error;
     ExecutionStatusDto.WaitingPayloadDto waitingPayload;
     final Instant startedAt;

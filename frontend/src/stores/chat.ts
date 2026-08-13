@@ -31,6 +31,7 @@ export const useChatStore = defineStore('chat', () => {
         status: m.status, createdAt: m.createdAt,
         thinking: m.thinking, tip: m.tip, toolCalls: m.toolCalls,
         documentSummaries: m.documentSummaries, workflowExecution: m.workflowExecution,
+        attachments: m.attachments || [],
       }))
       // 刷新恢复：若有未终结的 assistant 消息，恢复轮询
       const pending = messages.value.find(
@@ -51,15 +52,21 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendMessage(sessionId: string, agentId: string, content: string) {
+  async function sendMessage(
+    sessionId: string,
+    agentId: string,
+    content: string,
+    attachmentIds: string[] = [],
+  ) {
     sending.value = true
     error.value = null
     const tempUserId = 'temp-' + Date.now()
     const tempAssistantId = 'temp-a-' + Date.now()
     messages.value.push(
       {
-        id: tempUserId, role: 'user', content,
+        id: tempUserId, role: 'user', content: content || (attachmentIds.length ? '（见附件）' : ''),
         runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString(),
+        attachments: attachmentIds.map((id) => ({ id, filename: '附件', mimetype: 'application/octet-stream' })),
       },
       {
         id: tempAssistantId, role: 'assistant', content: '',
@@ -69,7 +76,11 @@ export const useChatStore = defineStore('chat', () => {
     const userIndex = messages.value.length - 2
     const assistantIndex = messages.value.length - 1
     try {
-      const result: SendMessageResult = await api.sendMessage(sessionId, { agentId, content })
+      const result: SendMessageResult = await api.sendMessage(sessionId, {
+        agentId,
+        content,
+        attachmentIds,
+      })
       const user = messages.value[userIndex]
       const assistant = messages.value[assistantIndex]
       if (user) user.id = result.messageId
@@ -78,18 +89,17 @@ export const useChatStore = defineStore('chat', () => {
         assistant.runtimeExecutionId = result.runtimeExecutionId
         assistant.status = result.status
       }
-      // F-07：runId 立即进入 store，建立 execId→runId 映射
       runIdByExec.value[result.runtimeExecutionId] = result.runId
-      // 启动轮询（用 runId）
       if (result.status === 'RUNNING' || result.status === 'WAITING_INPUT') {
         startPolling(result.runId)
       } else if (result.status === 'COMPLETED' || result.status === 'FAILED') {
         await fetchRun(result.runId)
       }
+      // 回拉消息以拿到完整附件元数据
+      await fetchMessages(sessionId)
       return result
     } catch (e: any) {
       error.value = e.message || '发送失败'
-      // 移除乐观占位，避免幽灵消息
       messages.value = messages.value.filter(
         (m) => m.id !== tempUserId && m.id !== tempAssistantId
       )
@@ -99,28 +109,40 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendModelMessage(sessionId: string, modelId: string, content: string) {
+  async function sendModelMessage(
+    sessionId: string,
+    modelId: string,
+    content: string,
+    attachmentIds: string[] = [],
+  ) {
     sending.value = true
     error.value = null
     const tempUserId = `model-u-${Date.now()}`
     const tempAssistantId = `model-a-${Date.now()}`
     messages.value.push(
-      { id: tempUserId, role: 'user', content, runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString() },
+      {
+        id: tempUserId, role: 'user',
+        content: content || (attachmentIds.length ? '（见附件）' : ''),
+        runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString(),
+        attachments: attachmentIds.map((id) => ({ id, filename: '附件', mimetype: 'application/octet-stream' })),
+      },
       { id: tempAssistantId, role: 'assistant', content: '', runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString() },
     )
     const userIndex = messages.value.length - 2
     const assistantIndex = messages.value.length - 1
     try {
-      const result = await api.completeInSession(sessionId, { modelId, content })
+      const result = await api.completeInSession(sessionId, { modelId, content, attachmentIds })
       const user = messages.value[userIndex]
       const assistant = messages.value[assistantIndex]
       if (user) user.id = result.messageId
       if (assistant) {
         assistant.id = result.assistantMessageId
         assistant.content = result.content || '（模型返回了空内容）'
+        assistant.thinking = result.thinking || undefined
         assistant.status = result.status || 'COMPLETED'
       }
-      return result as { sessionTitle?: string; content: string; status: string }
+      await fetchMessages(sessionId)
+      return result as { sessionTitle?: string; content: string; thinking?: string; status: string }
     } catch (e: any) {
       const assistant = messages.value[assistantIndex]
       if (assistant) {

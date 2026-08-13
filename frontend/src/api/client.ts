@@ -1,6 +1,8 @@
 // API client。基于 fetch，统一处理 base url、租户头、loading/error。
 // 后端地址通过 VITE_API_BASE_URL 配置；租户头 X-Tenant-Id / X-User-Id 在开发态注入。
 
+import type { MessageAttachment } from '../types'
+
 // Resolve API relative to the deployed Vite base path.
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
   || (import.meta.env.PROD ? `${import.meta.env.BASE_URL}api` : '/api')
@@ -14,13 +16,23 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * 附件内容 URL（带部署 base）。
+ */
+export function attachmentContentUrl(att: Pick<MessageAttachment, 'id' | 'url'>): string {
+  return `${BASE_URL}/chat/uploads/${att.id}/content`
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = path.startsWith('http') ? path : `${BASE_URL}${path}`
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     'X-Tenant-Id': TENANT_ID,
     'X-User-Id': USER_ID,
     ...(options.headers as Record<string, string> || {}),
+  }
+  // JSON 默认 Content-Type；FormData 交给浏览器设置 boundary
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
   }
   const res = await fetch(url, { ...options, headers })
   if (!res.ok) {
@@ -44,7 +56,10 @@ function userMessage(code: string, status: number): string {
     MODEL_UNAVAILABLE: '当前模型暂时不可用，请换一个模型',
     MODEL_RUNTIME_UNAVAILABLE: '当前模型暂时无法响应，请稍后重试',
     NETWORK_ERROR: '网络连接异常，请稍后重试',
+    RATE_LIMITED: '请求过于频繁，请稍后再试',
+    BAD_REQUEST: '请求无效，请检查文件或内容后重试',
   }
+  if (code === 'RATE_LIMITED' || status === 429) return messages.RATE_LIMITED
   return messages[code] || (status >= 500 ? '服务暂时不可用，请稍后重试' : '请求未完成，请稍后重试')
 }
 
@@ -52,24 +67,30 @@ export const api = {
   listModels: () => request<{ items: any[]; defaultModelId: string | null }>('/chat/models'),
   complete: (data: { modelId: string; messages: Array<{ role: string; content: string }> }) =>
     request<{ modelId: string; content: string }>('/chat/models/completions', { method: 'POST', body: JSON.stringify(data) }),
-  // agents
   listAgents: () => request<any[]>('/chat/agents'),
 
-  // sessions
   listSessions: () => request<any[]>('/chat/sessions'),
   createSession: (data: { title?: string; agentId?: string; agentName?: string }) =>
     request<any>('/chat/sessions', { method: 'POST', body: JSON.stringify(data) }),
   updateSessionTitle: (sessionId: string, title: string) =>
     request<any>(`/chat/sessions/${sessionId}/title`, { method: 'PATCH', body: JSON.stringify({ title }) }),
 
-  // messages
   listMessages: (sessionId: string) => request<any[]>(`/chat/sessions/${sessionId}/messages`),
-  sendMessage: (sessionId: string, data: { agentId: string; content: string }) =>
+  sendMessage: (sessionId: string, data: { agentId: string; content: string; attachmentIds?: string[] }) =>
     request<any>(`/chat/sessions/${sessionId}/messages`, { method: 'POST', body: JSON.stringify(data) }),
-  completeInSession: (sessionId: string, data: { modelId: string; content: string }) =>
+  completeInSession: (sessionId: string, data: { modelId: string; content: string; attachmentIds?: string[] }) =>
     request<any>(`/chat/sessions/${sessionId}/completions`, { method: 'POST', body: JSON.stringify(data) }),
 
-  // runs
+  /**
+   * 上传附件到服务器（存盘路径由后端 CHAT_UPLOAD_ROOT 决定）。
+   */
+  uploadFile: async (file: File, sessionId?: string): Promise<MessageAttachment> => {
+    const fd = new FormData()
+    fd.append('file', file)
+    if (sessionId) fd.append('sessionId', sessionId)
+    return request<MessageAttachment>('/chat/uploads', { method: 'POST', body: fd })
+  },
+
   getRun: (runId: string) => request<any>(`/chat/runs/${runId}`),
   resumeRun: (runId: string, data: { action: string; payload?: string }) =>
     request<any>(`/chat/runs/${runId}/resume`, { method: 'POST', body: JSON.stringify(data) }),

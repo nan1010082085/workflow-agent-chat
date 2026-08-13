@@ -212,12 +212,34 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     if (executionId.isBlank()) executionId = text(data, "id");
     ExecutionStatusDto.RunStatusDto status = mapStatus(text(data, "status").toLowerCase());
     String output = asText(data, "output");
+    String thinking = firstNonBlank(
+        asText(data, "thinking"),
+        asText(data, "reasoning"),
+        asText(data, "reasoningContent"));
+    ThinkingExtractor.Split split = ThinkingExtractor.splitEmbedded(output == null ? "" : output);
+    if ((thinking == null || thinking.isBlank()) && !split.thinking().isBlank()) {
+      thinking = split.thinking();
+      output = split.content();
+    }
     String errorMessage = text(data, "error");
     ExecutionStatusDto.WaitingPayloadDto waiting = parseWaiting(data.get("waiting"));
     List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(data.get("nodes"));
     Instant startedAt = parseInstant(data, "startedAt");
     Instant finishedAt = parseInstant(data, "finishedAt");
-    return new ExecutionStatusDto(executionId, status, output, errorMessage, waiting, nodes, startedAt, finishedAt);
+    return new ExecutionStatusDto(
+        executionId, status, output, blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt);
+  }
+
+  private static String firstNonBlank(String... values) {
+    if (values == null) return null;
+    for (String v : values) {
+      if (v != null && !v.isBlank()) return v;
+    }
+    return null;
+  }
+
+  private static String blankToNull(String value) {
+    return value == null || value.isBlank() ? null : value;
   }
 
   private ExecutionStatusDto.WaitingPayloadDto parseWaiting(JsonNode waiting) {

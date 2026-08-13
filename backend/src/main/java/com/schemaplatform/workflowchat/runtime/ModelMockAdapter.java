@@ -25,7 +25,7 @@ public class ModelMockAdapter implements ModelAdapter {
   }
 
   @Override
-  public String complete(String tenantId, String modelId, List<Message> messages) {
+  public CompletionResult complete(String tenantId, String modelId, List<Message> messages) {
     String lastUser = "";
     if (messages != null) {
       for (int i = messages.size() - 1; i >= 0; i--) {
@@ -38,9 +38,17 @@ public class ModelMockAdapter implements ModelAdapter {
     }
     log.info("[MOCK] complete tenant={} model={} promptLen={}", tenantId, modelId, lastUser.length());
     if (lastUser.isEmpty()) {
-      return "你好，我是本地联调模型。请输入一条消息试试。";
+      return new CompletionResult(
+          "你好，我是本地联调模型。请输入一条消息试试。",
+          "确认用户尚未提供具体任务，先给出引导回复。");
     }
     String snippet = lastUser.length() > 80 ? lastUser.substring(0, 80) + "…" : lastUser;
-    return "（模拟回复）已收到：「" + snippet + "」。这是 Workflow Agent Chat 的本地 mock 模型响应。";
+    String thinking = """
+        1. 读取用户输入：「%s」
+        2. 判断为普通对话请求
+        3. 生成简短确认回复（mock）
+        """.formatted(snippet).trim();
+    String content = "（模拟回复）已收到：「" + snippet + "」。这是 Workflow Agent Chat 的本地 mock 模型响应。";
+    return new CompletionResult(content, thinking);
   }
 }

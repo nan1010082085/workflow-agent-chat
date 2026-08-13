@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * 全局异常处理。统一出口，避免堆栈泄露。
@@ -58,6 +59,19 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
         .body(ErrorResponse.of("RUNTIME_UNAVAILABLE",
             "助手服务暂不可用，请稍后重试或联系管理员"));
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<ErrorResponse> handleMaxUpload(MaxUploadSizeExceededException ex) {
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        .body(ErrorResponse.of("FILE_TOO_LARGE", "文件过大，请压缩后重试"));
+  }
+
+  @ExceptionHandler(RateLimitExceededException.class)
+  public ResponseEntity<ErrorResponse> handleRateLimit(RateLimitExceededException ex) {
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        .header("Retry-After", "60")
+        .body(ErrorResponse.of("RATE_LIMITED", ex.getMessage()));
   }
 
   @ExceptionHandler(RuntimeException.class)

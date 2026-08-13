@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { Message, RunStatusView, WaitingPayload } from '../types'
 import MessageParts from './message/MessageParts.vue'
 import DocumentSummaryList from './message/DocumentSummaryList.vue'
+import MessageAttachmentList from './message/MessageAttachmentList.vue'
 
 const props = defineProps<{
   message: Message
@@ -13,6 +14,7 @@ const emit = defineEmits<{
   (e: 'resume', action: string, payload?: string): void
   (e: 'cancel'): void
   (e: 'retry'): void
+  (e: 'open-process'): void
 }>()
 
 const isUser = computed(() => props.message.role === 'user')
@@ -39,6 +41,12 @@ const waiting = computed<WaitingPayload | null>(() => {
   return props.run?.waiting || null
 })
 
+const hasProcessMeta = computed(() =>
+  Boolean(props.message.thinking)
+    || Boolean(props.message.toolCalls?.length)
+    || Boolean(props.message.workflowExecution),
+)
+
 let inputValue = ''
 function onInput(e: Event) { inputValue = (e.target as HTMLTextAreaElement).value }
 function submit(action: string) {
@@ -51,7 +59,9 @@ const showTyping = computed(() =>
 )
 
 const showContent = computed(() =>
-  Boolean(props.message.content) || Boolean(props.message.documentSummaries?.length),
+  Boolean(props.message.content)
+    || Boolean(props.message.documentSummaries?.length)
+    || Boolean(props.message.attachments?.length),
 )
 
 const showWaitingHint = computed(() =>
@@ -69,11 +79,30 @@ const showCancelledHint = computed(() =>
 function copyContent() {
   if (props.message.content) navigator.clipboard?.writeText(props.message.content)
 }
+
+/**
+ * 下载整段助手正文。
+ */
+function downloadContent() {
+  if (!props.message.content) return
+  const blob = new Blob([props.message.content], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'reply.md'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
+  if (tool.error) return '失败'
+  if (tool.result !== undefined) return '已完成'
+  return '处理中'
+}
 </script>
 
 <template>
   <div class="message" :class="message.role">
-    <!-- 仅助手保留左侧标识；用户消息不再显示右侧头像 -->
     <span v-if="isAssistant" class="avatar" aria-hidden="true">
       <svg viewBox="0 0 16 16" width="14" height="14">
         <path
@@ -83,15 +112,19 @@ function copyContent() {
       </svg>
     </span>
     <div class="bubble-wrap">
-      <!-- 处理中 -->
+      <p v-if="isAssistant && message.tip" class="tip">{{ message.tip }}</p>
+
       <div v-if="showTyping" class="typing">
         <span class="status-text">正在处理</span>
         <span class="dots"><i></i><i></i><i></i></span>
       </div>
 
-      <!-- 正文（用户 / 助手结果） -->
       <div v-else-if="showContent" class="result-wrap">
-        <div class="bubble message-content">
+        <div class="bubble message-content" :class="{ user: isUser }">
+          <MessageAttachmentList
+            v-if="message.attachments?.length"
+            :attachments="message.attachments"
+          />
           <MessageParts v-if="message.content" :content="message.content" />
           <DocumentSummaryList
             v-if="message.documentSummaries?.length"
@@ -99,13 +132,23 @@ function copyContent() {
           />
         </div>
         <div v-if="isAssistant && message.status === 'COMPLETED'" class="result-actions">
-          <el-tooltip content="复制" placement="top" :show-after="200">
+          <el-tooltip content="复制全文" placement="top" :show-after="200">
             <button class="icon-btn" type="button" aria-label="复制" @click="copyContent">
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4" />
                 <path d="M3.5 10.5V3.5h7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
               </svg>
             </button>
+          </el-tooltip>
+          <el-tooltip content="下载" placement="top" :show-after="200">
+            <button class="icon-btn" type="button" aria-label="下载" @click="downloadContent">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="M8 2.5v7.2M5.2 7.5 8 10.3l2.8-2.8M3.5 13h9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </el-tooltip>
+          <el-tooltip v-if="hasProcessMeta" content="处理信息" placement="top" :show-after="200">
+            <button class="text-link" type="button" @click="emit('open-process')">处理信息</button>
           </el-tooltip>
         </div>
         <div v-if="isAssistant && message.status === 'FAILED'" class="fail-actions">
@@ -130,7 +173,6 @@ function copyContent() {
         </div>
       </div>
 
-      <!-- 无正文时的状态提示（独立分支，避免 v-else-if 链被 details 打断） -->
       <div v-else-if="showWaitingHint" class="bubble waiting-hint">
         智能体正在等待你的确认，请在下方操作。
       </div>
@@ -159,6 +201,7 @@ function copyContent() {
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
+      <!-- 过程信息默认折叠，避免淹没结果 -->
       <details v-if="isAssistant && message.thinking" class="detail-block">
         <summary>思考过程</summary>
         <div class="detail-content">{{ message.thinking }}</div>
@@ -167,11 +210,20 @@ function copyContent() {
         <summary>处理步骤（{{ message.toolCalls.length }}）</summary>
         <div v-for="tool in message.toolCalls" :key="tool.id || tool.name" class="tool-row">
           <strong>{{ tool.name }}</strong>
-          <span>{{ tool.error ? '失败' : tool.result !== undefined ? '已完成' : '处理中' }}</span>
+          <span :class="{ err: Boolean(tool.error) }">{{ toolStatus(tool) }}</span>
+        </div>
+      </details>
+      <details v-if="isAssistant && message.workflowExecution" class="detail-block">
+        <summary>处理摘要 · {{ message.workflowExecution.status }}</summary>
+        <div class="detail-content">
+          <div>{{ message.workflowExecution.workflowName || '任务处理' }}</div>
+          <div v-if="message.workflowExecution.durationMs != null">
+            耗时 {{ Math.round(message.workflowExecution.durationMs / 1000) }} 秒
+          </div>
+          <div v-if="message.workflowExecution.error" class="err">{{ message.workflowExecution.error }}</div>
         </div>
       </details>
 
-      <!-- 状态标记 -->
       <span
         v-if="isAssistant && message.status !== 'COMPLETED' && message.status !== 'CANCELLED'"
         class="chip"
@@ -183,7 +235,6 @@ function copyContent() {
         <i></i>已完成
       </span>
 
-      <!-- inline approval -->
       <div v-if="waiting" class="inline-approval" :class="{ dangerous: waiting.dangerous }">
         <div class="approval-head">
           <span class="title">需要你的确认</span>
@@ -219,7 +270,7 @@ function copyContent() {
 </template>
 
 <style scoped>
-.message { display: flex; gap: 12px; max-width: 860px; margin: 0 auto 20px; align-items: flex-start; }
+.message { display: flex; gap: 12px; max-width: 900px; margin: 0 auto 22px; align-items: flex-start; }
 .message.user { justify-content: flex-end; }
 .avatar {
   flex: none;
@@ -227,49 +278,85 @@ function copyContent() {
   place-items: center;
   width: 28px;
   height: 28px;
+  margin-top: 2px;
   color: #fff;
   background: var(--c-accent);
   border-radius: 8px;
 }
-.bubble-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 720px; min-width: 0; }
+.bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 760px; min-width: 0; }
 .message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
 .result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
 .message.user .result-wrap { align-items: flex-end; }
+.tip {
+  margin: 0;
+  padding: 0 2px;
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
 .bubble {
   margin: 0;
-  padding: 10px 14px;
+  padding: 12px 16px;
   width: fit-content;
   max-width: 100%;
-  line-height: 1.65;
+  line-height: 1.7;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  border-radius: var(--radius);
+  border-radius: 14px;
   word-break: break-word;
+  box-shadow: 0 1px 2px rgba(20, 40, 40, .04);
 }
-.bubble :deep(p) { margin: 0 0 0.45em; }
-.bubble :deep(p:last-child) { margin-bottom: 0; }
-.bubble :deep(code) { background: #eef2f2; padding: 1px 5px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, monospace; }
-.bubble :deep(pre) { background: #1e2a33; color: #e8efef; padding: 12px; border-radius: var(--radius); overflow-x: auto; margin: 8px 0; }
-.bubble :deep(pre code) { background: transparent; color: inherit; padding: 0; }
-.bubble :deep(ul),
-.bubble :deep(ol) { margin: 8px 0; padding-left: 1.25em; }
-.bubble :deep(li) { margin: 2px 0; }
-.bubble :deep(h1),
-.bubble :deep(h2),
-.bubble :deep(h3) { margin: 10px 0 6px; line-height: 1.35; font-weight: 700; }
-.bubble :deep(h1) { font-size: 1.2em; }
-.bubble :deep(h2) { font-size: 1.1em; }
-.bubble :deep(h3) { font-size: 1.05em; }
+.bubble.user {
+  background: #e8f3f2;
+  border-color: #cfe3e1;
+}
 .message-content > :first-child { margin-top: 0; }
 .message-content > :last-child { margin-bottom: 0; }
-.detail-block { color: var(--c-text-muted); font-size: 12px; }
-.detail-block summary { cursor: pointer; }
-.detail-content { margin-top: 6px; padding: 8px 10px; background: var(--c-bg); white-space: pre-wrap; line-height: 1.5; }
+.detail-block {
+  max-width: 100%;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  border: 1px solid var(--c-border-soft, var(--c-border));
+  border-radius: 10px;
+  background: rgba(255,255,255,.55);
+  padding: 2px 10px 8px;
+}
+.detail-block summary {
+  cursor: pointer;
+  padding: 6px 0;
+  list-style: none;
+  font-weight: 600;
+}
+.detail-block summary::-webkit-details-marker { display: none; }
+.detail-block summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform .15s ease;
+}
+.detail-block[open] summary::before { transform: rotate(90deg); }
+.detail-content {
+  margin-top: 2px;
+  padding: 8px 10px;
+  background: var(--c-bg);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  color: var(--c-text-secondary);
+}
 .tool-row { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; }
+.err { color: var(--c-danger); }
 .waiting-hint { color: var(--c-warning); background: #fdf2df; border-color: #f0d9a8; }
 .failed-hint { color: var(--c-danger); background: var(--c-danger-soft); border-color: #f0c4be; }
 .cancelled-hint { color: var(--c-text-muted); background: #eef2f2; border-color: var(--c-border); }
-.typing { display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+}
 .status-text { font-size: 13px; color: var(--c-text-muted); }
 .dots { display: inline-flex; gap: 4px; }
 .dots i { width: 6px; height: 6px; background: var(--c-running); border-radius: 50%; animation: blink 1.4s infinite both; }
@@ -277,6 +364,16 @@ function copyContent() {
 .dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
 .result-actions, .fail-actions { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.text-link {
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.text-link:hover { color: var(--c-primary); background: var(--c-primary-soft); }
 .icon-btn {
   display: inline-grid;
   place-items: center;
@@ -290,7 +387,14 @@ function copyContent() {
   cursor: pointer;
 }
 .icon-btn:hover { color: var(--c-primary); background: var(--c-primary-soft); }
-.inline-approval { margin-top: 8px; padding: 14px; background: var(--c-surface); border: 1px solid var(--c-border); border-left: 3px solid var(--c-primary); border-radius: var(--radius); }
+.inline-approval {
+  margin-top: 4px;
+  padding: 14px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-primary);
+  border-radius: var(--radius);
+}
 .inline-approval.dangerous { border-left-color: var(--c-danger); background: var(--c-danger-soft); }
 .approval-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .title { font-weight: 700; font-size: 13px; }
@@ -298,6 +402,33 @@ function copyContent() {
 .prompt { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--c-text-secondary); }
 .field { margin-bottom: 8px; }
 .field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 3px; }
-.field input, .field textarea { display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--c-border); border-radius: var(--radius); font-size: 13px; outline: none; background: var(--c-surface); }
+.field input, .field textarea {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  outline: none;
+  background: var(--c-surface);
+}
 .actions { display: flex; gap: 8px; justify-content: flex-end; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #eef2f2;
+  color: var(--c-text-secondary);
+}
+.chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip-running { color: var(--c-running); background: #e8f4ff; }
+.chip-waiting { color: var(--c-warning); background: #fdf2df; }
+.chip-success { color: var(--c-primary); background: var(--c-primary-soft); }
+.chip-failed { color: var(--c-danger); background: var(--c-danger-soft); }
+.chip-cancelled { color: var(--c-text-muted); }
 </style>

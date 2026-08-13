@@ -12,6 +12,7 @@ const emit = defineEmits<{
   (e: 'resume', action: string, payload?: string): void
   (e: 'cancel'): void
   (e: 'retry'): void
+  (e: 'open-process', message: Message): void
 }>()
 const container = ref<HTMLElement | null>(null)
 
@@ -43,6 +44,7 @@ function runForMessage(m: Message): RunStatusView | null {
         @resume="(a, p) => emit('resume', a, p)"
         @cancel="emit('cancel')"
         @retry="emit('retry')"
+        @open-process="emit('open-process', m)"
       />
     </template>
   </div>
