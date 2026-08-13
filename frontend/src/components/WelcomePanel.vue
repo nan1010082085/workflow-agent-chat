@@ -29,7 +29,7 @@ const emit = defineEmits<{ select: [agent: Agent]; useGeneralChat: [] }>()
 </template>
 
 <style scoped>
-.welcome-panel { width: min(680px, calc(100% - 48px)); margin: 0 auto; padding: clamp(42px, 9vh, 92px) 0 28px; }
+.welcome-panel { flex: 1; overflow-y: auto; width: min(680px, calc(100% - 48px)); margin: 0 auto; padding: clamp(34px, 7vh, 72px) 0 28px; }
 .welcome-intro { max-width: 520px; margin-bottom: 34px; }
 .welcome-mark { display: block; margin-bottom: 18px; color: var(--c-accent); font-size: 28px; }
 .welcome-kicker { margin: 0 0 9px; color: var(--c-primary); font-size: 12px; font-weight: 700; letter-spacing: .04em; }

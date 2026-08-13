@@ -35,7 +35,7 @@ function onEnter(e: KeyboardEvent) {
     <textarea
       ref="textareaRef"
       v-model="input"
-      :placeholder="agentSelected ? '描述你想完成的任务...' : '请先选择一个 Agent'"
+      :placeholder="agentSelected ? '描述你想完成的任务...' : '先说说你想完成什么，我们会帮你找到合适的助手'"
       :disabled="disabled"
       @input="autoResize"
       @keydown="onEnter"
@@ -46,7 +46,8 @@ function onEnter(e: KeyboardEvent) {
 </template>
 
 <style scoped>
-.composer { position: relative; margin: 0 40px 24px; max-width: 920px; }
+.composer { position: relative; flex: none; width: min(720px, calc(100% - 48px)); margin: 0 auto 20px; padding-top: 14px; }
+.composer::before { content: ''; position: absolute; top: 0; left: 50%; width: 100vw; height: 1px; transform: translateX(-50%); background: var(--c-border); }
 textarea { display: block; width: 100%; min-height: 48px; max-height: 160px; resize: none; padding: 14px 54px 26px 16px; border: 1px solid var(--c-border); border-radius: var(--radius-lg); outline: none; background: var(--c-surface); line-height: 1.5; font-size: 14px; }
 textarea:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(13, 107, 103, .12); }
 textarea:disabled { background: #f4f6f6; color: var(--c-text-muted); }

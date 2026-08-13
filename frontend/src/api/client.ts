@@ -1,7 +1,9 @@
 // API client。基于 fetch，统一处理 base url、租户头、loading/error。
 // 后端地址通过 VITE_API_BASE_URL 配置；租户头 X-Tenant-Id / X-User-Id 在开发态注入。
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+// Resolve API relative to the deployed Vite base path.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  || (import.meta.env.PROD ? `${import.meta.env.BASE_URL}api` : '/api')
 const TENANT_ID = import.meta.env.VITE_TENANT_ID || 'dev-tenant'
 const USER_ID = import.meta.env.VITE_USER_ID || 'dev-user'
 
@@ -29,6 +31,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new ApiError(code, message, body?.details)
   }
   if (res.status === 204) return null as T
+  if (!(res.headers.get('content-type') || '').includes('application/json')) {
+    throw new ApiError('INVALID_API_RESPONSE', '接口地址配置错误，服务返回了网页而不是 JSON')
+  }
   return res.json() as Promise<T>
 }
 

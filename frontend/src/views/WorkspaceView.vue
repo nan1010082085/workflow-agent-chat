@@ -19,6 +19,7 @@ const agentStore = useAgentStore()
 const chatStore = useChatStore()
 
 const selectedAgentId = ref<string | null>(null)
+const pendingContent = ref<string | null>(null)
 const showPicker = ref(false)
 const showDrawer = ref(false)
 const switchHint = ref<string | null>(null) // 换助手提示
@@ -62,13 +63,18 @@ function onSwitchAssistant() {
   showPicker.value = true
 }
 
-function onAgentSelect(a: Agent) {
+async function onAgentSelect(a: Agent) {
   selectedAgentId.value = a.id
   showPicker.value = false
   switchHint.value = null
   // 已有内容或已绑定助手 → 创建新对话
   if (currentSession.value?.agentId && currentSession.value.agentId !== a.id) {
-    startNewChat(a)
+    await startNewChat(a)
+  }
+  if (pendingContent.value) {
+    const content = pendingContent.value
+    pendingContent.value = null
+    await onSend(content)
   }
 }
 
@@ -76,12 +82,14 @@ async function startNewChat(agent?: Agent) {
   const a = agent || currentAgent.value
   if (!a) return
   const s = await sessionStore.createSession(a.id, a.name)
-  router.push(`/chat/${s.id}`)
+  await router.push(`/chat/${s.id}`)
 }
 
 async function onSend(content: string) {
   if (!currentAgent.value) {
+    pendingContent.value = content
     showPicker.value = true
+    switchHint.value = '先选择一个助手，再发送这条任务。'
     return
   }
   let sessionId = route.params.sessionId as string
@@ -171,6 +179,6 @@ function onUseGeneralChat() {
 .hint-bar { padding: 8px 32px; background: var(--c-accent-soft); color: #8a5a1f; font-size: 13px; border-bottom: 1px solid var(--c-border-soft); }
 .inline-picker { max-width: 720px; width: calc(100% - 48px); margin: 20px auto 0; padding: 14px; border: 1px solid var(--c-border); background: var(--c-surface); border-radius: var(--radius); }
 .inline-picker-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-.conversation { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.conversation { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .global-error { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--c-danger); color: #fff; padding: 8px 16px; border-radius: var(--radius); font-size: 13px; z-index: 40; }
 </style>
