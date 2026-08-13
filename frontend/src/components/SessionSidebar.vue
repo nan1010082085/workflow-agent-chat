@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
+import { useChatStore } from '../stores/chat'
 
 const emit = defineEmits<{ (e: 'navigate'): void }>()
+const route = useRoute()
 const router = useRouter()
 const sessionStore = useSessionStore()
+const chatStore = useChatStore()
 
 const sessions = computed(() => sessionStore.sessions)
 const currentId = computed(() => sessionStore.currentSessionId)
@@ -33,15 +36,22 @@ function moveSession(id: string, folder: string) {
 }
 function toggleFolder(folder: string) { collapsed.value[folder] = !collapsed.value[folder] }
 
-function select(id: string) {
+async function select(id: string) {
+  const sameRoute = route.params.sessionId === id
   sessionStore.select(id)
-  router.push(`/chat/${id}`)
+  if (sameRoute) {
+    // 同路由再次点击时 vue-router 不会触发导航，需手动恢复消息
+    await chatStore.resumeFromSession(id)
+  } else {
+    await router.push(`/chat/${id}`)
+  }
   emit('navigate')
 }
 
 async function newChat() {
-  router.push('/chat')
   sessionStore.currentSessionId = null
+  chatStore.reset()
+  if (route.params.sessionId) await router.push('/chat')
   emit('navigate')
 }
 

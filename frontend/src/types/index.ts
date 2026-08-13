@@ -114,6 +114,15 @@ export interface SendMessageResult {
   runId: string
   runtimeExecutionId: string
   status: MessageStatus
+  sessionTitle?: string
+}
+
+export interface ModelTurnResult {
+  messageId: string
+  assistantMessageId: string
+  content: string
+  status: MessageStatus
+  sessionTitle?: string
 }
 
 export interface CreateSessionRequest {

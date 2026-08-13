@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 消息接口。对应 ARCHITECTURE §3 的 message 相关 API。
  * POST /api/chat/sessions/{id}/messages 发送消息并触发 Runtime 执行。
+ * POST /api/chat/sessions/{id}/completions 基础模型对话并落库。
  */
 @RestController
 @RequestMapping("/api/chat/sessions")
@@ -42,7 +43,16 @@ public class MessageController {
     return chatService.sendMessage(sessionId, request.agentId(), request.content());
   }
 
+  @PostMapping("/{sessionId}/completions")
+  public ChatService.ModelTurnResult completeModelTurn(
+      @PathVariable String sessionId,
+      @RequestBody ModelTurnRequest request) {
+    return chatService.completeModelTurn(sessionId, request.modelId(), request.content());
+  }
+
   public record SendMessageRequest(@NotBlank String agentId, @NotBlank String content) {}
+
+  public record ModelTurnRequest(@NotBlank String modelId, @NotBlank String content) {}
 
   public record MessageDto(
       String id, String role, String content, String runtimeExecutionId,

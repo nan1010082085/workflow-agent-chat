@@ -49,7 +49,7 @@ function runForMessage(m: Message): RunStatusView | null {
 </template>
 
 <style scoped>
-.message-list { flex: 1; overflow-y: auto; padding: 24px 32px; }
-.skeleton-line { max-width: 760px; margin: 0 auto; padding: 16px; background: var(--c-surface); border: 1px solid var(--c-border-soft); border-radius: var(--radius); }
+.message-list { flex: 1; overflow-y: auto; padding: 24px 32px; background: transparent; }
+.skeleton-line { max-width: 860px; margin: 0 auto; padding: 16px; background: var(--c-surface); border: 1px solid var(--c-border-soft); border-radius: var(--radius); }
 @media (max-width: 767px) { .message-list { padding: 16px; } }
 </style>

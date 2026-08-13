@@ -4,11 +4,13 @@ import com.schemaplatform.workflowchat.domain.ChatMessage;
 import com.schemaplatform.workflowchat.domain.ChatRun;
 import com.schemaplatform.workflowchat.domain.ChatSession;
 import com.schemaplatform.workflowchat.domain.MessageStatus;
-import com.schemaplatform.workflowchat.domain.RunStatus;
 import com.schemaplatform.workflowchat.runtime.AgentDto;
 import com.schemaplatform.workflowchat.runtime.ExecutionStatusDto;
+import com.schemaplatform.workflowchat.runtime.ModelAdapter;
 import com.schemaplatform.workflowchat.runtime.RuntimeAdapter;
 import com.schemaplatform.workflowchat.tenant.TenantContext;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +34,17 @@ public class ChatService {
   private final RunService runService;
   private final AgentCatalogService agentCatalogService;
   private final RuntimeAdapter runtimeAdapter;
+  private final ModelAdapter modelAdapter;
 
   public ChatService(SessionService sessionService, MessageService messageService,
       RunService runService, AgentCatalogService agentCatalogService,
-      RuntimeAdapter runtimeAdapter) {
+      RuntimeAdapter runtimeAdapter, ModelAdapter modelAdapter) {
     this.sessionService = sessionService;
     this.messageService = messageService;
     this.runService = runService;
     this.agentCatalogService = agentCatalogService;
     this.runtimeAdapter = runtimeAdapter;
+    this.modelAdapter = modelAdapter;
   }
 
   /**
@@ -70,7 +74,11 @@ public class ChatService {
     sessionService.save(session);
 
     // 1. 落 user message
+    boolean firstMessage = messageService.countMessages(sessionId) == 0;
     ChatMessage userMsg = messageService.saveUserMessage(sessionId, content);
+    if (firstMessage) {
+      session = sessionService.applyAutoTitleIfNeeded(sessionId, content);
+    }
 
     // 2. 调 Runtime invoke
     String idempotencyKey = UUID.randomUUID().toString();
@@ -105,7 +113,53 @@ public class ChatService {
         sessionId, agentId, run.getId(), invokeResult.runtimeExecutionId(), invokeResult.initialStatus());
 
     return new SendMessageResult(userMsg.getId(), placeholder.getId(), run.getId(),
-        invokeResult.runtimeExecutionId(), initialMsgStatus);
+        invokeResult.runtimeExecutionId(), initialMsgStatus, session.getTitle());
+  }
+
+  /**
+   * 基础模型对话：落库 user/assistant，并在首条消息时自动生成标题。
+   */
+  @Transactional
+  public ModelTurnResult completeModelTurn(String sessionId, String modelId, String content) {
+    ChatSession session = sessionService.getSession(sessionId);
+    if (session.getAgentId() != null && !session.getAgentId().isBlank()) {
+      throw new IllegalStateException(
+          "该对话已绑定助手「" + session.getAgentNameSnapshot() + "」，请新建对话使用基础模型");
+    }
+
+    List<ChatMessage> history = messageService.listMessages(sessionId);
+    boolean firstMessage = history.isEmpty();
+    ChatMessage userMsg = messageService.saveUserMessage(sessionId, content);
+    if (firstMessage) {
+      session = sessionService.applyAutoTitleIfNeeded(sessionId, content);
+    }
+
+    List<ModelAdapter.Message> llmMessages = new ArrayList<>();
+    for (ChatMessage m : history) {
+      if (m.getContent() == null || m.getContent().isBlank()) continue;
+      llmMessages.add(new ModelAdapter.Message(m.getRole().name().toLowerCase(), m.getContent()));
+    }
+    llmMessages.add(new ModelAdapter.Message("user", content));
+
+    String reply;
+    MessageStatus status = MessageStatus.COMPLETED;
+    try {
+      reply = modelAdapter.complete(TenantContext.tenantId(), modelId, llmMessages);
+      if (reply == null || reply.isBlank()) {
+        reply = "（模型返回了空内容）";
+      }
+    } catch (Exception e) {
+      log.warn("模型补全失败 session={} model={}: {}", sessionId, modelId, e.getMessage());
+      reply = "这次没有得到回复，请稍后重试。";
+      status = MessageStatus.FAILED;
+    }
+
+    ChatMessage assistant = messageService.saveAssistantResult(sessionId, reply, status);
+    sessionService.touch(sessionId);
+    session = sessionService.getSession(sessionId);
+
+    return new ModelTurnResult(
+        userMsg.getId(), assistant.getId(), reply, status, session.getTitle());
   }
 
   private MessageStatus mapToMessageStatus(ExecutionStatusDto.RunStatusDto runtimeStatus) {
@@ -125,6 +179,15 @@ public class ChatService {
       String assistantMessageId,
       String runId,
       String runtimeExecutionId,
-      MessageStatus status
+      MessageStatus status,
+      String sessionTitle
+  ) {}
+
+  public record ModelTurnResult(
+      String messageId,
+      String assistantMessageId,
+      String content,
+      MessageStatus status,
+      String sessionTitle
   ) {}
 }

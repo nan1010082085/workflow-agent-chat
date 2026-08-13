@@ -1,5 +1,7 @@
 .DS_Store
 .env
+.env.local
+.env.*.local
 backend/target/
 frontend/node_modules/
 frontend/dist/
@@ -8,3 +10,14 @@ frontend/**/*.js.map
 frontend/**/*.tsbuildinfo
 *.iml
 .idea/
+
+# 本地调试 / Agent 产物（勿提交到公开仓库）
+.playwright-cli/
+.playwright-mcp/
+.workbuddy/
+output/
+
+# 编辑器 / 系统
+.vscode/
+.cursor/
+.claude/

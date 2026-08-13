@@ -1,30 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" fill="none">
   <rect width="1440" height="900" fill="#eef3f4"/>
-  <g stroke="#b9d6d2" stroke-width="2" opacity=".32">
+  <!-- 中央区域：对话时也能看见的轻点阵 -->
+  <g fill="#c5d9d6" opacity=".45">
+    <circle cx="520" cy="220" r="3"/><circle cx="620" cy="250" r="3"/><circle cx="720" cy="210" r="3"/>
+    <circle cx="820" cy="240" r="3"/><circle cx="920" cy="220" r="3"/>
+    <circle cx="480" cy="340" r="3"/><circle cx="580" cy="370" r="3"/><circle cx="680" cy="330" r="3"/>
+    <circle cx="780" cy="360" r="3"/><circle cx="880" cy="340" r="3"/><circle cx="980" cy="370" r="3"/>
+    <circle cx="500" cy="470" r="3"/><circle cx="600" cy="500" r="3"/><circle cx="700" cy="460" r="3"/>
+    <circle cx="800" cy="490" r="3"/><circle cx="900" cy="470" r="3"/><circle cx="960" cy="510" r="3"/>
+    <circle cx="540" cy="590" r="3"/><circle cx="640" cy="620" r="3"/><circle cx="740" cy="580" r="3"/>
+    <circle cx="840" cy="610" r="3"/><circle cx="940" cy="590" r="3"/>
+  </g>
+  <!-- 中央轻量走线，避免中间一片死白 -->
+  <g stroke="#b9d6d2" stroke-width="1.5" opacity=".28">
+    <path d="M420 280h120l40 40h160l36-36h140"/>
+    <path d="M460 520h100l48-48h180l40 40h120"/>
+    <path d="M980 300v80l-36 36v90"/>
+    <path d="M460 300v70l36 36v100"/>
+  </g>
+  <g fill="#d2e4e1" opacity=".55">
+    <circle cx="420" cy="280" r="4"/><circle cx="916" cy="324" r="4"/>
+    <circle cx="460" cy="520" r="4"/><circle cx="948" cy="512" r="4"/>
+    <circle cx="980" cy="300" r="4"/><circle cx="460" cy="300" r="4"/>
+  </g>
+  <!-- 四角装饰保留 -->
+  <g stroke="#b9d6d2" stroke-width="2" opacity=".36">
     <path d="M80 150h150l58 58h156"/>
     <path d="M1170 126h-126l-66 66H820"/>
     <path d="M70 730h174l64-64h172"/>
     <path d="M1370 710h-160l-58-58h-180"/>
   </g>
-  <g stroke="#c4d9d7" stroke-width="1.5" opacity=".32">
+  <g stroke="#c4d9d7" stroke-width="1.5" opacity=".36">
     <path d="M115 112v76h76"/>
     <path d="M1320 112v76h-76"/>
     <path d="M115 788v-76h76"/>
     <path d="M1320 788v-76h-76"/>
   </g>
-  <g fill="#d2e4e1" opacity=".5">
+  <g fill="#d2e4e1" opacity=".55">
     <circle cx="80" cy="150" r="5"/><circle cx="444" cy="208" r="5"/>
     <circle cx="1170" cy="126" r="5"/><circle cx="820" cy="192" r="5"/>
     <circle cx="70" cy="730" r="5"/><circle cx="480" cy="666" r="5"/>
     <circle cx="1370" cy="710" r="5"/><circle cx="972" cy="652" r="5"/>
   </g>
-  <g stroke="#d1b68e" stroke-width="2" opacity=".28">
+  <g stroke="#d1b68e" stroke-width="2" opacity=".3">
     <path d="M168 270h92l28 28h96"/>
     <path d="M1270 300h-92l-28 28h-96"/>
     <path d="M180 606h84l28-28h112"/>
     <path d="M1260 590h-84l-28-28h-112"/>
   </g>
-  <g stroke="#b9d6d2" stroke-width="2" opacity=".3">
+  <g stroke="#b9d6d2" stroke-width="2" opacity=".34">
     <rect x="100" y="118" width="54" height="34" rx="8"/>
     <path d="M116 152l-7 12 16-12"/>
     <rect x="1286" y="118" width="54" height="34" rx="8"/>

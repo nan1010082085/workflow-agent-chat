@@ -35,6 +35,21 @@ public class MessageService {
         ChatMessage.assistantPlaceholder(UUID.randomUUID().toString(), tenantId, sessionId, runtimeExecutionId));
   }
 
+  /** 保存已完成的助手回复（基础模型对话用）。 */
+  @Transactional
+  public ChatMessage saveAssistantResult(String sessionId, String content, MessageStatus status) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository.save(
+        ChatMessage.assistantResult(
+            UUID.randomUUID().toString(), tenantId, sessionId, content, null, status));
+  }
+
+  @Transactional(readOnly = true)
+  public long countMessages(String sessionId) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository.countByTenantIdAndSessionId(tenantId, sessionId);
+  }
+
   @Transactional(readOnly = true)
   public List<ChatMessage> listMessages(String sessionId) {
     String tenantId = TenantContext.tenantId();

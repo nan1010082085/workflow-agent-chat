@@ -51,8 +51,40 @@ public class SessionService {
   @Transactional
   public ChatSession updateTitle(String sessionId, String title) {
     ChatSession session = getSession(sessionId);
-    session.updateTitle(title);
+    session.updateTitle(normalizeTitle(title));
     return sessionRepository.save(session);
+  }
+
+  /**
+   * 首条用户消息时，若标题仍是占位文案，则用消息内容生成会话标题。
+   */
+  @Transactional
+  public ChatSession applyAutoTitleIfNeeded(String sessionId, String firstUserContent) {
+    ChatSession session = getSession(sessionId);
+    if (!isPlaceholderTitle(session.getTitle())) {
+      return session;
+    }
+    session.updateTitle(titleFromContent(firstUserContent));
+    return sessionRepository.save(session);
+  }
+
+  /** 从首条用户输入生成侧栏标题（单行、截断）。 */
+  public static String titleFromContent(String content) {
+    String text = content == null ? "" : content.replaceAll("\\s+", " ").trim();
+    if (text.isEmpty()) return "新会话";
+    if (text.length() > 40) return text.substring(0, 40) + "…";
+    return text;
+  }
+
+  public static boolean isPlaceholderTitle(String title) {
+    if (title == null || title.isBlank()) return true;
+    if ("新会话".equals(title)) return true;
+    return title.endsWith(" 会话");
+  }
+
+  private static String normalizeTitle(String title) {
+    String text = title == null ? "" : title.replaceAll("\\s+", " ").trim();
+    return text.isEmpty() ? "新会话" : (text.length() > 80 ? text.substring(0, 80) + "…" : text);
   }
 
   @Transactional

@@ -54,22 +54,30 @@ export const useChatStore = defineStore('chat', () => {
   async function sendMessage(sessionId: string, agentId: string, content: string) {
     sending.value = true
     error.value = null
-    const tempUser: Message = {
-      id: 'temp-' + Date.now(), role: 'user', content,
-      runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString(),
-    }
-    const tempAssistant: Message = {
-      id: 'temp-a-' + Date.now(), role: 'assistant', content: '',
-      runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString(),
-    }
-    messages.value.push(tempUser, tempAssistant)
+    const tempUserId = 'temp-' + Date.now()
+    const tempAssistantId = 'temp-a-' + Date.now()
+    messages.value.push(
+      {
+        id: tempUserId, role: 'user', content,
+        runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString(),
+      },
+      {
+        id: tempAssistantId, role: 'assistant', content: '',
+        runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString(),
+      },
+    )
+    const userIndex = messages.value.length - 2
+    const assistantIndex = messages.value.length - 1
     try {
       const result: SendMessageResult = await api.sendMessage(sessionId, { agentId, content })
-      // 用真实 id 替换临时 id
-      tempUser.id = result.messageId
-      tempAssistant.id = result.assistantMessageId
-      tempAssistant.runtimeExecutionId = result.runtimeExecutionId
-      tempAssistant.status = result.status
+      const user = messages.value[userIndex]
+      const assistant = messages.value[assistantIndex]
+      if (user) user.id = result.messageId
+      if (assistant) {
+        assistant.id = result.assistantMessageId
+        assistant.runtimeExecutionId = result.runtimeExecutionId
+        assistant.status = result.status
+      }
       // F-07：runId 立即进入 store，建立 execId→runId 映射
       runIdByExec.value[result.runtimeExecutionId] = result.runId
       // 启动轮询（用 runId）
@@ -83,7 +91,7 @@ export const useChatStore = defineStore('chat', () => {
       error.value = e.message || '发送失败'
       // 移除乐观占位，避免幽灵消息
       messages.value = messages.value.filter(
-        (m) => m.id !== tempUser.id && m.id !== tempAssistant.id
+        (m) => m.id !== tempUserId && m.id !== tempAssistantId
       )
       throw e
     } finally {
@@ -91,18 +99,39 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendModelMessage(modelId: string, content: string) {
-    sending.value = true; error.value = null
-    const user: Message = { id: `model-u-${Date.now()}`, role: 'user', content, runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString() }
-    const assistant: Message = { id: `model-a-${Date.now()}`, role: 'assistant', content: '', runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString() }
-    modelMessages.value.push(user, assistant)
+  async function sendModelMessage(sessionId: string, modelId: string, content: string) {
+    sending.value = true
+    error.value = null
+    const tempUserId = `model-u-${Date.now()}`
+    const tempAssistantId = `model-a-${Date.now()}`
+    messages.value.push(
+      { id: tempUserId, role: 'user', content, runtimeExecutionId: null, status: 'COMPLETED', createdAt: new Date().toISOString() },
+      { id: tempAssistantId, role: 'assistant', content: '', runtimeExecutionId: null, status: 'RUNNING', createdAt: new Date().toISOString() },
+    )
+    const userIndex = messages.value.length - 2
+    const assistantIndex = messages.value.length - 1
     try {
-      const result = await api.complete({ modelId, messages: modelMessages.value.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content })) })
-      assistant.content = result.content; assistant.status = 'COMPLETED'
-    } catch {
-      assistant.content = '这次没有得到回复，请稍后重试。'; assistant.status = 'FAILED'
-      error.value = '模型暂时无法响应，请稍后重试'
-    } finally { sending.value = false }
+      const result = await api.completeInSession(sessionId, { modelId, content })
+      const user = messages.value[userIndex]
+      const assistant = messages.value[assistantIndex]
+      if (user) user.id = result.messageId
+      if (assistant) {
+        assistant.id = result.assistantMessageId
+        assistant.content = result.content || '（模型返回了空内容）'
+        assistant.status = result.status || 'COMPLETED'
+      }
+      return result as { sessionTitle?: string; content: string; status: string }
+    } catch (e: any) {
+      const assistant = messages.value[assistantIndex]
+      if (assistant) {
+        assistant.content = '这次没有得到回复，请稍后重试。'
+        assistant.status = 'FAILED'
+      }
+      error.value = e?.message || '模型暂时无法响应，请稍后重试'
+      throw e
+    } finally {
+      sending.value = false
+    }
   }
 
   async function fetchRun(runId: string) {
@@ -112,6 +141,8 @@ export const useChatStore = defineStore('chat', () => {
       applyRunToMessages(r)
       if (isTerminal(r.status)) {
         stopPolling()
+        // 后端已把结果写入 assistant message，终态时回拉消息以展示正文
+        if (r.sessionId) await fetchMessages(r.sessionId)
       } else if (!pollTimer) {
         startPolling(runId)
       }

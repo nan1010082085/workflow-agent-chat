@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Message, RunStatusView, WaitingPayload } from '../types'
-import { splitTextAndCodeBlocks } from '../utils/textParser'
+import { renderMarkdown, splitTextAndCodeBlocks } from '../utils/textParser'
 
 const props = defineProps<{
   message: Message
@@ -17,13 +17,14 @@ const emit = defineEmits<{
 const isUser = computed(() => props.message.role === 'user')
 const isAssistant = computed(() => props.message.role === 'assistant')
 
-// 轻量处理状态文案（F-05）
+/** 轻量处理状态文案（F-05） */
 function statusLabel(status: string): string {
   return {
     PENDING: '排队中', RUNNING: '正在处理', WAITING_INPUT: '等待你的确认',
     COMPLETED: '已完成', FAILED: '处理失败', CANCELLED: '已取消',
   }[status] || status
 }
+
 function statusClass(status: string): string {
   return {
     RUNNING: 'chip-running', WAITING_INPUT: 'chip-waiting',
@@ -31,16 +32,12 @@ function statusClass(status: string): string {
   }[status] || 'chip-cancelled'
 }
 
-// inline approval：waiting 卡片紧邻助手消息（F-04）
+/** inline approval：waiting 卡片紧邻助手消息（F-04） */
 const waiting = computed<WaitingPayload | null>(() => {
   if (props.message.status !== 'WAITING_INPUT') return null
   return props.run?.waiting || null
 })
 
-const approvalValue = computed({
-  get: () => '',
-  set: () => {},
-})
 let inputValue = ''
 function onInput(e: Event) { inputValue = (e.target as HTMLTextAreaElement).value }
 function submit(action: string) {
@@ -50,51 +47,79 @@ function submit(action: string) {
 
 const contentParts = computed(() => splitTextAndCodeBlocks(props.message.content || ''))
 
-// 简易 Markdown 渲染（F-06）：处理 **粗体**、`code`、换行、列表
-function renderContent(content: string): string {
-  if (!content) return ''
-  let html = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-  html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
-  html = html.replace(/\n/g, '<br>')
-  // 清理 ul 间多余的 br
-  html = html.replace(/<br>(<ul>)/g, '$1').replace(/(<\/ul>)<br>/g, '$1')
-  return html
-}
+const showTyping = computed(() =>
+  isAssistant.value && props.message.status === 'RUNNING' && !props.message.content,
+)
+
+const showContent = computed(() => Boolean(props.message.content))
+
+const showWaitingHint = computed(() =>
+  isAssistant.value && props.message.status === 'WAITING_INPUT' && !props.message.content,
+)
+
+const showFailedHint = computed(() =>
+  isAssistant.value && props.message.status === 'FAILED' && !props.message.content,
+)
+
+const showCancelledHint = computed(() =>
+  isAssistant.value && props.message.status === 'CANCELLED' && !props.message.content,
+)
 
 function copyContent() {
   if (props.message.content) navigator.clipboard?.writeText(props.message.content)
+}
+
+function fenceLabel(part: { language?: string; artifactType?: string; type: string }): string {
+  if (part.type === 'artifact') return part.artifactType || 'artifact'
+  if (part.language && part.language !== 'text') return part.language
+  return ''
 }
 </script>
 
 <template>
   <div class="message" :class="message.role">
-    <span class="avatar">{{ isUser ? '你' : (props.run?.agentId ? 'AI' : 'AI') }}</span>
+    <span class="avatar">{{ isUser ? '你' : 'AI' }}</span>
     <div class="bubble-wrap">
-      <!-- 处理中：轻量指示 -->
-      <div v-if="isAssistant && message.status === 'RUNNING' && !message.content" class="typing">
+      <!-- 处理中 -->
+      <div v-if="showTyping" class="typing">
         <span class="status-text">正在处理</span>
         <span class="dots"><i></i><i></i><i></i></span>
       </div>
 
-      <!-- 助手结果 -->
-      <div v-else-if="message.content" class="result-wrap">
+      <!-- 正文（用户 / 助手结果） -->
+      <div v-else-if="showContent" class="result-wrap">
         <div class="bubble message-content">
           <template v-for="(part, index) in contentParts" :key="index">
-            <div v-if="part.type === 'text'" v-html="renderContent(part.content)"></div>
-            <pre v-else class="code-block"><code>{{ part.content }}</code></pre>
+            <div v-if="part.type === 'text'" class="md-block" v-html="renderMarkdown(part.content)" />
+            <div v-else class="code-wrap">
+              <div v-if="fenceLabel(part)" class="code-lang">{{ fenceLabel(part) }}</div>
+              <pre class="code-block"><code>{{ part.content }}</code></pre>
+            </div>
           </template>
         </div>
         <div v-if="isAssistant && message.status === 'COMPLETED'" class="result-actions">
-          <button class="link-btn" @click="copyContent">复制</button>
+          <button class="link-btn" type="button" @click="copyContent">复制</button>
+        </div>
+        <div v-if="isAssistant && message.status === 'FAILED'" class="fail-actions">
+          <button class="link-btn" type="button" @click="emit('retry')">重试</button>
+          <span class="sep">·</span>
+          <button class="link-btn" type="button" @click="emit('cancel')">换一个智能体</button>
         </div>
       </div>
+
+      <!-- 无正文时的状态提示（独立分支，避免 v-else-if 链被 details 打断） -->
+      <div v-else-if="showWaitingHint" class="bubble waiting-hint">
+        智能体正在等待你的确认，请在下方操作。
+      </div>
+      <div v-else-if="showFailedHint" class="bubble failed-hint">
+        处理失败
+        <div class="fail-actions">
+          <button class="link-btn" type="button" @click="emit('retry')">重试</button>
+          <span class="sep">·</span>
+          <button class="link-btn" type="button" @click="emit('cancel')">换一个智能体</button>
+        </div>
+      </div>
+      <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
       <details v-if="isAssistant && message.thinking" class="detail-block">
         <summary>思考过程</summary>
@@ -103,40 +128,24 @@ function copyContent() {
       <details v-if="isAssistant && message.toolCalls?.length" class="detail-block">
         <summary>处理步骤（{{ message.toolCalls.length }}）</summary>
         <div v-for="tool in message.toolCalls" :key="tool.id || tool.name" class="tool-row">
-          <strong>{{ tool.name }}</strong><span>{{ tool.error ? '失败' : tool.result !== undefined ? '已完成' : '处理中' }}</span>
+          <strong>{{ tool.name }}</strong>
+          <span>{{ tool.error ? '失败' : tool.result !== undefined ? '已完成' : '处理中' }}</span>
         </div>
       </details>
 
-      <!-- 等待确认提示 -->
-      <div v-else-if="isAssistant && message.status === 'WAITING_INPUT'" class="bubble waiting-hint">
-        智能体正在等待你的确认，请在下方操作。
-      </div>
-
-      <!-- 失败 + 下一步动作（F-06） -->
-      <div v-else-if="isAssistant && message.status === 'FAILED'" class="bubble failed-hint">
-        处理失败{{ message.content ? '：' + message.content : '' }}
-        <div class="fail-actions">
-          <button class="link-btn" @click="emit('retry')">重试</button>
-          <span class="sep">·</span>
-          <button class="link-btn" @click="emit('cancel')">换一个智能体</button>
-        </div>
-      </div>
-
-      <!-- 已取消 -->
-      <div v-else-if="isAssistant && message.status === 'CANCELLED' && !message.content" class="bubble cancelled-hint">
-        已取消
-      </div>
-
       <!-- 状态标记 -->
-      <span v-if="isAssistant && message.status !== 'COMPLETED' && message.status !== 'CANCELLED'"
-        class="chip" :class="statusClass(message.status)">
+      <span
+        v-if="isAssistant && message.status !== 'COMPLETED' && message.status !== 'CANCELLED'"
+        class="chip"
+        :class="statusClass(message.status)"
+      >
         <i></i>{{ statusLabel(message.status) }}
       </span>
       <span v-else-if="isAssistant && message.status === 'COMPLETED'" class="chip chip-success">
         <i></i>已完成
       </span>
 
-      <!-- inline approval 紧邻助手消息（F-04） -->
+      <!-- inline approval -->
       <div v-if="waiting" class="inline-approval" :class="{ dangerous: waiting.dangerous }">
         <div class="approval-head">
           <span class="title">需要你的确认</span>
@@ -145,14 +154,26 @@ function copyContent() {
         <p class="prompt">{{ waiting.prompt }}</p>
         <div v-for="f in waiting.fields" :key="f.key" class="field">
           <label>{{ f.label }}</label>
-          <textarea v-if="f.type === 'textarea'" @input="onInput" :placeholder="'请输入' + f.label" rows="2"></textarea>
-          <input v-else @input="onInput" :placeholder="'请输入' + f.label" />
+          <textarea
+            v-if="f.type === 'textarea'"
+            rows="2"
+            :placeholder="'请输入' + f.label"
+            @input="onInput"
+          />
+          <input v-else :placeholder="'请输入' + f.label" @input="onInput" />
         </div>
         <div class="actions">
-          <button v-for="a in waiting.actions" :key="a.action"
-            class="btn" :class="a.style === 'danger' ? 'btn-danger' : 'btn-primary'"
+          <button
+            v-for="a in waiting.actions"
+            :key="a.action"
+            type="button"
+            class="btn"
+            :class="a.style === 'danger' ? 'btn-danger' : 'btn-primary'"
             :disabled="sending"
-            @click="submit(a.action)">{{ a.label }}</button>
+            @click="submit(a.action)"
+          >
+            {{ a.label }}
+          </button>
         </div>
       </div>
     </div>
@@ -160,20 +181,42 @@ function copyContent() {
 </template>
 
 <style scoped>
-.message { display: flex; gap: 12px; max-width: 760px; margin: 0 auto 20px; align-items: flex-start; }
+.message { display: flex; gap: 12px; max-width: 860px; margin: 0 auto 20px; align-items: flex-start; }
 .message.user { justify-content: flex-end; }
 .message.user .avatar { order: 2; background: var(--c-primary); }
 .avatar { flex: none; display: grid; place-items: center; width: 30px; height: 30px; color: #fff; background: var(--c-accent); border-radius: var(--radius); font-size: 11px; font-weight: 700; }
-.bubble-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 640px; min-width: 0; }
+.bubble-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 720px; min-width: 0; }
 .message.user .bubble-wrap { align-items: flex-end; }
 .bubble { margin: 0; padding: 12px 15px; line-height: 1.65; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); word-break: break-word; }
 .bubble :deep(code) { background: #eef2f2; padding: 1px 5px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, monospace; }
 .bubble :deep(pre) { background: #1e2a33; color: #e8efef; padding: 12px; border-radius: var(--radius); overflow-x: auto; margin: 8px 0; }
 .bubble :deep(pre code) { background: transparent; color: inherit; padding: 0; }
-.bubble :deep(ul) { margin: 6px 0; padding-left: 20px; }
+.bubble :deep(ul),
+.bubble :deep(ol) { margin: 8px 0; padding-left: 1.25em; }
+.bubble :deep(li) { margin: 2px 0; }
+.bubble :deep(h1),
+.bubble :deep(h2),
+.bubble :deep(h3) { margin: 10px 0 6px; line-height: 1.35; font-weight: 700; }
+.bubble :deep(h1) { font-size: 1.2em; }
+.bubble :deep(h2) { font-size: 1.1em; }
+.bubble :deep(h3) { font-size: 1.05em; }
+.md-block { min-width: 0; }
 .message-content > :first-child { margin-top: 0; }
 .message-content > :last-child { margin-bottom: 0; }
-.code-block { margin: 10px 0 0; padding: 12px; overflow-x: auto; border-radius: var(--radius); background: #1e2a33; color: #e8efef; white-space: pre; }
+.code-wrap { margin-top: 10px; }
+.code-wrap:first-child { margin-top: 0; }
+.code-lang {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #eef2f2;
+  color: var(--c-text-muted);
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: lowercase;
+}
+.code-block { margin: 0; padding: 12px; overflow-x: auto; border-radius: var(--radius); background: #1e2a33; color: #e8efef; white-space: pre; }
 .detail-block { color: var(--c-text-muted); font-size: 12px; }
 .detail-block summary { cursor: pointer; }
 .detail-content { margin-top: 6px; padding: 8px 10px; background: var(--c-bg); white-space: pre-wrap; line-height: 1.5; }

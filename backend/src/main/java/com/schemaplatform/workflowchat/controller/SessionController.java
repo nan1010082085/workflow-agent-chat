@@ -5,6 +5,7 @@ import com.schemaplatform.workflowchat.service.SessionService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,7 +40,16 @@ public class SessionController {
     return SessionSummary.from(session);
   }
 
+  @PatchMapping("/{sessionId}/title")
+  public SessionSummary updateTitle(
+      @PathVariable String sessionId,
+      @RequestBody UpdateTitleRequest request) {
+    return SessionSummary.from(sessionService.updateTitle(sessionId, request.title()));
+  }
+
   public record CreateSessionRequest(String title, String agentId, String agentName) {}
+
+  public record UpdateTitleRequest(String title) {}
 
   public record SessionSummary(
       String id, String title, String agentId, String agentName,

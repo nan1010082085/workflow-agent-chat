@@ -59,11 +59,15 @@ export const api = {
   listSessions: () => request<any[]>('/chat/sessions'),
   createSession: (data: { title?: string; agentId?: string; agentName?: string }) =>
     request<any>('/chat/sessions', { method: 'POST', body: JSON.stringify(data) }),
+  updateSessionTitle: (sessionId: string, title: string) =>
+    request<any>(`/chat/sessions/${sessionId}/title`, { method: 'PATCH', body: JSON.stringify({ title }) }),
 
   // messages
   listMessages: (sessionId: string) => request<any[]>(`/chat/sessions/${sessionId}/messages`),
   sendMessage: (sessionId: string, data: { agentId: string; content: string }) =>
     request<any>(`/chat/sessions/${sessionId}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  completeInSession: (sessionId: string, data: { modelId: string; content: string }) =>
+    request<any>(`/chat/sessions/${sessionId}/completions`, { method: 'POST', body: JSON.stringify(data) }),
 
   // runs
   getRun: (runId: string) => request<any>(`/chat/runs/${runId}`),

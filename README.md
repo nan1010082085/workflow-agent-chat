@@ -1,59 +1,72 @@
 # Workflow Agent Chat
 
-独立的通用 Chat 产品：消费 Schema Platform AI 中已发布的 Agent Workflow，提供会话、Agent 选择、流式运行结果与 HITL 恢复能力。
+面向业务任务的对话工作台：选择助手（或基础模型），用自然语言完成审核、摘要、问答、生成等工作；处理中状态、需要确认时的操作、会话历史都在同一界面完成。
 
-## 产品边界
+本仓库是**消费端产品**：不负责助手编排、工作流编辑或模型基础设施，只提供会话、目录、消息与执行状态的产品层体验。
 
-- `schema-platform/ai/app`：Workflow Builder、调试、评测、监控，以及服务 Editor/Flow 的领域 Copilot，保持不变。
-- 本项目：Workflow Agent 的消费端，不承载 Workflow 编辑器，不复用 `ai/app` 的 Chat 页面和会话状态。
-- `schema-platform/server`：现阶段作为 Workflow Runtime，通过 Open API 提供 Agent 执行能力。
+## 功能概览
+
+- 模型优先对话，也可切换已发布的任务助手
+- 会话列表、本地目录整理、自动标题
+- 处理中 / 需要确认 / 失败重试等状态呈现
+- 消息 Markdown 与代码块展示
+- Docker Compose 一键部署（前端 + 后端 + MySQL）
 
 ## 技术栈
 
-- Backend: Java 17+ (当前基线 Java 17), Spring Boot 3.4, Spring Web, Spring Data JPA, MySQL 8, Flyway
-- Frontend: Vue 3, TypeScript, Vite, Pinia, Vue Router
-- Runtime integration: REST first; SSE adapter in the chat backend
+| 层 | 技术 |
+|---|---|
+| 前端 | Vue 3、TypeScript、Vite、Pinia、Vue Router |
+| 后端 | Java 17、Spring Boot 3.4、Spring Data JPA、Flyway |
+| 数据 | MySQL 8 |
+| 部署 | Docker Compose、Nginx 静态托管 |
 
 ## 文档
 
-- [PRD](docs/PRD.md)
-- [技术架构与 API](docs/ARCHITECTURE.md)
-- [UI/UX 设计](docs/UIUX.md)
-- [开发计划](docs/DEVELOPMENT_PLAN.md)
-- [落地任务清单](docs/TASKS.md)
+| 文档 | 说明 |
+|---|---|
+| [PRD](docs/PRD.md) | 产品定义与 MVP 范围 |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | 拓扑、数据模型与 API |
+| [UIUX](docs/UIUX.md) | 交互与文案约定 |
+| [DEVELOPMENT_PLAN](docs/DEVELOPMENT_PLAN.md) | 开发阶段 |
+| [TASKS](docs/TASKS.md) | 落地任务清单 |
+| [RUNTIME_ISSUES](docs/RUNTIME_ISSUES.md) | 与外部 Runtime 契约待确认项（内部对接用） |
 
-## 运行（骨架）
+## 本地开发
 
 ```bash
+# 后端（需本机 MySQL，库名见 application.yml）
 cd backend && ./mvnw spring-boot:run
+
+# 前端
 cd frontend && pnpm install && pnpm dev
 ```
 
-启动前端后，可通过 `VITE_API_BASE_URL` 配置 Chat Backend 地址。Runtime 地址、API Key、数据库等配置见 `backend/src/main/resources/application.yml`。
+可选环境变量：
 
-## 部署到服务器
+- 前端：`VITE_API_BASE_URL`、`VITE_TENANT_ID`、`VITE_USER_ID`
+- 后端：见 `backend/src/main/resources/application.yml`（数据库、Runtime 地址、凭证均通过环境变量注入）
 
-Chat 使用 Docker Compose 部署前端、Spring Boot 后端和 MySQL。Agent Runtime 由 Schema Platform 提供，通过 `RUNTIME_BASE_URL` 接入。
+无可用 Runtime 时，可设置 `RUNTIME_MOCK_ENABLED=true` 使用内置 Mock，便于联调 UI。
+
+## 部署
 
 ```bash
 cp .env.example .env
-# 编辑 .env，至少修改 MYSQL_PASSWORD、MYSQL_ROOT_PASSWORD 和 RUNTIME_BASE_URL
+# 至少修改 MYSQL_PASSWORD、MYSQL_ROOT_PASSWORD，并配置 RUNTIME_BASE_URL（及所需凭证）
 docker compose up -d --build
-docker compose ps
 ```
 
-默认访问地址为 `http://服务器IP:5301`，前端容器内部通过 Nginx 将 `/api` 反代到 Chat Backend。健康检查：
+默认入口：`http://<host>:5301`（前端 Nginx 将 `/api` 反代到后端）。健康检查：`GET /health`。
 
-```bash
-curl http://服务器IP:5301/health
-```
+生产建议：入口 HTTPS、收紧 `CHAT_CORS_ORIGINS`、MySQL 仅走 Compose 内网、密钥只放在服务器 `.env`（勿提交仓库）。
 
-生产环境建议在服务器入口配置 HTTPS，并将域名反向代理到 `127.0.0.1:5301`。MySQL 不映射宿主机端口，只通过 Compose 内部网络访问。
+## 安全提示
 
-常用运维命令：
+- **不要把真实 `.env`、密钥、截图或 Playwright 日志提交到仓库。**
+- 当前身份依赖请求头 `X-Tenant-Id` / `X-User-Id`（开发态有默认值），**公网部署前必须由网关注入可信身份或接入 JWT**，否则会话数据可被伪造头访问。
+- Runtime / 模型网关凭证仅配置在后端，前端不持有。
 
-```bash
-docker compose logs -f chat-backend
-docker compose restart chat-backend
-docker compose down
-```
+## 仓库可见性
+
+若文档中的对接细节或部署拓扑不适合对外公开，请将 GitHub 仓库设为 **Private**，或仅公开本 README 与必要的产品说明。

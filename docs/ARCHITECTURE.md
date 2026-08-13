@@ -3,21 +3,21 @@
 ## 1. 部署拓扑
 
 ```text
-Vue Chat Web
+Chat Web
     |
     v
-Java Chat Backend  ---- MySQL 8
+Chat Backend  ---- MySQL 8
     |
-    | X-Tenant-Id + X-Workflow-Key / service credential
+    | 租户头 + 服务端凭证
     v
-Schema Platform AI Runtime
+外部 Agent / 模型 Runtime
     |
-    +-- published workflows
-    +-- BullMQ execution
-    +-- HITL / callback / monitoring
+    +-- 已发布助手目录
+    +-- 执行与状态
+    +-- 人工确认 / 回调
 ```
 
-Chat Backend 是 BFF 和产品领域服务，不直接读取 Runtime MongoDB。Runtime 的认证凭证只在后端配置。
+Chat Backend 是 BFF 与产品领域服务，不直接读取 Runtime 业务库。执行层凭证只在后端配置。
 
 ## 1.1 框架选择
 
