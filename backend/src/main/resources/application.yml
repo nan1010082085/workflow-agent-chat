@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: workflow-agent-chat
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/workflow_agent_chat?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}
+runtime:
+  base-url: ${RUNTIME_BASE_URL:http://localhost:3001}
+  workflow-key: ${RUNTIME_WORKFLOW_KEY:}
