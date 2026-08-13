@@ -73,11 +73,11 @@ async function openSessionFromRoute(sessionId: string | undefined) {
     return
   }
 
-  // 当前会话正在发送或已有本地消息时，不要用路由回载覆盖
-  if (
-    sessionStore.currentSessionId === sessionId
-    && (chatStore.sending || chatStore.messages.length > 0)
-  ) {
+  /**
+   * 仅在「本会话正在发送」时跳过回载，避免覆盖乐观更新。
+   * 侧栏会先 select 再 push：若用 messages.length 判断，切到其他会话会被误跳过、内容不更新。
+   */
+  if (chatStore.sending && sessionStore.currentSessionId === sessionId) {
     return
   }
 

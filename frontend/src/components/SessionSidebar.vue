@@ -44,9 +44,8 @@ function moveSession(id: string, folder: string) {
 function toggleFolder(folder: string) { collapsed.value[folder] = !collapsed.value[folder] }
 
 async function select(id: string) {
-  const sameRoute = route.params.sessionId === id
   sessionStore.select(id)
-  if (sameRoute) {
+  if (route.params.sessionId === id) {
     // 同路由再次点击时 vue-router 不会触发导航，需手动恢复消息
     await chatStore.resumeFromSession(id)
   } else {

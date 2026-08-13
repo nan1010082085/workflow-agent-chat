@@ -23,12 +23,21 @@ export const useChatStore = defineStore('chat', () => {
   let pollTimer: ReturnType<typeof setTimeout> | null = null
   // key: runtimeExecutionId, value: runId —— 用于把 waiting/run 关联到消息
   const runIdByExec = ref<Record<string, string>>({})
+  /** 当前 messages 对应的会话，用于切换时清屏与丢弃过期请求 */
+  const loadedSessionId = ref<string | null>(null)
+  let fetchSeq = 0
 
   async function fetchMessages(sessionId: string) {
+    const seq = ++fetchSeq
     loadingMessages.value = true
     error.value = null
+    // 切会话立刻清空，避免短暂显示上一会话内容
+    if (loadedSessionId.value !== sessionId) {
+      messages.value = []
+    }
     try {
       const list = await api.listMessages(sessionId)
+      if (seq !== fetchSeq) return
       messages.value = list.map((m: any) => ({
         id: m.id, role: m.role, content: m.content,
         runtimeExecutionId: m.runtimeExecutionId,
@@ -37,6 +46,7 @@ export const useChatStore = defineStore('chat', () => {
         documentSummaries: m.documentSummaries, workflowExecution: m.workflowExecution,
         attachments: m.attachments || [],
       }))
+      loadedSessionId.value = sessionId
       // 刷新恢复：若有未终结的 assistant 消息，恢复轮询
       const pending = messages.value.find(
         (m) => m.role === 'assistant' &&
@@ -50,9 +60,10 @@ export const useChatStore = defineStore('chat', () => {
         // 此处保留 pending 标记，由组件按需处理
       }
     } catch (e: any) {
+      if (seq !== fetchSeq) return
       error.value = e.message || '获取消息失败'
     } finally {
-      loadingMessages.value = false
+      if (seq === fetchSeq) loadingMessages.value = false
     }
   }
 
@@ -352,6 +363,8 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   function reset() {
+    fetchSeq += 1
+    loadedSessionId.value = null
     messages.value = []
     currentRun.value = null
     error.value = null
@@ -361,6 +374,8 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   function clearAgentConversation() {
+    fetchSeq += 1
+    loadedSessionId.value = null
     messages.value = []
     currentRun.value = null
     error.value = null
