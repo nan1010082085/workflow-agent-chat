@@ -317,10 +317,27 @@ startxref
 
 
 def minimal_png_bytes() -> bytes:
-    # 1x1 PNG
-    import base64
-    return base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    """生成合法小图（非 1x1），避免部分 vision API 拒收无效/过小 base64。"""
+    import struct
+    import zlib
+
+    width, height = 64, 64
+    rgb = (220, 72, 48)
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data))
+            + tag
+            + data
+            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+        )
+
+    raw = b"".join(b"\x00" + bytes(rgb) * width for _ in range(height))
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw, 9))
+        + chunk(b"IEND", b"")
     )
 
 

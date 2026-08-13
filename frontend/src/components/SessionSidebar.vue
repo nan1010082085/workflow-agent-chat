@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useChatStore } from '../stores/chat'
 import UserMenu from './UserMenu.vue'
+import AppMark from './AppMark.vue'
 
 const emit = defineEmits<{ (e: 'navigate'): void }>()
 const route = useRoute()
@@ -76,7 +77,7 @@ function formatTime(iso: string): string {
 <template>
   <div class="nav">
     <div class="brand">
-      <span class="brand-mark">W</span>
+      <AppMark variant="product" size="md" />
       <div>
         <strong>澄语</strong>
         <small>和助手聊聊，把事情办完</small>
@@ -186,7 +187,6 @@ function formatTime(iso: string): string {
 <style scoped>
 .nav { display: flex; flex-direction: column; height: 100%; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 20px 18px 18px; }
-.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; color: #fff; background: var(--c-primary); font-weight: 800; border-radius: var(--radius-lg); }
 .brand strong, .brand small { display: block; }
 .brand small { color: var(--c-text-muted); font-size: 12px; margin-top: 2px; }
 .sidebar-footer { flex: none; padding: 12px 14px 8px; background: var(--c-surface); }

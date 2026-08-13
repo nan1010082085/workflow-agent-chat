@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Agent } from '../types'
+import AppMark from './AppMark.vue'
 
 defineProps<{ agent: Agent | null; hasMessages: boolean; processing: boolean }>()
 const emit = defineEmits<{
@@ -11,7 +12,7 @@ const emit = defineEmits<{
 <template>
   <header class="conversation-header">
     <div class="conversation-identity">
-      <span class="identity-icon">{{ agent?.icon || '✦' }}</span>
+      <AppMark variant="ai" size="md" :glyph="agent?.icon || ''" />
       <div class="identity-copy">
         <span class="identity-label">正在使用</span>
         <strong>{{ agent?.name || '选择一个智能体开始' }}</strong>
@@ -32,7 +33,6 @@ const emit = defineEmits<{
 <style scoped>
 .conversation-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; padding: 12px 32px; border-bottom: 1px solid var(--c-border); background: var(--c-surface); }
 .conversation-identity, .conversation-actions { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.identity-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 1px solid #f2d8b8; border-radius: 8px; background: var(--c-accent-soft); color: #b96d25; font-size: 17px; }
 .identity-copy { display: grid; gap: 2px; min-width: 0; }
 .identity-label { color: var(--c-text-muted); font-size: 11px; }
 .identity-copy strong { overflow: hidden; color: var(--c-text); font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }

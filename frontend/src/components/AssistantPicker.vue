@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useAgentStore } from '../stores/agent'
 import type { Agent } from '../types'
+import AppMark from './AppMark.vue'
 
 const props = defineProps<{ modelValue: string | null }>()
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void; (e: 'select', agent: Agent): void }>()
@@ -9,12 +10,12 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: string): void; (e: 'selec
 const agentStore = useAgentStore()
 const agents = computed(() => agentStore.agents)
 
-// 用户术语：能力标签用「文本/文件/需要确认」，不用 HITL
+/** 用户术语：能力标签用「文本/文件/需要确认」，不用 HITL */
 function caps(a: Agent): string[] {
-  const caps: string[] = ['文本']
-  if (a.supportedInputs?.includes('file')) caps.push('文件')
-  if (a.hitlCapable) caps.push('需要确认')
-  return caps
+  const list: string[] = ['文本']
+  if (a.supportedInputs?.includes('file')) list.push('文件')
+  if (a.hitlCapable) list.push('需要确认')
+  return list
 }
 
 function pick(a: Agent) {
@@ -24,7 +25,7 @@ function pick(a: Agent) {
 </script>
 
 <template>
-<div class="picker">
+  <div class="picker">
     <div v-if="agentStore.loading" class="empty-state" style="padding: 24px;">
       <p>正在加载智能体…</p>
     </div>
@@ -35,47 +36,81 @@ function pick(a: Agent) {
       <p>暂无可用智能体</p>
     </div>
     <button
-      v-for="a in agents" :key="a.id"
+      v-for="a in agents"
+      :key="a.id"
       type="button"
-      class="agent-item" :class="{ active: props.modelValue === a.id }"
+      class="agent-item"
+      :class="{ active: props.modelValue === a.id }"
       @click="pick(a)"
     >
-      <span class="icon">{{ a.icon || '✦' }}</span>
-      <span class="info">
-        <b>{{ a.name }}</b>
-        <small>{{ a.description || '适合处理一类明确任务' }}</small>
-        <span class="caps">
-          <span v-for="c in caps(a)" :key="c" class="cap" :class="{ confirm: c === '需要确认' }">{{ c }}</span>
+      <div class="agent-main">
+        <AppMark variant="ai" size="md" :glyph="a.icon || ''" />
+        <span class="info">
+          <b>{{ a.name }}</b>
+          <small>{{ a.description || '适合处理一类明确任务' }}</small>
+          <span class="caps">
+            <span
+              v-for="c in caps(a)"
+              :key="c"
+              class="cap"
+              :class="{ confirm: c === '需要确认' }"
+            >{{ c }}</span>
+          </span>
         </span>
-        <span class="choose-state">{{ props.modelValue === a.id ? '已选择' : '开始使用' }}</span>
+      </div>
+      <span class="choose-state" :class="{ selected: props.modelValue === a.id }">
+        {{ props.modelValue === a.id ? '已选择' : '开始使用' }}
       </span>
     </button>
   </div>
 </template>
 
 <style scoped>
-.picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+}
 .agent-item {
-  position: relative;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
   min-width: 0;
-  min-height: 108px;
+  min-height: 148px;
+  padding: 14px;
   text-align: left;
   border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  padding: 14px;
   border-radius: var(--radius);
-  cursor: pointer;
+  background: var(--c-surface);
   color: var(--c-text);
-  overflow: hidden;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  cursor: pointer;
+  /* 禁止裁切底部操作文案 */
+  overflow: visible;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
 .agent-item:hover { background: var(--c-bg); }
-.agent-item.active { border-color: var(--c-primary); background: var(--c-primary-soft); color: var(--c-primary); box-shadow: 0 0 0 2px rgba(13, 107, 103, .08); }
-.icon { flex: none; font-size: 22px; line-height: 1.4; color: var(--c-accent); }
-.info { flex: 1; min-width: 0; overflow: hidden; }
+.agent-item.active {
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  box-shadow: 0 0 0 2px rgba(13, 107, 103, .08);
+}
+.agent-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .info b {
   display: block;
   font-size: 14px;
@@ -91,15 +126,37 @@ function pick(a: Agent) {
   line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0;
   font-size: 12px;
+  line-height: 1.45;
   color: var(--c-text-muted);
-  margin-top: 3px;
-  line-height: 1.4;
   word-break: break-word;
 }
-.caps { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-.cap { font-size: 10px; padding: 1px 6px; background: var(--c-bg); border-radius: 3px; color: var(--c-text-muted); }
+.caps { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.cap {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--c-bg);
+  color: var(--c-text-muted);
+}
 .cap.confirm { color: var(--c-warning); background: #fdf2df; }
-.choose-state { display: block; margin-top: 8px; color: var(--c-primary); font-size: 11px; font-weight: 650; }
-@media (max-width: 600px) { .picker { grid-template-columns: 1fr; } }
+/** 底部操作行：始终占位，不被描述挤没 */
+.choose-state {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 4px 0 0;
+  color: var(--c-primary);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+.choose-state.selected { color: var(--c-primary); }
+.agent-item.active .choose-state { color: var(--c-primary); }
+@media (max-width: 600px) {
+  .picker { grid-template-columns: 1fr; }
+}
 </style>

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAgentStore } from '../stores/agent'
 import { useSessionStore } from '../stores/session'
 import type { Agent } from '../types'
+import AppMark from '../components/AppMark.vue'
 
 const router = useRouter()
 const agentStore = useAgentStore()
@@ -51,7 +52,7 @@ function updateTime(a: Agent): string {
       </div>
       <div v-for="a in agents" :key="a.id" class="card">
         <div class="card-head">
-          <span class="icon">{{ a.icon || '✦' }}</span>
+          <AppMark variant="ai" size="md" :glyph="a.icon || ''" />
           <div>
             <b>{{ a.name }}</b>
             <small>更新于 {{ updateTime(a) }}</small>
@@ -81,10 +82,10 @@ function updateTime(a: Agent): string {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-  overflow: hidden;
+  min-height: 200px;
+  overflow: visible;
 }
 .card-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.icon { flex: none; font-size: 28px; color: var(--c-accent); }
 .card-head > div { min-width: 0; }
 .card-head b {
   display: block;
@@ -108,8 +109,12 @@ function updateTime(a: Agent): string {
   text-overflow: ellipsis;
   word-break: break-word;
 }
-.caps { display: flex; gap: 6px; }
+.caps { display: flex; flex-wrap: wrap; gap: 6px; }
 .cap { font-size: 11px; padding: 2px 8px; background: var(--c-bg); border-radius: 3px; color: var(--c-text-muted); }
 .cap.confirm { color: var(--c-warning); background: #fdf2df; }
-.start-btn { align-self: flex-start; }
+.start-btn {
+  flex: none;
+  align-self: flex-start;
+  margin-top: auto;
+}
 </style>

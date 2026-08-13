@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import AppMark from '../components/AppMark.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -92,7 +93,7 @@ function switchMode(next: 'login' | 'register') {
 
     <div class="stage">
       <header class="hero">
-        <span class="brand-mark" aria-hidden="true">澄</span>
+        <AppMark class="hero-mark" variant="product" size="lg" />
         <h1 class="brand-name">澄语</h1>
         <p class="tagline">和助手聊聊，把事情办完</p>
       </header>
@@ -257,20 +258,8 @@ function switchMode(next: 'login' | 'register') {
   text-align: center;
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
+.hero-mark {
   margin: 0 auto 14px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, var(--c-primary) 0%, #0a8a84 100%);
-  color: #fff;
-  font-family: 'Noto Serif SC', 'Songti SC', serif;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 10px 28px rgba(13, 107, 103, 0.28);
   animation: mark-breathe 4.5s ease-in-out infinite;
 }
 .brand-name {
@@ -411,8 +400,8 @@ input:focus {
   }
 }
 @keyframes mark-breathe {
-  0%, 100% { transform: translateY(0); box-shadow: 0 10px 28px rgba(13, 107, 103, 0.28); }
-  50% { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(13, 107, 103, 0.34); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 @keyframes wash-drift {
   from { transform: translate3d(0, 0, 0) scale(1); }
@@ -444,7 +433,7 @@ input:focus {
   .bg-wash,
   .orb,
   .bg-grid,
-  .brand-mark,
+  .hero-mark,
   .hero,
   .tagline,
   .login-card,
@@ -462,11 +451,6 @@ input:focus {
 @media (max-width: 480px) {
   .login-card {
     padding: 20px 16px 18px;
-  }
-  .brand-mark {
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
   }
 }
 </style>

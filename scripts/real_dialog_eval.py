@@ -415,7 +415,7 @@ def main() -> int:
     parser.add_argument(
         "--only",
         default="intelligent,parity,dashboard,model",
-        help="comma: intelligent,parity,dashboard,model",
+        help="comma: intelligent,parity,dashboard,model（文档族请另跑 scripts/doc_agent_eval.py）",
     )
     parser.add_argument("--json-out", default="")
     args = parser.parse_args()

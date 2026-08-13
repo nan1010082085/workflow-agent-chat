@@ -307,10 +307,11 @@ function onWsClick() {
   transition: border-color .2s ease, box-shadow .2s ease;
 }
 .composer-field:focus-within {
-  border-color: var(--c-primary);
+  border-color: color-mix(in srgb, var(--c-primary) 72%, var(--c-accent));
   box-shadow:
-    0 0 0 3px rgba(13, 107, 103, .1),
-    0 0 16px rgba(94, 207, 196, .18);
+    0 0 0 3px rgba(13, 107, 103, .07),
+    0 0 18px rgba(243, 155, 69, .14),
+    0 0 28px rgba(13, 107, 103, .08);
 }
 .composer-field.disabled { background: #f4f6f6; }
 .composer-field.disabled:focus-within {
@@ -328,7 +329,7 @@ function onWsClick() {
   overflow: visible;
   opacity: 0;
   z-index: 2;
-  transition: opacity .2s ease;
+  transition: opacity .25s ease;
 }
 .composer-field:focus-within .stream-ring { opacity: 1; }
 .composer-field.disabled:focus-within .stream-ring { opacity: 0; }
@@ -344,22 +345,24 @@ function onWsClick() {
   stroke-linecap: round;
   stroke-dashoffset: 0;
 }
+/** 拖尾：品牌青绿，长而轻 */
 .stream-ring-trail {
-  stroke: rgba(13, 107, 103, .35);
-  stroke-width: 1.5;
-  /* 拖尾：更长、更淡 */
-  stroke-dasharray: 28 72;
+  stroke: rgba(13, 107, 103, .32);
+  stroke-width: 1.4;
+  stroke-dasharray: 30 70;
 }
+/** 亮头：暖琥珀（呼应 accent），短而亮、不刺眼 */
 .stream-ring-path {
-  stroke: #5ecfc4;
-  stroke-width: 2;
-  /* 亮头：短而亮，沿边框匀速绕行 */
-  stroke-dasharray: 12 88;
-  filter: drop-shadow(0 0 3px rgba(94, 207, 196, .9));
+  stroke: #e8b56a;
+  stroke-width: 2.1;
+  stroke-dasharray: 9 91;
+  filter:
+    drop-shadow(0 0 2.5px rgba(243, 155, 69, .55))
+    drop-shadow(0 0 7px rgba(232, 181, 106, .35));
 }
 .composer-field:focus-within .stream-ring-trail,
 .composer-field:focus-within .stream-ring-path {
-  animation: stream-along-border 2.4s linear infinite;
+  animation: stream-along-border 2.6s linear infinite;
 }
 
 @keyframes stream-along-border {
@@ -368,7 +371,7 @@ function onWsClick() {
 
 @media (prefers-reduced-motion: reduce) {
   .composer-field:focus-within {
-    box-shadow: 0 0 0 3px rgba(13, 107, 103, .12);
+    box-shadow: 0 0 0 3px rgba(13, 107, 103, .1);
   }
   .stream-ring { display: none; }
 }
@@ -380,7 +383,7 @@ function onWsClick() {
   z-index: 5;
   display: flex;
   flex-direction: column;
-  max-height: min(48vh, 360px);
+  max-height: min(56vh, 440px);
   padding: 12px;
   overflow: hidden;
   border: 1px solid var(--c-border);
@@ -391,9 +394,10 @@ function onWsClick() {
 .composer-panel :deep(.picker) {
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 2px;
+  padding: 2px 2px 8px;
 }
 .pending-list {
   display: flex;
