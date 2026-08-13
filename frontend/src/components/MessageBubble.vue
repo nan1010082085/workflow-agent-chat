@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import type { Message, RunStatusView, WaitingField, WaitingPayload } from '../types'
+import AppMark from './AppMark.vue'
 import MessageParts from './message/MessageParts.vue'
 import DocumentSummaryList from './message/DocumentSummaryList.vue'
 import MessageAttachmentList from './message/MessageAttachmentList.vue'
@@ -48,7 +49,7 @@ function statusClass(status: string): string {
 
 const DEFAULT_WAITING_ACTIONS: WaitingPayload['actions'] = [
   { action: 'approve', label: '确认继续', style: 'primary' },
-  { action: 'reject', label: '拒绝', style: 'danger' },
+  { action: 'reject', label: '需要修改', style: 'danger' },
 ]
 
 /** inline approval：waiting 卡片紧邻助手消息（F-04） */
@@ -223,14 +224,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 
 <template>
   <div class="message" :class="[message.role, message.status && isAssistant ? `st-${message.status}` : '']">
-    <span v-if="isAssistant" class="avatar" aria-hidden="true">
-      <svg viewBox="0 0 16 16" width="14" height="14">
-        <path
-          d="M8 1.8 9.6 5.4l3.8.4-2.9 2.6.9 3.7L8 10.4l-3.4 1.7.9-3.7L2.6 5.8l3.8-.4L8 1.8Z"
-          fill="currentColor"
-        />
-      </svg>
-    </span>
+    <AppMark v-if="isAssistant" variant="ai" size="sm" />
     <div class="bubble-wrap">
       <p v-if="isAssistant && message.tip" class="tip">{{ message.tip }}</p>
 
@@ -366,6 +360,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
           <span v-if="waiting.dangerous" class="danger-tag">需谨慎</span>
         </div>
         <p class="prompt">{{ waiting.prompt }}</p>
+        <p class="revise-hint">若结果不准，可在下方补充正确需求后点「需要修改」；我会取消本次确认并按你的说明继续。</p>
         <ul v-if="showFieldHints" class="question-list">
           <li v-for="f in waiting.fields" :key="f.key">{{ f.label }}</li>
         </ul>
@@ -412,17 +407,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 <style scoped>
 .message { display: flex; gap: 12px; max-width: 900px; margin: 0 auto 22px; align-items: flex-start; }
 .message.user { justify-content: flex-end; }
-.avatar {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-top: 2px;
-  color: #fff;
-  background: var(--c-accent);
-  border-radius: 8px;
-}
+.message :deep(.app-mark) { margin-top: 2px; }
 .bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 760px; min-width: 0; width: 100%; }
 .message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
 .result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
@@ -555,6 +540,12 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .title { font-weight: 700; font-size: 13px; }
 .danger-tag { font-size: 10px; font-weight: 700; color: #fff; background: var(--c-danger); padding: 1px 6px; border-radius: 3px; }
 .prompt { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--c-text-secondary); }
+.revise-hint {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
 .question-list {
   margin: 0 0 12px;
   padding: 8px 10px 8px 28px;

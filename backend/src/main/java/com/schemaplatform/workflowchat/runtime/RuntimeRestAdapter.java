@@ -704,7 +704,7 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
   private static List<ExecutionStatusDto.ActionDto> defaultActions() {
     return List.of(
         new ExecutionStatusDto.ActionDto("approve", "确认继续", "primary"),
-        new ExecutionStatusDto.ActionDto("reject", "拒绝", "danger"));
+        new ExecutionStatusDto.ActionDto("reject", "需要修改", "danger"));
   }
 
   /** 前端若把多字段答案序列化为 JSON，则转成平台 answers map。 */

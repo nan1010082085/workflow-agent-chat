@@ -74,10 +74,12 @@ public class RunSyncService {
 
   /**
    * HITL resume。对应 TASKS B-08。
+   * <p>平台对 approved=false 会终止执行；澄语在拒绝后补一条引导，避免对话「停住」。
    */
   @Transactional
   public RunStatusView resume(String runId, String action, String payload) {
     ChatRun run = runService.getRun(runId);
+    boolean rejected = isRejectAction(action);
     ExecutionStatusDto status = runtimeAdapter.resume(
         run.getRuntimeExecutionId(), run.getTenantId(),
         new RuntimeAdapter.ResumeRequest(action, payload));
@@ -87,8 +89,80 @@ public class RunSyncService {
       run.markRunning();
       updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
     }
+    if (rejected && run.getStatus() == RunStatus.CANCELLED) {
+      appendHitlRejectFollowUp(run, payload);
+    }
     ChatRun saved = runService.save(run);
     return RunStatusView.from(saved, status);
+  }
+
+  /**
+   * 是否为拒绝类动作。
+   * @param action 前端 action
+   * @return true 表示拒绝 / 否认 / 取消确认
+   */
+  private static boolean isRejectAction(String action) {
+    if (action == null || action.isBlank()) return false;
+    String a = action.trim().toLowerCase();
+    return a.equals("reject") || a.equals("deny") || a.equals("cancel");
+  }
+
+  /**
+   * 拒绝确认后的会话续航：标注原气泡，并追加引导回复。
+   * @param run 已取消的 run
+   * @param payload 用户填写的补充/说明
+   */
+  private void appendHitlRejectFollowUp(ChatRun run, String payload) {
+    ChatMessage placeholder = messageService.findAssistantByExecutionId(run.getRuntimeExecutionId());
+    if (placeholder != null) {
+      String existing = placeholder.getContent() == null ? "" : placeholder.getContent().trim();
+      String marked = existing.isEmpty()
+          ? "**本次确认已取消。**"
+          : existing + "\n\n---\n\n**本次确认已取消。**";
+      messageService.updateAssistantResult(
+          placeholder.getId(), marked, placeholder.getThinking(), MessageStatus.CANCELLED);
+    }
+
+    String revision = extractHumanRevision(payload);
+    String followUp = revision.isEmpty()
+        ? "好的，已取消本次确认。请直接告诉我你真正想做的事，我会重新开始。"
+        : "好的，已取消上次确认。请确认或继续补充下面的需求，也可直接发送新的说明：\n\n> "
+            + revision;
+    messageService.saveAssistantResult(
+        run.getSessionId(), followUp, null, MessageStatus.COMPLETED);
+    log.info("HITL 拒绝后续已写入 session={} run={} hasRevision={}",
+        run.getSessionId(), run.getId(), !revision.isEmpty());
+  }
+
+  /**
+   * 从 resume payload 提取可读的人工修正说明（忽略空 JSON）。
+   * @param payload 前端 payload
+   * @return 可读文本，可能为空
+   */
+  private static String extractHumanRevision(String payload) {
+    if (payload == null) return "";
+    String raw = payload.trim();
+    if (raw.isEmpty()) return "";
+    if (raw.startsWith("{") && raw.endsWith("}")) {
+      try {
+        com.fasterxml.jackson.databind.JsonNode node =
+            new com.fasterxml.jackson.databind.ObjectMapper().readTree(raw);
+        StringBuilder sb = new StringBuilder();
+        node.fields().forEachRemaining(e -> {
+          String v = e.getValue() == null || e.getValue().isNull()
+              ? ""
+              : e.getValue().asText("").trim();
+          if (!v.isEmpty()) {
+            if (sb.length() > 0) sb.append('；');
+            sb.append(v);
+          }
+        });
+        return sb.toString().trim();
+      } catch (Exception ignored) {
+        return raw;
+      }
+    }
+    return raw;
   }
 
   /**

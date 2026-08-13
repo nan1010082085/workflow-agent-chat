@@ -371,7 +371,13 @@ export const useChatStore = defineStore('chat', () => {
       const r: RunStatusView = await api.resumeRun(runId, { action, payload })
       currentRun.value = r
       applyRunToMessages(r)
-      if (!isTerminal(r.status)) startPolling(runId)
+      if (!isTerminal(r.status)) {
+        startPolling(runId)
+      } else {
+        stopPolling()
+        // 终态（含拒绝取消）回拉，展示后端写入的引导回复
+        if (r.sessionId) await fetchMessages(r.sessionId)
+      }
       return r
     } catch (e: any) {
       error.value = e.message || '提交失败'
@@ -382,10 +388,34 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /**
+   * 从拒绝 payload 提取可读修正（JSON 字段拼成一句）。
+   * @param {string | undefined} payload
+   * @returns {string}
+   */
+  function extractRejectRevision(payload?: string): string {
+    const raw = (payload || '').trim()
+    if (!raw) return ''
+    if (raw.startsWith('{') && raw.endsWith('}')) {
+      try {
+        const obj = JSON.parse(raw) as Record<string, unknown>
+        return Object.values(obj)
+          .map((v) => String(v ?? '').trim())
+          .filter(Boolean)
+          .join('；')
+      } catch {
+        return raw
+      }
+    }
+    return raw
+  }
+
+  /**
    * 对当前等待确认的消息提交审批；优先 currentRun，否则按 executionId 反查。
+   * 拒绝后：回拉引导消息；若有补充说明则自动开启新一轮，避免「停住」。
    */
   async function resumeWaiting(action: string, payload?: string) {
     let runId = currentRun.value?.runId
+    let sessionId = currentRun.value?.sessionId || loadedSessionId.value
     if (!runId) {
       const pending = messages.value.find(
         (m) => m.role === 'assistant' && m.status === 'WAITING_INPUT' && m.runtimeExecutionId,
@@ -396,6 +426,7 @@ export const useChatStore = defineStore('chat', () => {
           try {
             const r: RunStatusView = await api.getRunByExecution(pending.runtimeExecutionId)
             runId = r.runId
+            sessionId = r.sessionId || sessionId
             currentRun.value = r
             runIdByExec.value[pending.runtimeExecutionId] = r.runId
           } catch (e: any) {
@@ -409,7 +440,19 @@ export const useChatStore = defineStore('chat', () => {
       error.value = '找不到待确认的任务，请刷新后重试'
       return null
     }
-    return resumeRun(runId, action, payload)
+    const r = await resumeRun(runId, action, payload)
+    const rejected = ['reject', 'deny', 'cancel'].includes((action || '').toLowerCase())
+    if (rejected && r) {
+      sessionId = r.sessionId || sessionId
+      if (sessionId) await fetchMessages(sessionId)
+      const revision = extractRejectRevision(payload)
+      // 有补充说明时自动重开一轮，把「需要修改」变成真正的后续
+      const nextAgentId = r.agentId || currentRun.value?.agentId || null
+      if (revision && sessionId && nextAgentId) {
+        await sendMessage(sessionId, nextAgentId, revision)
+      }
+    }
+    return r
   }
 
   async function cancelRun(runId: string) {
