@@ -320,14 +320,16 @@ function onWsClick() {
   overflow: hidden;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
-.composer-field:focus-within {
+.composer-field:focus-within,
+.composer-field:hover:not(.disabled) {
   border-color: var(--c-primary);
   box-shadow:
     0 0 0 3px rgba(13, 107, 103, .08),
     0 0 20px rgba(94, 184, 176, .16);
 }
 .composer-field.disabled { background: #f4f6f6; }
-.composer-field.disabled:focus-within {
+.composer-field.disabled:focus-within,
+.composer-field.disabled:hover {
   border-color: var(--c-border);
   box-shadow: none;
 }
@@ -344,8 +346,10 @@ function onWsClick() {
   z-index: 2;
   transition: opacity .25s ease;
 }
-.composer-field:focus-within .stream-ring { opacity: 1; }
-.composer-field.disabled:focus-within .stream-ring { opacity: 0; }
+.composer-field:focus-within .stream-ring,
+.composer-field:hover:not(.disabled) .stream-ring { opacity: 1; }
+.composer-field.disabled:focus-within .stream-ring,
+.composer-field.disabled:hover .stream-ring { opacity: 0; }
 .stream-ring-trail,
 .stream-ring-path {
   x: 0.75px;
@@ -374,7 +378,9 @@ function onWsClick() {
     drop-shadow(0 0 6px rgba(13, 107, 103, .28));
 }
 .composer-field:focus-within .stream-ring-trail,
-.composer-field:focus-within .stream-ring-path {
+.composer-field:focus-within .stream-ring-path,
+.composer-field:hover:not(.disabled) .stream-ring-trail,
+.composer-field:hover:not(.disabled) .stream-ring-path {
   animation: stream-along-border 2.8s linear infinite;
 }
 
@@ -383,7 +389,8 @@ function onWsClick() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .composer-field:focus-within {
+  .composer-field:focus-within,
+  .composer-field:hover:not(.disabled) {
     box-shadow: 0 0 0 3px rgba(13, 107, 103, .1);
   }
   .stream-ring { display: none; }
