@@ -1,0 +1,248 @@
+
+--- gui-document-summary ---
+STATUS COMPLETED notes=[] ok=True
+### 核心主题
+2026-08-12 产品、研发、设计三方周会，聚焦澄语 HITL 流程缺陷与文档助手评测缺口，明确修复排期与分工。
+
+### 议题
+- **澄语 HITL 拒绝后无后续**：已排期修复。
+- **文档助手评测覆盖不足**：本周补齐。
+
+### 决议
+- 本周五前上线拒绝后续引导。
+- 文档类助手改为对话可用入口。
+
+### 待办
+- **张三**：改 webhook 入口。
+- **李四**：补 PDF 解析联调。
+
+--- gui-document-summary ---
+STATUS COMPLETED notes=[] ok=True
+# 会议纪要摘要
+
+**核心主题**：2026年8月12日周会，产品、研发、设计三方同步澄语 HITL 与文档助手的问题修复及推进计划。
+
+**关键要点**：
+- 澄语 HITL 拒绝后无后续引导，已排期修复。
+- 文档助手评测覆盖不足，计划本周补齐。
+- 决议本周五前上线拒绝后续引导，并将文档类助手改为对话可用入口。
+- 待办明确：张三负责改 webhook 入口，李四负责补 PDF 解析联调。
+
+**结论或建议**：
+- 按决议时间节点推进，确保周五前完成上线。
+- 及时跟进张三、李四的待办事项，保证文档助手的评测覆盖与联调进度。
+
+--- gui-contract-extract ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "parties": ["澄语科技有限公司", "华腾贸易有限公司"],
+  "effectiveDate": "2026-08-01",
+  "expiryDate": null,
+  "totalAmount": "人民币壹拾贰万元整（¥120,000）",
+  "paymentTerms": "签约后5个工作日内支付40%；验收通过后10个工作日内支付60%",
+  "keyClauses": [
+    {
+      "clause": "服务内容与周期",
+      "content": "乙方为甲方提供企业软件实施服务，周期90天。",
+      "riskLevel": "low"
+    },
+    {
+      "clause": "付款条款",
+      "content": "总金额120,000元，分两期支付：签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。",
+      "riskLevel": "medium"
+    },
+    {
+      "clause": "违约责任",
+      "content": …
+
+--- gui-contract-extract ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "parties": ["澄语科技有限公司", "华腾贸易有限公司"],
+  "effectiveDate": "2026-08-01",
+  "expiryDate": null,
+  "totalAmount": "人民币壹拾贰万元整（¥120,000）",
+  "paymentTerms": "分两期支付：签约后5个工作日内支付40%（¥48,000）；验收通过后10个工作日内支付60%（¥72,000）",
+  "keyClauses": [
+    {
+      "clause": "服务内容",
+      "content": "乙方为甲方提供企业软件实施服务，周期90天。",
+      "riskLevel": "low"
+    },
+    {
+      "clause": "付款条款",
+      "content": "总金额¥120,000，签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。",
+      "riskLevel": "medium"
+    },
+    {
+      "clause": "违约责任",
+  …
+
+--- gui-contract-risk-tag ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "overallRisk": "medium",
+  "clauses": [
+    {
+      "clause": "服务内容",
+      "riskLevel": "medium",
+      "issue": "服务内容仅描述'企业软件实施服务，周期90天'，未明确具体功能范围、交付标准、验收标准，易产生履约范围争议。"
+    },
+    {
+      "clause": "合同金额与付款",
+      "riskLevel": "medium",
+      "issue": "签约后即支付40%预付款，但未与具体交付成果挂钩，甲方在乙方未实际履行或履行不合格时面临资金损失风险；验收条款缺失，验收通过标准不明确。"
+    },
+    {
+      "clause": "违约责任",
+      "riskLevel": "medium",
+      "issue": "违约金为合同总额20%（24000元），可能高于实际损失，且未区分不同违约情形；未约定因交付质量不合格导致的返工、迟延等具体违约处理，守约方举证难度大。"
+    },
+   …
+
+--- gui-resume-screening ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "candidate": {
+    "name": "张三",
+    "education": "本科（计算机科学）",
+    "experience": "约3年（2022至今）",
+    "skills": ["Java", "Spring Cloud", "MySQL", "Redis", "Docker", "Kafka"]
+  },
+  "matchScore": 85,
+  "strengths": [
+    "核心技能与岗位要求高度匹配：Java、Spring、MySQL、Redis",
+    "有订单服务重构经验，QPS提升40%，具备性能优化能力",
+    "计算机科学本科学历，专业基础扎实"
+  ],
+  "weaknesses": [
+    "工作经历未标注具体起止月份，能否满足整3年经验需面试确认",
+    "简历中未展示系统设计或架构层面的更多细节"
+  ],
+  "recommendation": "yes",
+  "reason": "候选人在技术栈、学历和项目成果上均符合岗位要求，技能匹配度高；仅工作经验年限存在少量不确定性，建…
+
+--- gui-resume-screening ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "candidate": {
+    "name": "张三",
+    "education": "本科",
+    "experience": "2年（2022年至今）",
+    "skills": ["Java", "Spring Cloud", "MySQL", "Redis", "Docker", "Spring Boot", "Kafka"]
+  },
+  "matchScore": 80,
+  "strengths": [
+    "计算机科学本科学历，专业对口",
+    "具备Java后端开发经验，熟悉Spring Boot/Spring Cloud、MySQL、Redis等主流技术栈",
+    "有订单服务重构经历，QPS提升40%，体现性能优化能力",
+    "接触过Kafka，具备分布式消息队列基础"
+  ],
+  "weaknesses": [
+    "工作年限较短，仅约2年，经验尚浅",
+    "简历中项目描述较为简略，缺少具体职责、挑战和量化成果细节",
+    "未提供个人项目、开源贡献或技术博客等额外亮点",
+    "岗位要求未指定…
+
+--- gui-expense-audit ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "compliant": false,
+  "totalAmount": 639,
+  "items": [
+    {
+      "description": "高铁票 北京-上海",
+      "amount": 553,
+      "compliant": true,
+      "reason": "已提供发票号码，金额合理"
+    },
+    {
+      "description": "出租车",
+      "amount": 86,
+      "compliant": false,
+      "reason": "缺少对应发票，无法核实"
+    }
+  ],
+  "anomalies": [
+    "出租车费用未单独提供发票",
+    "报销日期2026-08-10为未来日期，需确认"
+  ],
+  "suggestion": "need_review"
+}
+
+--- gui-multi-doc-compare ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "differences": [
+    {
+      "topic": "合同金额",
+      "docA": "总金额人民币壹拾贰万元整（¥120,000）",
+      "docB": "总金额改为人民币壹拾万元整（¥100,000）",
+      "conflict": true
+    },
+    {
+      "topic": "违约责任-违约金比例",
+      "docA": "违约金为合同总额的20%",
+      "docB": "违约金改为合同总额的10%",
+      "conflict": true
+    }
+  ],
+  "consistencyIssues": [
+    "文档B仅提供了修改说明，未提供完整合同正文，无法确认除金额和违约金外其余条款是否完全一致",
+    "合同总金额修改后，分两期支付的40%/60%金额未在文档B中明确同步调整，需确认具体金额",
+    "违约金比例在文档A和文档B中存在两个不同版本，需确定最终适用比例"
+  ],
+  "mergeSuggestions": [
+    "建议以文档A的…
+
+--- gui-doc-image-recognition ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "type": "document",
+  "filename": "chat-message.txt",
+  "summary": "文档是一张铁路电子发票的OCR识别结果，包含发票代码、开票日期、金额、销售方和购买方等关键信息。",
+  "sections": [
+    {
+      "title": "发票信息",
+      "content": "发票代码 044001234567\n开票日期 2026-08-10\n金额 553.00\n销方 中国铁路12306\n购方 澄语科技"
+    }
+  ],
+  "keyPoints": [
+    "发票代码：044001234567",
+    "开票日期：2026-08-10",
+    "金额：553.00元",
+    "销方：中国铁路12306",
+    "购方：澄语科技"
+  ]
+}
+
+--- gui-contract-extract ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "parties": [],
+  "effectiveDate": null,
+  "expiryDate": null,
+  "totalAmount": "CNY 120000",
+  "paymentTerms": null,
+  "keyClauses": [],
+  "risks": []
+}
+
+--- gui-doc-image-recognition ---
+STATUS FAILED notes=['BAD_STATUS:FAILED', 'FAILED:视觉分析失败：当前模型不支持 image_url 多模态（400 Failed to deserialize the JSON body into the target type: messages[0]: unknown variant '] ok=False
+视觉分析失败：当前模型不支持 image_url 多模态（400 Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `image_url`, expected `text` at line 1 column 497）。请在模型中心为对话模型勾选 vision 能力，或设置环境变量 AI_VISION_OCR_MODEL。
+
+=== DOC AGENT SUMMARY ===
+[gui-document-summary] mode=paste PASS notes=[]
+[gui-document-summary] mode=attachment PASS notes=[]
+[gui-contract-extract] mode=paste PASS notes=[]
+[gui-contract-extract] mode=attachment PASS notes=[]
+[gui-contract-risk-tag] mode=paste PASS notes=[]
+[gui-resume-screening] mode=paste PASS notes=[]
+[gui-resume-screening] mode=attachment PASS notes=[]
+[gui-expense-audit] mode=paste PASS notes=[]
+[gui-multi-doc-compare] mode=paste PASS notes=[]
+[gui-doc-image-recognition] mode=paste PASS notes=[]
+[gui-contract-extract] mode=attachment PASS notes=[]
+[gui-doc-image-recognition] mode=attachment FAIL notes=['BAD_STATUS:FAILED', 'FAILED:视觉分析失败：当前模型不支持 image_url 多模态（400 Failed to deserialize the JSON body into the target type: messages[0]: unknown variant ']
+wrote docs/eval/latest_doc_agents.json passed=11 failed=1

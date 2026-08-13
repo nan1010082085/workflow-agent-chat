@@ -87,6 +87,7 @@ public class ChatService {
     List<ChatAttachment> attachments =
         uploadService.bindToMessage(userMsg.getId(), sessionId, attachmentIds);
     String runtimeInput = normalized + UploadService.formatAttachmentContext(attachments);
+    List<RuntimeAdapter.InvokeFile> invokeFiles = uploadService.toInvokeFiles(attachments);
 
     if (firstMessage) {
       session = sessionService.applyAutoTitleIfNeeded(sessionId, normalized);
@@ -97,7 +98,7 @@ public class ChatService {
     try {
       invokeResult = runtimeAdapter.invoke(new RuntimeAdapter.InvokeRequest(
           agent.slug(), runtimeInput, session.getTenantId(), session.getUserId(),
-          sessionId, idempotencyKey, history));
+          sessionId, idempotencyKey, history, invokeFiles));
     } catch (Exception e) {
       throw e;
     }

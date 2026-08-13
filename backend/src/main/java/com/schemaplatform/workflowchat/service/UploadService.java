@@ -169,6 +169,37 @@ public class UploadService {
     return sb.toString();
   }
 
+  /**
+   * 把已落盘附件转成平台 invoke 文件流（Base64）。
+   * @param attachments 本轮附件
+   * @return 平台 $input.files
+   */
+  public List<com.schemaplatform.workflowchat.runtime.RuntimeAdapter.InvokeFile> toInvokeFiles(
+      List<ChatAttachment> attachments) {
+    if (attachments == null || attachments.isEmpty()) return List.of();
+    List<com.schemaplatform.workflowchat.runtime.RuntimeAdapter.InvokeFile> out = new ArrayList<>();
+    for (ChatAttachment a : attachments) {
+      try {
+        Path path = root.resolve(a.getStoredRelativePath()).normalize();
+        if (!path.startsWith(root) || !Files.isRegularFile(path)) continue;
+        byte[] bytes = Files.readAllBytes(path);
+        // 单附件上限与上传配置对齐，避免 invoke 体过大
+        if (bytes.length > props.getMaxFileBytes()) {
+          log.warn("附件过大跳过传平台 id={} size={}", a.getId(), bytes.length);
+          continue;
+        }
+        String b64 = java.util.Base64.getEncoder().encodeToString(bytes);
+        out.add(new com.schemaplatform.workflowchat.runtime.RuntimeAdapter.InvokeFile(
+            a.getOriginalFilename(),
+            a.getContentType() == null ? "application/octet-stream" : a.getContentType(),
+            b64));
+      } catch (Exception e) {
+        log.warn("读取附件失败 id={}: {}", a.getId(), e.getMessage());
+      }
+    }
+    return out;
+  }
+
   static Path resolveRoot(String configured) {
     String value = configured == null || configured.isBlank() ? "~/payflow/agentChat" : configured.trim();
     if (value.startsWith("~/") || value.equals("~")) {

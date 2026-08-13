@@ -1,0 +1,135 @@
+{
+  "marker": "20260813-135431",
+  "passed": 11,
+  "failed": 1,
+  "results": [
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "sessionId": "f9f64faf-e978-4b43-bf98-9b349d7d6ce5",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "### 核心主题\n2026-08-12 产品、研发、设计三方周会，聚焦澄语 HITL 流程缺陷与文档助手评测缺口，明确修复排期与分工。\n\n### 议题\n- **澄语 HITL 拒绝后无后续**：已排期修复。\n- **文档助手评测覆盖不足**：本周补齐。\n\n### 决议\n- 本周五前上线拒绝后续引导。\n- 文档类助手改为对话可用入口。\n\n### 待办\n- **张三**：改 webhook 入口。\n- **李四**：补 PDF 解析联调。",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "sessionId": "b1e4ba3b-df2a-42c2-96aa-b0e0cab7afff",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "# 会议纪要摘要\n\n**核心主题**：2026年8月12日周会，产品、研发、设计三方同步澄语 HITL 与文档助手的问题修复及推进计划。\n\n**关键要点**：\n- 澄语 HITL 拒绝后无后续引导，已排期修复。\n- 文档助手评测覆盖不足，计划本周补齐。\n- 决议本周五前上线拒绝后续引导，并将文档类助手改为对话可用入口。\n- 待办明确：张三负责改 webhook 入口，李四负责补 PDF 解析联调。\n\n**结论或建议**：\n- 按决议时间节点推进，确保周五前完成上线。\n- 及时跟进张三、李四的待办事项，保证文档助手的评测覆盖与联调进度。",
+      "mode": "attachment"
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "sessionId": "f60a93de-5bcd-4172-8123-d4de873d0d2e",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"parties\": [\"澄语科技有限公司\", \"华腾贸易有限公司\"],\n  \"effectiveDate\": \"2026-08-01\",\n  \"expiryDate\": null,\n  \"totalAmount\": \"人民币壹拾贰万元整（¥120,000）\",\n  \"paymentTerms\": \"签约后5个工作日内支付40%；验收通过后10个工作日内支付60%\",\n  \"keyClauses\": [\n    {\n      \"clause\": \"服务内容与周期\",\n      \"content\": \"乙方为甲方提供企业软件实施服务，周期90天。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"付款条款\",\n      \"content\": \"总金额120,000元，分两期支付：签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。\",\n      \"riskLevel\": \"medium\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"任何一方逾期付款或交付超过15日，守约方有权解除合同并要求违约金为合同总额的20%。\",\n      \"riskLevel\": \"high\"\n    },\n    {\n      \"clause\": \"保密条款\",\n      \"content\": \"双方对商业秘密保密，期限为合同终止后3年。\",\n      \"riskLevel\": \"medium\"\n    },\n    {\n      \"clause\": \"争议解决\",\n      \"content\": \"提交甲方所在地人民法院诉讼解决。\",\n      \"riskLevel\": \"medium\"\n    }\n  ],\n  \"risks\": [\n    \"违约金比例为合同总额的20%，可能过高，存在被法院调减的风险。\",\n    \"合同未明确验收标准及验收流程，可能导致付款条件模糊，引发争议。\",\n    \"争议解决条款约定甲方所在地法院管辖，对乙方较为不利，增加乙方诉讼成本。\",\n    \"未约定合同到期日，仅依据服务周期推算，存在到期时间不明确的风险。\",\n    \"保密期限为合同终止后3年，但未明确保密范围及违约责任，可能执行困难。\"\n  ]\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "sessionId": "2a9aa161-b0bc-497f-bcaf-e1b8b2db923a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"parties\": [\"澄语科技有限公司\", \"华腾贸易有限公司\"],\n  \"effectiveDate\": \"2026-08-01\",\n  \"expiryDate\": null,\n  \"totalAmount\": \"人民币壹拾贰万元整（¥120,000）\",\n  \"paymentTerms\": \"分两期支付：签约后5个工作日内支付40%（¥48,000）；验收通过后10个工作日内支付60%（¥72,000）\",\n  \"keyClauses\": [\n    {\n      \"clause\": \"服务内容\",\n      \"content\": \"乙方为甲方提供企业软件实施服务，周期90天。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"付款条款\",\n      \"content\": \"总金额¥120,000，签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。\",\n      \"riskLevel\": \"medium\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"任何一方逾期付款或交付超过15日，守约方有权解除合同并要求支付合同总额20%的违约金。\",\n      \"riskLevel\": \"medium\"\n    },\n    {\n      \"clause\": \"保密条款\",\n      \"content\": \"双方对商业秘密保密，期限为合同终止后3年。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"争议解决\",\n      \"content\": \"提交甲方所在地人民法院诉讼解决。\",\n      \"riskLevel\": \"high\"\n    }\n  ],\n  \"risks\": [\n    \"争议解决条款约定由甲方所在地法院管辖，对乙方可能造成诉讼不便，增加维权成本。\",\n    \"违约金比例（合同总额20%）可能偏高，若实际损失较小，违约方可能请求法院酌减。\",\n    \"付款以验收通过为条件，但合同未明确验收标准和程序，可能导致付款延迟或争议。\",\n    \"服务周期90天未明确起算日期，可能与签约后付款时间产生衔接歧义。\",\n    \"保密期限为合同终止后3年，但未约定保密信息范围和例外情形，可能导致责任边界不清。\"\n  ]\n}",
+      "mode": "attachment"
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "sessionId": "3edbb076-86be-414a-bb8b-ddaf30c2d15c",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"overallRisk\": \"medium\",\n  \"clauses\": [\n    {\n      \"clause\": \"服务内容\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"服务内容仅描述'企业软件实施服务，周期90天'，未明确具体功能范围、交付标准、验收标准，易产生履约范围争议。\"\n    },\n    {\n      \"clause\": \"合同金额与付款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"签约后即支付40%预付款，但未与具体交付成果挂钩，甲方在乙方未实际履行或履行不合格时面临资金损失风险；验收条款缺失，验收通过标准不明确。\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"违约金为合同总额20%（24000元），可能高于实际损失，且未区分不同违约情形；未约定因交付质量不合格导致的返工、迟延等具体违约处理，守约方举证难度大。\"\n    },\n    {\n      \"clause\": \"保密\",\n      \"riskLevel\": \"low\",\n      \"issue\": \"保密期限为合同终止后3年，约定合理；但未定义商业秘密范围及违约泄露后果，实际执行存在模糊性。\"\n    },\n    {\n      \"clause\": \"争议解决\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"约定由甲方所在地法院诉讼，对乙方增加诉讼成本和不便，存在程序上的不利因素。\"\n    }\n  ],\n  \"recommendations\": [\n    \"细化服务内容：明确软件功能清单、交付物、实施里程碑、验收标准及验收流程。\",\n    \"调整付款比例与节点：将40%预付款降至30%以内，增加按里程碑支付，并将验收款比例提高，降低甲方预付款风险。\",\n    \"明确验收程序：约定验收时间、验收方式、不符合要求的整改期限及拒收后的处理机制。\",\n    \"完善违约责任：按逾期交付、质量不合格、付款迟延等分别约定违约金计算方式，并设置违约金上限。\",\n    \"建议争议解决条款修改为原告方所在地或合同签订地法院，或约定仲裁，以平衡双方诉讼成本。\",\n    \"补充保密范围、保密义务具体措施及违反保密义务的赔偿责任。\"\n  ]\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "sessionId": "d20dbccb-fa22-49fb-810b-314b54f62c90",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科（计算机科学）\",\n    \"experience\": \"约3年（2022至今）\",\n    \"skills\": [\"Java\", \"Spring Cloud\", \"MySQL\", \"Redis\", \"Docker\", \"Kafka\"]\n  },\n  \"matchScore\": 85,\n  \"strengths\": [\n    \"核心技能与岗位要求高度匹配：Java、Spring、MySQL、Redis\",\n    \"有订单服务重构经验，QPS提升40%，具备性能优化能力\",\n    \"计算机科学本科学历，专业基础扎实\"\n  ],\n  \"weaknesses\": [\n    \"工作经历未标注具体起止月份，能否满足整3年经验需面试确认\",\n    \"简历中未展示系统设计或架构层面的更多细节\"\n  ],\n  \"recommendation\": \"yes\",\n  \"reason\": \"候选人在技术栈、学历和项目成果上均符合岗位要求，技能匹配度高；仅工作经验年限存在少量不确定性，建议进入面试进一步核实。\"\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "sessionId": "ac4b49f9-e761-4c32-8545-c8c94a62f08c",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年（2022年至今）\",\n    \"skills\": [\"Java\", \"Spring Cloud\", \"MySQL\", \"Redis\", \"Docker\", \"Spring Boot\", \"Kafka\"]\n  },\n  \"matchScore\": 80,\n  \"strengths\": [\n    \"计算机科学本科学历，专业对口\",\n    \"具备Java后端开发经验，熟悉Spring Boot/Spring Cloud、MySQL、Redis等主流技术栈\",\n    \"有订单服务重构经历，QPS提升40%，体现性能优化能力\",\n    \"接触过Kafka，具备分布式消息队列基础\"\n  ],\n  \"weaknesses\": [\n    \"工作年限较短，仅约2年，经验尚浅\",\n    \"简历中项目描述较为简略，缺少具体职责、挑战和量化成果细节\",\n    \"未提供个人项目、开源贡献或技术博客等额外亮点\",\n    \"岗位要求未指定，无法进行针对性匹配评估\"\n  ],\n  \"recommendation\": \"yes\",\n  \"reason\": \"候选人具备Java后端开发核心技能，本科学历，有实际项目经验并展现出性能优化能力，整体素质良好，符合通用Java后端工程师岗位要求。\"\n}",
+      "mode": "attachment"
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "sessionId": "3a4f38f7-40d8-43c4-ba72-5ce37bc9c7ae",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"compliant\": false,\n  \"totalAmount\": 639,\n  \"items\": [\n    {\n      \"description\": \"高铁票 北京-上海\",\n      \"amount\": 553,\n      \"compliant\": true,\n      \"reason\": \"已提供发票号码，金额合理\"\n    },\n    {\n      \"description\": \"出租车\",\n      \"amount\": 86,\n      \"compliant\": false,\n      \"reason\": \"缺少对应发票，无法核实\"\n    }\n  ],\n  \"anomalies\": [\n    \"出租车费用未单独提供发票\",\n    \"报销日期2026-08-10为未来日期，需确认\"\n  ],\n  \"suggestion\": \"need_review\"\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "sessionId": "95681a53-a89e-4358-95fe-00f782235240",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"differences\": [\n    {\n      \"topic\": \"合同金额\",\n      \"docA\": \"总金额人民币壹拾贰万元整（¥120,000）\",\n      \"docB\": \"总金额改为人民币壹拾万元整（¥100,000）\",\n      \"conflict\": true\n    },\n    {\n      \"topic\": \"违约责任-违约金比例\",\n      \"docA\": \"违约金为合同总额的20%\",\n      \"docB\": \"违约金改为合同总额的10%\",\n      \"conflict\": true\n    }\n  ],\n  \"consistencyIssues\": [\n    \"文档B仅提供了修改说明，未提供完整合同正文，无法确认除金额和违约金外其余条款是否完全一致\",\n    \"合同总金额修改后，分两期支付的40%/60%金额未在文档B中明确同步调整，需确认具体金额\",\n    \"违约金比例在文档A和文档B中存在两个不同版本，需确定最终适用比例\"\n  ],\n  \"mergeSuggestions\": [\n    \"建议以文档A的完整合同结构为基础，将总金额调整为人民币壹拾万元整（¥100,000），将违约金比例调整为双方最终确认的10%，生成一份合并后的正式版本\",\n    \"同步更新分期付款金额：签约后5个工作日内支付40%即人民币40,000元，验收通过后10个工作日内支付60%即人民币60,000元，并确保大小写一致\",\n    \"由合同双方对修订内容书面确认并签字盖章，避免之后因合同版本不一致产生争议\"\n  ]\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "sessionId": "70f31139-28bd-4773-b57d-658ab2e3ee53",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"type\": \"document\",\n  \"filename\": \"chat-message.txt\",\n  \"summary\": \"文档是一张铁路电子发票的OCR识别结果，包含发票代码、开票日期、金额、销售方和购买方等关键信息。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票代码 044001234567\\n开票日期 2026-08-10\\n金额 553.00\\n销方 中国铁路12306\\n购方 澄语科技\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票代码：044001234567\",\n    \"开票日期：2026-08-10\",\n    \"金额：553.00元\",\n    \"销方：中国铁路12306\",\n    \"购方：澄语科技\"\n  ]\n}",
+      "mode": "paste"
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "sessionId": "80b0d487-ca00-45d2-9957-6838418fd649",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "content": "{\n  \"parties\": [],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"CNY 120000\",\n  \"paymentTerms\": null,\n  \"keyClauses\": [],\n  \"risks\": []\n}",
+      "mode": "attachment"
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "sessionId": "f6e1bef4-087b-4d6a-875a-cfa273696085",
+      "status": "FAILED",
+      "ok": false,
+      "notes": [
+        "BAD_STATUS:FAILED",
+        "FAILED:视觉分析失败：当前模型不支持 image_url 多模态（400 Failed to deserialize the JSON body into the target type: messages[0]: unknown variant "
+      ],
+      "content": "视觉分析失败：当前模型不支持 image_url 多模态（400 Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `image_url`, expected `text` at line 1 column 497）。请在模型中心为对话模型勾选 vision 能力，或设置环境变量 AI_VISION_OCR_MODEL。",
+      "mode": "attachment"
+    }
+  ],
+  "insight": [
+    "catalog 里 supportedInputs 全是 text，但文档助手图多依赖 document-parse",
+    "若干助手入口仍是 webhook-trigger，澄语 invoke 可能拿不到可解析文档",
+    "Chat 附件对 pdf/png 无文本摘录，需平台 document-parse/vision 真正吃文件"
+  ]
+}

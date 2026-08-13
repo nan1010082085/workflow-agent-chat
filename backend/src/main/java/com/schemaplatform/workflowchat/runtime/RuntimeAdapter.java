@@ -35,6 +35,12 @@ public interface RuntimeAdapter {
    */
   record HistoryTurn(String role, String content) {}
 
+  /**
+   * 传给平台 document-parse 的文件流（input.file / input.files[0]）。
+   * contentBase64 为原始文件字节的 Base64。
+   */
+  record InvokeFile(String filename, String mimetype, String contentBase64) {}
+
   record InvokeRequest(
       String slug,
       String input,
@@ -43,17 +49,27 @@ public interface RuntimeAdapter {
       String sessionId,
       String idempotencyKey,
       /** 本轮之前的对话；不含当前 user message */
-      List<HistoryTurn> history
+      List<HistoryTurn> history,
+      /** 可选附件，映射为平台 $input.file */
+      List<InvokeFile> files
   ) {
     public InvokeRequest {
       history = history == null ? List.of() : List.copyOf(history);
+      files = files == null ? List.of() : List.copyOf(files);
+    }
+
+    /** 无附件时的便捷构造。 */
+    public InvokeRequest(
+        String slug, String input, String tenantId, String userId,
+        String sessionId, String idempotencyKey, List<HistoryTurn> history) {
+      this(slug, input, tenantId, userId, sessionId, idempotencyKey, history, List.of());
     }
 
     /** 无历史时的便捷构造（mock / 单测）。 */
     public InvokeRequest(
         String slug, String input, String tenantId, String userId,
         String sessionId, String idempotencyKey) {
-      this(slug, input, tenantId, userId, sessionId, idempotencyKey, List.of());
+      this(slug, input, tenantId, userId, sessionId, idempotencyKey, List.of(), List.of());
     }
   }
 

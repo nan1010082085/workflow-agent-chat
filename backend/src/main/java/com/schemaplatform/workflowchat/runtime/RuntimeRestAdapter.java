@@ -65,6 +65,23 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     if (request.userId() != null && !request.userId().isBlank()) {
       input.put("userId", request.userId());
     }
+    if (request.files() != null && !request.files().isEmpty()) {
+      List<Map<String, String>> files = new ArrayList<>();
+      for (RuntimeAdapter.InvokeFile f : request.files()) {
+        if (f == null || f.contentBase64() == null || f.contentBase64().isBlank()) continue;
+        Map<String, String> row = new java.util.LinkedHashMap<>();
+        row.put("filename", f.filename() == null || f.filename().isBlank() ? "upload.bin" : f.filename());
+        row.put("mimetype", f.mimetype() == null || f.mimetype().isBlank()
+            ? "application/octet-stream" : f.mimetype());
+        row.put("content", f.contentBase64());
+        files.add(row);
+      }
+      if (!files.isEmpty()) {
+        // document-parse / resolveWorkflowUploadFile 同时认 file 与 files[0]
+        input.put("file", files.get(0));
+        input.put("files", files);
+      }
+    }
     if (request.history() != null && !request.history().isEmpty()) {
       List<Map<String, String>> turns = new ArrayList<>();
       StringBuilder historyText = new StringBuilder();
