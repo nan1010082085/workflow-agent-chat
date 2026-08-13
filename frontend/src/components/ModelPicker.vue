@@ -5,7 +5,6 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
 <template>
   <label class="model-picker">
-    <span>模型</span>
     <el-select :model-value="modelValue || undefined" :disabled="loading || !models.length" placeholder="选择模型" @update:model-value="emit('update:modelValue', $event)">
       <el-option v-if="loading" label="正在加载模型…" value="" />
       <el-option v-else-if="!models.length" label="暂无可用模型" value="" />

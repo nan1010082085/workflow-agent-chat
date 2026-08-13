@@ -63,7 +63,7 @@ function useBaseModel() {
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
           <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
-          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起智能体' : '选择智能体' }}</button>
+          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起智能体' : '智能体' }}</button>
         </template>
         <template #panel>
           <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
