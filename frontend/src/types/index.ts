@@ -42,6 +42,36 @@ export interface Message {
   runtimeExecutionId: string | null
   status: MessageStatus
   createdAt: string
+  thinking?: string
+  tip?: string
+  toolCalls?: ToolCallInfo[]
+  documentSummaries?: MessageDocumentSummary[]
+  workflowExecution?: WorkflowMessageExecution
+}
+
+export interface ToolCallInfo {
+  id?: string
+  name: string
+  arguments: Record<string, unknown>
+  result?: unknown
+  error?: string
+}
+
+export interface MessageDocumentSummary {
+  documentId: string
+  filename: string
+  summary: string
+  pageCount?: number
+}
+
+export interface WorkflowMessageExecution {
+  executionId: string
+  workflowId: string
+  workflowName: string
+  status: string
+  nodeRecords?: Array<{ nodeId: string; nodeName: string; nodeType: string; status: string; startedAt?: string; finishedAt?: string; durationMs?: number }>
+  durationMs?: number
+  error?: string
 }
 
 export type RunStatus = 'RUNNING' | 'COMPLETED' | 'FAILED' | 'WAITING_INPUT' | 'CANCELLED'

@@ -29,6 +29,8 @@ export const useChatStore = defineStore('chat', () => {
         id: m.id, role: m.role, content: m.content,
         runtimeExecutionId: m.runtimeExecutionId,
         status: m.status, createdAt: m.createdAt,
+        thinking: m.thinking, tip: m.tip, toolCalls: m.toolCalls,
+        documentSummaries: m.documentSummaries, workflowExecution: m.workflowExecution,
       }))
       // 刷新恢复：若有未终结的 assistant 消息，恢复轮询
       const pending = messages.value.find(

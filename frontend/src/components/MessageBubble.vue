@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Message, RunStatusView, WaitingPayload } from '../types'
+import { splitTextAndCodeBlocks } from '../utils/textParser'
 
 const props = defineProps<{
   message: Message
@@ -47,6 +48,8 @@ function submit(action: string) {
   inputValue = ''
 }
 
+const contentParts = computed(() => splitTextAndCodeBlocks(props.message.content || ''))
+
 // 简易 Markdown 渲染（F-06）：处理 **粗体**、`code`、换行、列表
 function renderContent(content: string): string {
   if (!content) return ''
@@ -82,11 +85,27 @@ function copyContent() {
 
       <!-- 助手结果 -->
       <div v-else-if="message.content" class="result-wrap">
-        <p class="bubble" v-html="renderContent(message.content)"></p>
+        <div class="bubble message-content">
+          <template v-for="(part, index) in contentParts" :key="index">
+            <div v-if="part.type === 'text'" v-html="renderContent(part.content)"></div>
+            <pre v-else class="code-block"><code>{{ part.content }}</code></pre>
+          </template>
+        </div>
         <div v-if="isAssistant && message.status === 'COMPLETED'" class="result-actions">
           <button class="link-btn" @click="copyContent">复制</button>
         </div>
       </div>
+
+      <details v-if="isAssistant && message.thinking" class="detail-block">
+        <summary>思考过程</summary>
+        <div class="detail-content">{{ message.thinking }}</div>
+      </details>
+      <details v-if="isAssistant && message.toolCalls?.length" class="detail-block">
+        <summary>处理步骤（{{ message.toolCalls.length }}）</summary>
+        <div v-for="tool in message.toolCalls" :key="tool.id || tool.name" class="tool-row">
+          <strong>{{ tool.name }}</strong><span>{{ tool.error ? '失败' : tool.result !== undefined ? '已完成' : '处理中' }}</span>
+        </div>
+      </details>
 
       <!-- 等待确认提示 -->
       <div v-else-if="isAssistant && message.status === 'WAITING_INPUT'" class="bubble waiting-hint">
@@ -152,6 +171,13 @@ function copyContent() {
 .bubble :deep(pre) { background: #1e2a33; color: #e8efef; padding: 12px; border-radius: var(--radius); overflow-x: auto; margin: 8px 0; }
 .bubble :deep(pre code) { background: transparent; color: inherit; padding: 0; }
 .bubble :deep(ul) { margin: 6px 0; padding-left: 20px; }
+.message-content > :first-child { margin-top: 0; }
+.message-content > :last-child { margin-bottom: 0; }
+.code-block { margin: 10px 0 0; padding: 12px; overflow-x: auto; border-radius: var(--radius); background: #1e2a33; color: #e8efef; white-space: pre; }
+.detail-block { color: var(--c-text-muted); font-size: 12px; }
+.detail-block summary { cursor: pointer; }
+.detail-content { margin-top: 6px; padding: 8px 10px; background: var(--c-bg); white-space: pre-wrap; line-height: 1.5; }
+.tool-row { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; }
 .waiting-hint { color: var(--c-warning); background: #fdf2df; border-color: #f0d9a8; }
 .failed-hint { color: var(--c-danger); background: var(--c-danger-soft); border-color: #f0c4be; }
 .cancelled-hint { color: var(--c-text-muted); background: #eef2f2; border-color: var(--c-border); }

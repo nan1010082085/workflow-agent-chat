@@ -53,7 +53,7 @@ function onEnter(e: KeyboardEvent) {
 
 <style scoped>
 .composer { position: relative; flex: none; width: min(720px, calc(100% - 48px)); margin: 0 auto 20px; padding-top: 14px; }
-.composer::before { content: ''; position: absolute; top: 0; left: 50%; width: 100vw; height: 1px; transform: translateX(-50%); background: var(--c-border); }
+.composer::before { content: none; }
 .composer-tools { display: flex; align-items: center; gap: 8px; min-height: 34px; margin-bottom: 8px; }
 .composer-panel { position: absolute; right: 0; bottom: calc(100% - 4px); left: 0; z-index: 5; padding: 12px; border: 1px solid var(--c-border); border-radius: var(--radius); background: var(--c-surface); box-shadow: 0 8px 24px rgba(20, 40, 40, .12); }
 textarea { display: block; width: 100%; min-height: 48px; max-height: 160px; resize: none; padding: 14px 54px 26px 16px; border: 1px solid var(--c-border); border-radius: var(--radius-lg); outline: none; background: var(--c-surface); line-height: 1.5; font-size: 14px; }
