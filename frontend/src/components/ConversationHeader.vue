@@ -14,13 +14,13 @@ const emit = defineEmits<{
       <span class="identity-icon">{{ agent?.icon || '✦' }}</span>
       <div class="identity-copy">
         <span class="identity-label">正在使用</span>
-        <strong>{{ agent?.name || '选择一个助手开始' }}</strong>
+        <strong>{{ agent?.name || '选择一个智能体开始' }}</strong>
       </div>
     </div>
     <div class="conversation-actions">
       <span v-if="processing" class="processing-label"><i></i>正在处理</span>
       <button class="text-action" type="button" @click="emit('changeAssistant')">
-        {{ hasMessages ? '新建对话' : '选择助手' }}
+        {{ hasMessages ? '新建对话' : '选择智能体' }}
       </button>
       <button v-if="hasMessages" class="text-action" type="button" @click="emit('toggleDetails')">
         处理详情

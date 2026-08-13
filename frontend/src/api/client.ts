@@ -39,7 +39,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 function userMessage(code: string, status: number): string {
   const messages: Record<string, string> = {
-    CATALOG_UNAVAILABLE: '专用能力暂时不可用，请稍后重试',
+    CATALOG_UNAVAILABLE: '智能体暂时不可用，请稍后重试',
     MODEL_LIST_UNAVAILABLE: '模型列表暂时不可用，请稍后重试',
     MODEL_UNAVAILABLE: '当前模型暂时不可用，请换一个模型',
     MODEL_RUNTIME_UNAVAILABLE: '当前模型暂时无法响应，请稍后重试',

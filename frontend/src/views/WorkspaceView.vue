@@ -63,12 +63,12 @@ function useBaseModel() {
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
           <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
-          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起专用能力' : '选择专用能力' }}</button>
+          <button class="workflow-toggle" type="button" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">{{ showWorkflows ? '收起智能体' : '选择智能体' }}</button>
         </template>
         <template #panel>
-          <div class="panel-title"><strong>已发布的专用能力</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
+          <div class="panel-title"><strong>已发布的智能体</strong><button type="button" @click="showWorkflows = false">关闭</button></div>
           <AssistantPicker :model-value="selectedAgent?.id || null" @select="selectAgent" />
-          <p v-if="agentStore.error" class="subtle">专用能力暂时不可用，请稍后重试。</p>
+          <p v-if="agentStore.error" class="subtle">智能体暂时不可用，请稍后重试。</p>
         </template>
       </Composer>
     </main>

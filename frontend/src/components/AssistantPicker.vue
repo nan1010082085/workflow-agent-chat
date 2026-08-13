@@ -26,13 +26,13 @@ function pick(a: Agent) {
 <template>
 <div class="picker">
     <div v-if="agentStore.loading" class="empty-state" style="padding: 24px;">
-      <p>正在加载助手…</p>
+      <p>正在加载智能体…</p>
     </div>
     <div v-else-if="agentStore.error" class="empty-state" style="padding: 24px;">
-      <p>助手列表暂时不可用</p>
+      <p>智能体列表暂时不可用</p>
     </div>
     <div v-else-if="!agents.length" class="empty-state" style="padding: 24px;">
-      <p>暂无可用助手</p>
+      <p>暂无可用智能体</p>
     </div>
     <button
       v-for="a in agents" :key="a.id"

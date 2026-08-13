@@ -37,17 +37,17 @@ function updateTime(a: Agent): string {
 <template>
   <div class="assistant-browse">
     <header class="page-head">
-      <h1>选择助手</h1>
+      <h1>选择智能体</h1>
       <p>这里用于浏览可用能力；开始使用后会进入新的对话。</p>
     </header>
     <div class="grid">
       <div v-if="agentStore.loading" class="card skeleton" style="height: 140px;"></div>
       <div v-else-if="agentStore.error" class="empty-state">
-        <p>助手列表暂时不可用</p>
+        <p>智能体列表暂时不可用</p>
         <p style="font-size: 12px">{{ agentStore.error }}</p>
       </div>
       <div v-else-if="!agents.length" class="empty-state">
-        <p>暂无可用助手</p>
+        <p>暂无可用智能体</p>
       </div>
       <div v-for="a in agents" :key="a.id" class="card">
         <div class="card-head">

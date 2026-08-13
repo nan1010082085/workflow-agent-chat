@@ -32,7 +32,7 @@ function elapsed(run: RunStatusView): string {
       </header>
       <div class="drawer-body">
         <div v-if="agent" class="block">
-          <span class="label">助手</span>
+          <span class="label">智能体</span>
           <p class="val">{{ agent.name }}</p>
         </div>
         <div v-if="run" class="block">

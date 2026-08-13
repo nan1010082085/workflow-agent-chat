@@ -109,7 +109,7 @@ function copyContent() {
 
       <!-- 等待确认提示 -->
       <div v-else-if="isAssistant && message.status === 'WAITING_INPUT'" class="bubble waiting-hint">
-        助手正在等待你的确认，请在下方操作。
+        智能体正在等待你的确认，请在下方操作。
       </div>
 
       <!-- 失败 + 下一步动作（F-06） -->
@@ -118,7 +118,7 @@ function copyContent() {
         <div class="fail-actions">
           <button class="link-btn" @click="emit('retry')">重试</button>
           <span class="sep">·</span>
-          <button class="link-btn" @click="emit('cancel')">换一个助手</button>
+          <button class="link-btn" @click="emit('cancel')">换一个智能体</button>
         </div>
       </div>
 

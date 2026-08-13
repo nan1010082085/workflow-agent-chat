@@ -63,7 +63,7 @@ function formatTime(iso: string): string {
       <span class="brand-mark">W</span>
       <div>
         <strong>任务对话</strong>
-        <small>把事情交给合适的助手</small>
+        <small>把事情交给合适的智能体</small>
       </div>
     </div>
     <div class="session-list">
