@@ -75,7 +75,7 @@ function useBaseModel() {
   </div>
 </template>
 <style scoped>
-.workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:#eef3f4; }
+.workspace { display:flex; flex-direction:column; height:100%; min-height:0; background:#eef3f4 url('/workflow-agent-chat/chat-canvas.svg') center/cover no-repeat; }
 .topbar { min-height:68px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 32px; background:var(--c-surface); }.topbar-copy{display:flex;align-items:flex-start;flex-direction:column;gap:0;min-width:0}.status-error{margin:0 0 0 auto;color:var(--c-danger);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
 .topbar strong { font-size:16px; }.subtle { display:block; margin-top:4px; color:var(--c-text-muted); font-size:12px; }.workflow-toggle,.panel-title button,.mode-action { border:0; background:transparent; color:var(--c-primary); cursor:pointer; font-size:13px; }.mode-action { padding:7px 10px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface); }
 .panel-title { display:flex; justify-content:space-between; margin-bottom:12px; }
