@@ -202,7 +202,11 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
       <!-- 过程信息默认折叠，避免淹没结果 -->
-      <details v-if="isAssistant && message.thinking" class="detail-block">
+      <details
+        v-if="isAssistant && message.thinking"
+        class="detail-block"
+        :open="message.status === 'RUNNING'"
+      >
         <summary>思考过程</summary>
         <div class="detail-content">{{ message.thinking }}</div>
       </details>

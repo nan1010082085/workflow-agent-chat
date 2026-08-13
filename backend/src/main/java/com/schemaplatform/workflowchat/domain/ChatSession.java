@@ -35,6 +35,10 @@ public class ChatSession {
   @Column(name = "agent_name_snapshot", length = 255)
   private String agentNameSnapshot;
 
+  /** 平台 LangGraph AIConversation id（Mongo ObjectId），模型模式 WS 多轮复用 */
+  @Column(name = "platform_conversation_id", length = 64)
+  private String platformConversationId;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 32, nullable = false)
   private SessionStatus status;
@@ -89,10 +93,17 @@ public class ChatSession {
   public String getTitle() { return title; }
   public String getAgentId() { return agentId; }
   public String getAgentNameSnapshot() { return agentNameSnapshot; }
+  public String getPlatformConversationId() { return platformConversationId; }
   public SessionStatus getStatus() { return status; }
   public Instant getCreatedAt() { return createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
 
   public void setAgentId(String agentId) { this.agentId = agentId; }
   public void setAgentNameSnapshot(String agentNameSnapshot) { this.agentNameSnapshot = agentNameSnapshot; }
+
+  public void setPlatformConversationId(String platformConversationId) {
+    if (platformConversationId == null || platformConversationId.isBlank()) return;
+    this.platformConversationId = platformConversationId.trim();
+    this.updatedAt = Instant.now();
+  }
 }

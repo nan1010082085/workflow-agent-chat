@@ -79,8 +79,8 @@ function formatTime(iso: string): string {
     <div class="brand">
       <span class="brand-mark">W</span>
       <div>
-        <strong>任务对话</strong>
-        <small>选助手，用对话把事情做完</small>
+        <strong>澄语</strong>
+        <small>和助手聊聊，把事情办完</small>
       </div>
     </div>
     <div class="session-list">

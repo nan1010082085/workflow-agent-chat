@@ -27,6 +27,8 @@ export interface SessionSummary {
   title: string
   agentId: string | null
   agentName: string | null
+  /** 平台 AIConversation id，模型 WS 多轮复用 */
+  platformConversationId?: string | null
   status: string
   createdAt: string
   updatedAt: string

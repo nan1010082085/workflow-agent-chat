@@ -87,8 +87,8 @@ function switchMode(next: 'login' | 'register') {
       <div class="brand">
         <span class="brand-mark">W</span>
         <div>
-          <h1>任务对话</h1>
-          <p>{{ mode === 'login' ? '登录后继续你的助手与模型对话' : '注册平台账号，即可开始对话' }}</p>
+          <h1>澄语</h1>
+          <p>{{ mode === 'login' ? '登录后继续你的对话' : '注册账号，即可开始对话' }}</p>
         </div>
       </div>
 

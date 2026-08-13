@@ -32,7 +32,7 @@
 
 ## Phase 3：体验升级（3-5 天）
 
-- SSE 事件流。
+- 模型对话：平台 Socket.IO 事件流；助手执行进度可演进 `workflow:*`。
 - 文件附件。
 - Markdown、代码、结构化输出渲染。
 - 自动 Agent 路由和 Agent 搜索。

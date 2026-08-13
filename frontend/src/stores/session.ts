@@ -29,6 +29,7 @@ export const useSessionStore = defineStore('session', () => {
       const list = await api.listSessions()
       sessions.value = list.map((s: any) => ({
         id: s.id, title: s.title, agentId: s.agentId, agentName: s.agentName,
+        platformConversationId: s.platformConversationId || null,
         status: s.status, createdAt: s.createdAt, updatedAt: s.updatedAt,
       }))
     } catch (e: any) {
@@ -42,6 +43,7 @@ export const useSessionStore = defineStore('session', () => {
     const s = await api.createSession({ title, agentId, agentName })
     const summary: SessionSummary = {
       id: s.id, title: s.title, agentId: s.agentId, agentName: s.agentName,
+      platformConversationId: s.platformConversationId || null,
       status: s.status, createdAt: s.createdAt, updatedAt: s.updatedAt,
     }
     sessions.value = [summary, ...sessions.value.filter((item) => item.id !== summary.id)]
@@ -52,7 +54,7 @@ export const useSessionStore = defineStore('session', () => {
   /**
    * 发送消息后刷新侧栏：更新标题并置顶。
    */
-  function bumpSession(sessionId: string, patch: Partial<Pick<SessionSummary, 'title' | 'updatedAt' | 'agentName' | 'agentId'>> = {}) {
+  function bumpSession(sessionId: string, patch: Partial<Pick<SessionSummary, 'title' | 'updatedAt' | 'agentName' | 'agentId' | 'platformConversationId'>> = {}) {
     const idx = sessions.value.findIndex((s) => s.id === sessionId)
     if (idx < 0) return
     const next: SessionSummary = {

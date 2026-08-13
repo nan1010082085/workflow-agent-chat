@@ -53,11 +53,13 @@ public class SessionController {
 
   public record SessionSummary(
       String id, String title, String agentId, String agentName,
+      String platformConversationId,
       String status, Instant createdAt, Instant updatedAt
   ) {
     static SessionSummary from(ChatSession s) {
       return new SessionSummary(s.getId(), s.getTitle(), s.getAgentId(),
-          s.getAgentNameSnapshot(), s.getStatus().name(), s.getCreatedAt(), s.getUpdatedAt());
+          s.getAgentNameSnapshot(), s.getPlatformConversationId(),
+          s.getStatus().name(), s.getCreatedAt(), s.getUpdatedAt());
     }
   }
 }

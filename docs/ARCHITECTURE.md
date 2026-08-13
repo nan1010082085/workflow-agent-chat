@@ -24,7 +24,7 @@ Chat Backend 是 BFF 与产品领域服务，不直接读取 Runtime 业务库�
 新 Chat 项目本身不使用 LangChain 或 LangGraph 作为核心架构。
 
 - Vue 3 + TypeScript：Chat 产品界面。
-- Spring Boot：Chat BFF、会话、消息、租户、权限、Runtime adapter、SSE。
+- Spring Boot：Chat BFF、会话、消息、租户、权限、Runtime adapter；模型流式依赖平台 Socket.IO。
 - MySQL：Chat 产品数据。
 - 现有 AI Runtime：继续使用 LangGraph、Workflow Executor、BullMQ、MCP 和模型配置。
 
@@ -35,7 +35,7 @@ LangGraph 属于 Agent Runtime，不属于 Chat 消费端。Chat 只有在未来
 | 服务 | 负责 | 不负责 |
 |---|---|---|
 | Chat Web | 会话交互、Agent 选择、结果展示 | 保存密钥、执行 Workflow |
-| Chat Backend | Chat 数据、权限、Runtime BFF、SSE/轮询 | 编辑/发布 Workflow、直接调用模型 |
+| Chat Backend | Chat 数据、权限、Runtime BFF、轮询；模型流式经平台 WS | 编辑/发布 Workflow、直接调用模型 |
 | AI Runtime | Agent Catalog 来源、Workflow 执行、模型/工具/RAG、HITL | Chat UI、Chat 会话列表 |
 | MySQL | session/message/run 映射 | Workflow graph 和 Runtime execution 明细 |
 
@@ -105,8 +105,8 @@ Runtime cancelled -> Chat CANCELLED
 
 ## 6. 技术决策
 
-- Java Spring Boot：承载认证、租户隔离、Chat 数据、Runtime adapter、SSE 聚合。
+- Java Spring Boot：承载认证、租户隔离、Chat 数据、Runtime adapter；模型流式依赖平台 Socket.IO。
 - MySQL：只存 Chat 产品自有数据，使用 Flyway 管理 schema。
 - Vue 3 + TypeScript：独立 Chat UI；不复制 `ai/app` 的 Pinia/组件。
-- 初期轮询：兼容当前 Runtime；Runtime 事件稳定后切换 SSE，前端 API 不变。
+- 模型对话：平台 Socket.IO（`chat:send` / `chat:event`）；助手路径初期轮询，后续可切 `workflow:*` WS。
 - 不引入 LangGraph：Chat 的职责是消费 Workflow，不负责重新编排底层 Agent。

@@ -59,12 +59,31 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
 
   @Override
   public InvokeResult invoke(InvokeRequest request) {
-    // 平台节点普遍读 input.message；纯字符串会导致 Agent 节点拿不到用户输入
-    Map<String, Object> requestBody = Map.of(
-        "input", Map.of("message", request.input()),
-        "sessionId", request.sessionId(),
-        "trigger", "chat"
-    );
+    // 平台节点读 input.message；多轮上下文经 input.history → conversationHistory
+    Map<String, Object> input = new java.util.LinkedHashMap<>();
+    input.put("message", request.input());
+    if (request.userId() != null && !request.userId().isBlank()) {
+      input.put("userId", request.userId());
+    }
+    if (request.history() != null && !request.history().isEmpty()) {
+      List<Map<String, String>> turns = new ArrayList<>();
+      for (RuntimeAdapter.HistoryTurn turn : request.history()) {
+        if (turn == null || turn.content() == null || turn.content().isBlank()) continue;
+        String role = turn.role() == null ? "user" : turn.role().trim().toLowerCase();
+        if (!role.equals("user") && !role.equals("assistant") && !role.equals("system")) {
+          role = "user";
+        }
+        turns.add(Map.of("role", role, "content", turn.content().trim()));
+      }
+      if (!turns.isEmpty()) {
+        input.put("history", turns);
+      }
+    }
+    Map<String, Object> requestBody = new java.util.LinkedHashMap<>();
+    requestBody.put("input", input);
+    requestBody.put("sessionId", request.sessionId());
+    requestBody.put("trigger", "chat");
+
     String path = props.invokePathTemplate().replace("{slug}", request.slug());
     String correlationId = request.idempotencyKey();
     try {
@@ -78,6 +97,9 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
               .body(requestBody))
           .retrieve()
           .body(JsonNode.class);
+      log.info("Runtime invoke slug={} session={} historyTurns={} corr={}",
+          request.slug(), request.sessionId(),
+          request.history() == null ? 0 : request.history().size(), correlationId);
       return parseInvokeResult(body);
     } catch (HttpClientErrorException e) {
       throw classifyError("invoke", request.slug(), correlationId, e);

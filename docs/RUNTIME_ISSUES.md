@@ -25,7 +25,12 @@
   5. 分页/全量策略。
 - **当前 Chat 侧处置**：Adapter 预留配置化 endpoint + 字段映射层，在契约冻结前以配置驱动，不硬编码字段语义。接口不可用时返回明确的可识别错误。
 
-### ISS-02 Runtime invoke/resume/cancel/status 契约字段未对齐 [未确认]
+### ISS-02b Chat→Agent 多轮历史 [部分确认 / Chat 已补齐]
+
+- **问题**：澄语每轮 invoke 仅传 `{ message }`，平台虽支持 `input.history` → `conversationHistory`，但 Chat 未传，导致智能体多轮「失忆」。
+- **Chat 侧处置（2026-08-13）**：`ChatService` 组装近 20 轮 user/assistant 正文，经 `RuntimeRestAdapter` 写入 `input.history`；不含本轮 message。
+- **平台侧处置**：`initExecutionConversation` 已消费 `history`；`agent-loop` 将 `conversationHistory` 注入 LLM 消息，并在结束后回写执行记录。
+- **后续**：可评估 `continueFromExecutionId` 续跑链路（`triggeredBy` 归属需与 `X-Chat-Internal` 对齐）。
 
 - **来源**：TASKS C-02；ARCHITECTURE §4 §5
 - **问题**：架构文档列出了 Runtime 现有接口路径（`POST /api/ai/workflows/invoke/{slug}`、`GET .../executions/{id}`、`POST .../resume`、`POST .../cancel`），但请求体、响应体、状态枚举、错误码、超时、幂等键的精确契约未提供。
@@ -60,17 +65,25 @@
 
 ## 二、Runtime 能力与行为待确认
 
-### ISS-04 Runtime 轮询/SSE 能力与事件契约 [未确认]
+### ISS-04 Runtime 实时通道：平台 Socket.IO（WS），非 SSE [已确认]
 
-- **来源**：PRD P0「轮询适配器；统一设计为可替换 SSE」；P1「SSE 实时事件流」；TASKS O-05
-- **问题**：当前 Runtime 是否已支持 SSE 事件流未知；轮询 `executions/{id}` 的频率上限与最终态保证未明确。
-- **Chat 侧影响**：`RunStatusPoller` 的轮询间隔、退避策略、终态退出条件；未来 SSE 接入点。
-- **待确认项**：
-  1. Runtime 是否提供 `GET .../executions/{id}/events` 或 SSE 端点。
-  2. SSE 事件类型集合（`node.start` / `node.finish` / `status.change` / `waiting` / `completed` / `error`）。
-  3. 轮询频率建议与限流阈值。
-  4. 最终态是否保证一定返回（是否会存在永驻 running）。
-- **当前 Chat 侧处置**：先实现轮询，间隔可配置（默认 2s），带指数退避与最大轮询时长保护；SSE adapter 预留接口位，待 Runtime 支持后切换。
+- **来源**：PRD 曾写「轮询；可替换 SSE」；平台实际能力为 Socket.IO
+- **已确认（2026-08-13）**：
+  1. 平台 AI 对话流式走 **Socket.IO**：`chat:send` / `chat:event` / `chat:cancel`（path 生产为 `/schema-platform/ws`）。
+  2. 关键事件含 `thinking_delta`、`text_delta`、`done`、`error` 等；**不要**再以 HTTP SSE 作为澄语模型对话主路径。
+  3. 澄语模型模式：前端持用户 JWT 直连平台 WS 流式渲染，结束后 `POST .../model-turns` 落库；同步 `POST .../completions` 仅作兜底。
+  4. 助手（Workflow）执行进度平台另有 `workflow:*` WS；当前澄语助手模式仍可轮询 `executions/{id}`，后续可切 WS。
+- **Chat 侧处置**：依赖平台 WS；文档与实现不再预留「SSE 替换轮询」为模型对话主方案。
+
+---
+
+### ISS-04b（历史）Runtime 轮询/SSE 能力与事件契约 [已替代]
+
+> 原「待确认 SSE」条目已由上方 ISS-04 替代；助手路径轮询仍可用直至切 `workflow:*`。
+
+原待确认项（归档）：
+1. Runtime 是否提供 `GET .../executions/{id}/events` 或 SSE 端点 → **模型对话不采用 SSE**。
+2. 轮询频率与终态保证 → 助手路径仍适用。
 
 ### ISS-05 HITL waiting 载荷 schema 未提供 [未确认]
 

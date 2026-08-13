@@ -52,7 +52,7 @@ watch(
     const agent = mode.value === 'agent' && selectedAgent.value?.name
       ? ` · ${selectedAgent.value.name}`
       : ''
-    document.title = `${pageHeading.value}${agent} · 任务对话`
+    document.title = `${pageHeading.value}${agent} · 澄语`
   },
   { immediate: true },
 )

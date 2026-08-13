@@ -74,6 +74,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     if ("POST".equalsIgnoreCase(method) && (
         path.matches(".*/sessions/[^/]+/messages/?$")
             || path.matches(".*/sessions/[^/]+/completions/?$")
+            || path.matches(".*/sessions/[^/]+/model-turns/?$")
             || path.matches(".*/models/completions/?$"))) {
       return Bucket.MESSAGE;
     }

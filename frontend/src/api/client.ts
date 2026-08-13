@@ -127,6 +127,20 @@ export const api = {
     request<any>(`/chat/sessions/${sessionId}/completions`, { method: 'POST', body: JSON.stringify(data) }),
 
   /**
+   * 落库平台 WS 流式得到的模型回合（正文 + thinking）。
+   */
+  persistModelTurn: (sessionId: string, data: {
+    modelId: string
+    content: string
+    attachmentIds?: string[]
+    assistantContent: string
+    thinking?: string
+    platformConversationId?: string | null
+    status?: string
+  }) =>
+    request<any>(`/chat/sessions/${sessionId}/model-turns`, { method: 'POST', body: JSON.stringify(data) }),
+
+  /**
    * 上传附件到服务器（存盘路径由后端 CHAT_UPLOAD_ROOT 决定）。
    */
   uploadFile: async (file: File, sessionId?: string): Promise<MessageAttachment> => {

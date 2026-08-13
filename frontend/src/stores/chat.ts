@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api/client'
+import { streamModelChatViaPlatform } from '../api/platformSocket'
+import { useAgentStore } from './agent'
+import { useModelStore } from './model'
+import { useSessionStore } from './session'
 import type { Message, RunStatusView, SendMessageResult } from '../types'
 
 /**
@@ -119,6 +123,7 @@ export const useChatStore = defineStore('chat', () => {
     error.value = null
     const tempUserId = `model-u-${Date.now()}`
     const tempAssistantId = `model-a-${Date.now()}`
+    const priorMessages = messages.value.slice()
     messages.value.push(
       {
         id: tempUserId, role: 'user',
@@ -130,23 +135,124 @@ export const useChatStore = defineStore('chat', () => {
     )
     const userIndex = messages.value.length - 2
     const assistantIndex = messages.value.length - 1
+
+    const agentStore = useAgentStore()
+    const modelStore = useModelStore()
+    const sessionStore = useSessionStore()
+    if (!agentStore.agents.length) {
+      try { await agentStore.fetchAgents() } catch { /* 目录失败时仍可对话 */ }
+    }
+    const selectedModel = modelStore.selected()
+    const llmModel = selectedModel?.model || selectedModel?.name
+    const platformConversationId = sessionStore.current?.platformConversationId || null
+
     try {
-      const result = await api.completeInSession(sessionId, { modelId, content, attachmentIds })
-      const user = messages.value[userIndex]
-      const assistant = messages.value[assistantIndex]
-      if (user) user.id = result.messageId
-      if (assistant) {
-        assistant.id = result.assistantMessageId
-        assistant.content = result.content || '（模型返回了空内容）'
-        assistant.thinking = result.thinking || undefined
-        assistant.status = result.status || 'COMPLETED'
+      let streamedContent = ''
+      let streamedThinking = ''
+      let nextPlatformConvo: string | null = platformConversationId
+      let usedWs = false
+
+      try {
+        const stream = await streamModelChatViaPlatform({
+          message: content || (attachmentIds.length ? '（见附件）' : ''),
+          conversationId: platformConversationId,
+          llmModel,
+          agents: agentStore.agents,
+          priorMessages,
+          onEvent: (ev) => {
+            const assistant = messages.value[assistantIndex]
+            if (!assistant) return
+            if (ev.type === 'thinking_delta' && ev.content) {
+              assistant.thinking = `${assistant.thinking || ''}${ev.content}`
+            }
+            if (ev.type === 'text_delta' && ev.content) {
+              assistant.content = `${assistant.content || ''}${ev.content}`
+            }
+          },
+        })
+        usedWs = true
+        streamedContent = stream.content
+        streamedThinking = stream.thinking
+        nextPlatformConvo = stream.conversationId || platformConversationId
+        if (stream.error && !streamedContent) {
+          throw new Error(stream.error)
+        }
+      } catch (wsErr: any) {
+        const partial = messages.value[assistantIndex]
+        const hasPartial = Boolean(partial?.content?.trim() || partial?.thinking?.trim())
+        if (hasPartial) {
+          console.warn('[chat] 平台 WS 中断，保留已流式内容', wsErr?.message || wsErr)
+          usedWs = true
+          streamedContent = partial?.content || ''
+          streamedThinking = partial?.thinking || ''
+        } else {
+          console.warn('[chat] 平台 WS 流式失败，回退同步补全', wsErr?.message || wsErr)
+          const result = await api.completeInSession(sessionId, { modelId, content, attachmentIds })
+          const user = messages.value[userIndex]
+          const assistant = messages.value[assistantIndex]
+          if (user) user.id = result.messageId
+          if (assistant) {
+            assistant.id = result.assistantMessageId
+            assistant.content = result.content || '（模型返回了空内容）'
+            assistant.thinking = result.thinking || undefined
+            assistant.status = result.status || 'COMPLETED'
+          }
+          if (result.platformConversationId) {
+            sessionStore.bumpSession(sessionId, { platformConversationId: result.platformConversationId })
+          }
+          await fetchMessages(sessionId)
+          return result as {
+            sessionTitle?: string
+            content: string
+            thinking?: string
+            status: string
+            platformConversationId?: string
+          }
+        }
       }
-      await fetchMessages(sessionId)
-      return result as { sessionTitle?: string; content: string; thinking?: string; status: string }
+
+      if (usedWs) {
+        const assistant = messages.value[assistantIndex]
+        if (assistant) {
+          assistant.content = streamedContent || assistant.content || '（模型返回了空内容）'
+          assistant.thinking = streamedThinking || assistant.thinking || undefined
+          assistant.status = streamedContent ? 'COMPLETED' : 'FAILED'
+        }
+        const result = await api.persistModelTurn(sessionId, {
+          modelId,
+          content,
+          attachmentIds,
+          assistantContent: streamedContent || (messages.value[assistantIndex]?.content ?? ''),
+          thinking: streamedThinking || undefined,
+          platformConversationId: nextPlatformConvo,
+          status: streamedContent ? 'COMPLETED' : 'FAILED',
+        })
+        const user = messages.value[userIndex]
+        if (user) user.id = result.messageId
+        if (assistant) {
+          assistant.id = result.assistantMessageId
+          assistant.content = result.content || assistant.content
+          assistant.thinking = result.thinking || assistant.thinking
+          assistant.status = result.status || assistant.status
+        }
+        if (result.platformConversationId) {
+          sessionStore.bumpSession(sessionId, { platformConversationId: result.platformConversationId })
+        }
+        await fetchMessages(sessionId)
+        return result as {
+          sessionTitle?: string
+          content: string
+          thinking?: string
+          status: string
+          platformConversationId?: string
+        }
+      }
+
+      throw new Error('模型未返回结果')
     } catch (e: any) {
       const assistant = messages.value[assistantIndex]
       if (assistant) {
-        assistant.content = '这次没有得到回复，请稍后重试。'
+        assistant.content = assistant.content || '这次没有得到回复，请稍后重试。'
         assistant.status = 'FAILED'
       }
       error.value = e?.message || '模型暂时无法响应，请稍后重试'

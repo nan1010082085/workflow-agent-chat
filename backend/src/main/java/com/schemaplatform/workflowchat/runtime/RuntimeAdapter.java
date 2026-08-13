@@ -29,14 +29,33 @@ public interface RuntimeAdapter {
   /** 取消执行。 */
   ExecutionStatusDto cancel(String runtimeExecutionId, String tenantId);
 
+  /**
+   * 澄语会话历史回合（映射平台 {@code input.history}）。
+   * role 仅用 user / assistant / system。
+   */
+  record HistoryTurn(String role, String content) {}
+
   record InvokeRequest(
       String slug,
       String input,
       String tenantId,
       String userId,
       String sessionId,
-      String idempotencyKey
-  ) {}
+      String idempotencyKey,
+      /** 本轮之前的对话；不含当前 user message */
+      List<HistoryTurn> history
+  ) {
+    public InvokeRequest {
+      history = history == null ? List.of() : List.copyOf(history);
+    }
+
+    /** 无历史时的便捷构造（mock / 单测）。 */
+    public InvokeRequest(
+        String slug, String input, String tenantId, String userId,
+        String sessionId, String idempotencyKey) {
+      this(slug, input, tenantId, userId, sessionId, idempotencyKey, List.of());
+    }
+  }
 
   record InvokeResult(
       String runtimeExecutionId,

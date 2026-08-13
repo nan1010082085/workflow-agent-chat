@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api, setAccessTokenProvider, setRefreshHandler } from '../api/client'
+import { setPlatformSocketTokenProvider } from '../api/platformSocket'
 
 const ACCESS_KEY = 'wac_access_token'
 const REFRESH_KEY = 'wac_refresh_token'
@@ -28,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => Boolean(accessToken.value && user.value))
 
   setAccessTokenProvider(() => accessToken.value)
+  setPlatformSocketTokenProvider(() => accessToken.value)
   setRefreshHandler(() => tryRefresh())
 
   function readUser(): AuthUserInfo | null {

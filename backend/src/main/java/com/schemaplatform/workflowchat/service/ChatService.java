@@ -30,6 +30,11 @@ public class ChatService {
 
   private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
+  /** 传给平台的历史回合上限（与平台 trim 50 对齐，Chat 侧更保守） */
+  private static final int WORKFLOW_HISTORY_MAX_TURNS = 20;
+  /** 单条历史内容截断，避免 invoke 体过大 */
+  private static final int WORKFLOW_HISTORY_MAX_CHARS = 2000;
+
   private final SessionService sessionService;
   private final MessageService messageService;
   private final RunService runService;
@@ -74,6 +79,9 @@ public class ChatService {
     sessionService.save(session);
 
     String normalized = normalizeContent(content, attachmentIds);
+    // 先取历史（不含本轮），供平台 workflow conversationHistory 初始化
+    List<RuntimeAdapter.HistoryTurn> history = buildWorkflowHistory(sessionId);
+
     boolean firstMessage = messageService.countMessages(sessionId) == 0;
     ChatMessage userMsg = messageService.saveUserMessage(sessionId, normalized);
     List<ChatAttachment> attachments =
@@ -89,7 +97,7 @@ public class ChatService {
     try {
       invokeResult = runtimeAdapter.invoke(new RuntimeAdapter.InvokeRequest(
           agent.slug(), runtimeInput, session.getTenantId(), session.getUserId(),
-          sessionId, idempotencyKey));
+          sessionId, idempotencyKey, history));
     } catch (Exception e) {
       throw e;
     }
@@ -117,16 +125,13 @@ public class ChatService {
   }
 
   /**
-   * 基础模型对话：落库 user/assistant，并在首条消息时自动生成标题。
+   * 基础模型对话（同步兜底）：落库 user/assistant，注入已发布助手目录。
+   * 主路径为前端经平台 Socket.IO 流式后调用 {@link #persistStreamedModelTurn}。
    */
   @Transactional
   public ModelTurnResult completeModelTurn(
       String sessionId, String modelId, String content, List<String> attachmentIds) {
-    ChatSession session = sessionService.getSession(sessionId);
-    if (session.getAgentId() != null && !session.getAgentId().isBlank()) {
-      throw new IllegalStateException(
-          "该对话已绑定助手「" + session.getAgentNameSnapshot() + "」，请新建对话使用基础模型");
-    }
+    ChatSession session = requireModelSession(sessionId);
 
     String normalized = normalizeContent(content, attachmentIds);
     List<ChatMessage> history = messageService.listMessages(sessionId);
@@ -141,6 +146,7 @@ public class ChatService {
     }
 
     List<ModelAdapter.Message> llmMessages = new ArrayList<>();
+    llmMessages.add(new ModelAdapter.Message("system", buildAgentAwarenessPrompt()));
     for (ChatMessage m : history) {
       if (m.getContent() == null || m.getContent().isBlank()) continue;
       String hist = m.getContent();
@@ -174,7 +180,94 @@ public class ChatService {
     session = sessionService.getSession(sessionId);
 
     return new ModelTurnResult(
-        userMsg.getId(), assistant.getId(), reply, thinking, status, session.getTitle());
+        userMsg.getId(), assistant.getId(), reply, thinking, status,
+        session.getTitle(), session.getPlatformConversationId());
+  }
+
+  /**
+   * 落库前端经平台 WS 流式得到的模型回合（不调 LLM）。
+   */
+  @Transactional
+  public ModelTurnResult persistStreamedModelTurn(
+      String sessionId,
+      String modelId,
+      String content,
+      List<String> attachmentIds,
+      String assistantContent,
+      String thinking,
+      String platformConversationId,
+      MessageStatus status) {
+    ChatSession session = requireModelSession(sessionId);
+    String normalized = normalizeContent(content, attachmentIds);
+    boolean firstMessage = messageService.countMessages(sessionId) == 0;
+    ChatMessage userMsg = messageService.saveUserMessage(sessionId, normalized);
+    uploadService.bindToMessage(userMsg.getId(), sessionId, attachmentIds);
+
+    if (firstMessage) {
+      session = sessionService.applyAutoTitleIfNeeded(sessionId, normalized);
+    }
+
+    String reply = assistantContent == null || assistantContent.isBlank()
+        ? (status == MessageStatus.FAILED ? "这次没有得到回复，请稍后重试。" : "（模型返回了空内容）")
+        : assistantContent;
+    MessageStatus finalStatus = status == null ? MessageStatus.COMPLETED : status;
+    ChatMessage assistant = messageService.saveAssistantResult(sessionId, reply, thinking, finalStatus);
+
+    if (platformConversationId != null && !platformConversationId.isBlank()) {
+      session.setPlatformConversationId(platformConversationId);
+      sessionService.save(session);
+    }
+    sessionService.touch(sessionId);
+    session = sessionService.getSession(sessionId);
+
+    log.info("WS 流式模型回合落库 session={} model={} platformConvo={} status={}",
+        sessionId, modelId, session.getPlatformConversationId(), finalStatus);
+
+    return new ModelTurnResult(
+        userMsg.getId(), assistant.getId(), reply, thinking, finalStatus,
+        session.getTitle(), session.getPlatformConversationId());
+  }
+
+  private ChatSession requireModelSession(String sessionId) {
+    ChatSession session = sessionService.getSession(sessionId);
+    if (session.getAgentId() != null && !session.getAgentId().isBlank()) {
+      throw new IllegalStateException(
+          "该对话已绑定助手「" + session.getAgentNameSnapshot() + "」，请新建对话使用基础模型");
+    }
+    return session;
+  }
+
+  /** 注入澄语产品与已发布助手目录，避免模型否认「智能体」存在。 */
+  private String buildAgentAwarenessPrompt() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("你正在「澄语」对话产品中。用户可选用基础模型，或切换到已发布的工作流助手。\n");
+    sb.append("若用户询问有哪些智能体/助手/Agent，请根据下列已发布列表介绍，");
+    sb.append("并引导其在界面中选择对应助手开始对话；不要声称系统没有智能体或无法获知列表。\n");
+    try {
+      List<AgentDto> agents = agentCatalogService.listAgents().stream()
+          .filter(AgentDto::published)
+          .toList();
+      if (agents.isEmpty()) {
+        sb.append("当前租户暂无已发布助手；可说明这一点并建议稍后再试或联系管理员发布。");
+      } else {
+        sb.append("【当前租户已发布助手】\n");
+        int i = 1;
+        for (AgentDto a : agents) {
+          sb.append(i++).append(". ").append(a.name());
+          if (a.slug() != null && !a.slug().isBlank()) {
+            sb.append("（").append(a.slug()).append('）');
+          }
+          if (a.description() != null && !a.description().isBlank()) {
+            sb.append(" — ").append(a.description().trim());
+          }
+          sb.append('\n');
+        }
+      }
+    } catch (Exception e) {
+      log.warn("加载助手目录失败，跳过注入: {}", e.getMessage());
+      sb.append("助手列表暂时不可用；可建议用户稍后在界面刷新助手列表。");
+    }
+    return sb.toString();
   }
 
   private static String normalizeContent(String content, List<String> attachmentIds) {
@@ -187,6 +280,34 @@ public class ChatService {
       return "（见附件）";
     }
     return text;
+  }
+
+  /**
+   * 从澄语会话组装平台 workflow 多轮历史（不含本轮即将发送的用户消息）。
+   * 只取已完成的 user/assistant 正文，过滤失败占位与空内容。
+   */
+  private List<RuntimeAdapter.HistoryTurn> buildWorkflowHistory(String sessionId) {
+    List<ChatMessage> all = messageService.listMessages(sessionId);
+    List<RuntimeAdapter.HistoryTurn> turns = new ArrayList<>();
+    for (ChatMessage m : all) {
+      if (m.getContent() == null || m.getContent().isBlank()) continue;
+      if (m.getRole() == ChatMessage.MessageRole.USER) {
+        turns.add(new RuntimeAdapter.HistoryTurn("user", truncateHistory(m.getContent())));
+      } else if (m.getRole() == ChatMessage.MessageRole.ASSISTANT) {
+        if (m.getStatus() != null && m.getStatus() != MessageStatus.COMPLETED) continue;
+        turns.add(new RuntimeAdapter.HistoryTurn("assistant", truncateHistory(m.getContent())));
+      }
+    }
+    if (turns.size() <= WORKFLOW_HISTORY_MAX_TURNS) {
+      return turns;
+    }
+    return turns.subList(turns.size() - WORKFLOW_HISTORY_MAX_TURNS, turns.size());
+  }
+
+  private static String truncateHistory(String content) {
+    String text = content.trim();
+    if (text.length() <= WORKFLOW_HISTORY_MAX_CHARS) return text;
+    return text.substring(0, WORKFLOW_HISTORY_MAX_CHARS) + "…";
   }
 
   private MessageStatus mapToMessageStatus(ExecutionStatusDto.RunStatusDto runtimeStatus) {
@@ -216,6 +337,7 @@ public class ChatService {
       String content,
       String thinking,
       MessageStatus status,
-      String sessionTitle
+      String sessionTitle,
+      String platformConversationId
   ) {}
 }

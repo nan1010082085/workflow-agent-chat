@@ -58,7 +58,8 @@ Workflow Agent Chat           = 能力消费端 + 任务工作台
 - 用户选择 Agent 并发送文本消息
 - 调用 Runtime Open API，保存 Chat Message 与 Runtime Run 映射
 - 展示运行中、成功、失败状态和最终结果
-- 轮询适配器；统一设计为可替换 SSE
+- 轮询适配器（助手执行）；模型对话依赖平台 Socket.IO 流式
+- 统一设计为可替换实时通道（平台 WS，非 SSE）
 - waiting 状态展示审批卡片，支持 resume
 - 取消运行
 
@@ -66,7 +67,7 @@ Workflow Agent Chat           = 能力消费端 + 任务工作台
 
 - 自动选择 Agent
 - 文件附件
-- SSE 实时事件流
+- 平台 Socket.IO 实时事件流（模型 `chat:*`；助手可演进 `workflow:*`）
 - Agent 搜索、收藏、最近使用
 - 用量、耗时、错误等基础信息
 

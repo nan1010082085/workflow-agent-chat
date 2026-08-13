@@ -1,6 +1,7 @@
 package com.schemaplatform.workflowchat.controller;
 
 import com.schemaplatform.workflowchat.domain.ChatMessage;
+import com.schemaplatform.workflowchat.domain.MessageStatus;
 import com.schemaplatform.workflowchat.service.ChatService;
 import com.schemaplatform.workflowchat.service.MessageService;
 import com.schemaplatform.workflowchat.service.UploadService;
@@ -17,7 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 消息接口。对应 ARCHITECTURE §3 的 message 相关 API。
  * POST /api/chat/sessions/{id}/messages 发送消息并触发 Runtime 执行。
- * POST /api/chat/sessions/{id}/completions 基础模型对话并落库。
+ * POST /api/chat/sessions/{id}/completions 基础模型同步对话并落库（兜底）。
+ * POST /api/chat/sessions/{id}/model-turns 落库前端经平台 WS 流式得到的模型回合。
  */
 @RestController
 @RequestMapping("/api/chat/sessions")
@@ -56,6 +58,34 @@ public class MessageController {
         sessionId, request.modelId(), request.content(), request.attachmentIds());
   }
 
+  /**
+   * 持久化平台 WS 流式回合（正文 + thinking），不调用 LLM。
+   */
+  @PostMapping("/{sessionId}/model-turns")
+  public ChatService.ModelTurnResult persistModelTurn(
+      @PathVariable String sessionId,
+      @RequestBody PersistModelTurnRequest request) {
+    MessageStatus status = parseStatus(request.status());
+    return chatService.persistStreamedModelTurn(
+        sessionId,
+        request.modelId(),
+        request.content(),
+        request.attachmentIds(),
+        request.assistantContent(),
+        request.thinking(),
+        request.platformConversationId(),
+        status);
+  }
+
+  private static MessageStatus parseStatus(String raw) {
+    if (raw == null || raw.isBlank()) return MessageStatus.COMPLETED;
+    try {
+      return MessageStatus.valueOf(raw.trim().toUpperCase());
+    } catch (IllegalArgumentException e) {
+      return MessageStatus.COMPLETED;
+    }
+  }
+
   private MessageDto toDto(ChatMessage m) {
     List<UploadController.AttachmentDto> attachments = uploadService.listByMessage(m.getId())
         .stream()
@@ -74,6 +104,16 @@ public class MessageController {
       @NotBlank String modelId,
       String content,
       List<String> attachmentIds
+  ) {}
+
+  public record PersistModelTurnRequest(
+      @NotBlank String modelId,
+      String content,
+      List<String> attachmentIds,
+      String assistantContent,
+      String thinking,
+      String platformConversationId,
+      String status
   ) {}
 
   public record MessageDto(
