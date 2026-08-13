@@ -11,8 +11,32 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+
 server:
   port: ${PORT:8080}
+
+chat:
+  cors:
+    allowed-origins: ${CHAT_CORS_ORIGINS:*}
+
 runtime:
   base-url: ${RUNTIME_BASE_URL:http://localhost:3001}
   workflow-key: ${RUNTIME_WORKFLOW_KEY:}
+  api-key: ${RUNTIME_API_KEY:}
+  # 以下路径为过渡契约，稳定后需对齐（见 docs/RUNTIME_ISSUES.md ISS-01/ISS-02）
+  catalog-path: ${RUNTIME_CATALOG_PATH:/api/ai/workflows/invoke/catalog}
+  invoke-path-template: ${RUNTIME_INVOKE_PATH:/api/ai/workflows/invoke/{slug}}
+  execution-path-template: ${RUNTIME_EXEC_PATH:/api/ai/workflows/invoke/executions/{id}}
+  resume-path-template: ${RUNTIME_RESUME_PATH:/api/ai/workflows/invoke/executions/{id}/resume}
+  cancel-path-template: ${RUNTIME_CANCEL_PATH:/api/ai/workflows/invoke/executions/{id}/cancel}
+  connect-timeout-ms: ${RUNTIME_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${RUNTIME_READ_TIMEOUT_MS:30000}
+  poll-interval-ms: ${RUNTIME_POLL_INTERVAL_MS:2000}
+  poll-max-duration-ms: ${RUNTIME_POLL_MAX_MS:300000}
+  # workflow-key 为空时自动启用 mock fallback，供前端联调（见 ISS-07）
+  mock-enabled: ${RUNTIME_MOCK_ENABLED:false}
+
+logging:
+  level:
+    com.schemaplatform.workflowchat: INFO
+    org.springframework.web: INFO

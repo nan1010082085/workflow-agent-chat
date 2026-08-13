@@ -1,0 +1,71 @@
+package com.schemaplatform.workflowchat.service;
+
+import com.schemaplatform.workflowchat.domain.ChatMessage;
+import com.schemaplatform.workflowchat.domain.MessageStatus;
+import com.schemaplatform.workflowchat.repository.ChatMessageRepository;
+import com.schemaplatform.workflowchat.tenant.TenantContext;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 消息服务。保存与查询消息，带租户隔离。
+ */
+@Service
+public class MessageService {
+
+  private final ChatMessageRepository messageRepository;
+
+  public MessageService(ChatMessageRepository messageRepository) {
+    this.messageRepository = messageRepository;
+  }
+
+  @Transactional
+  public ChatMessage saveUserMessage(String sessionId, String content) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository.save(
+        ChatMessage.userMessage(UUID.randomUUID().toString(), tenantId, sessionId, content));
+  }
+
+  @Transactional
+  public ChatMessage saveAssistantPlaceholder(String sessionId, String runtimeExecutionId) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository.save(
+        ChatMessage.assistantPlaceholder(UUID.randomUUID().toString(), tenantId, sessionId, runtimeExecutionId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<ChatMessage> listMessages(String sessionId) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository.findByTenantIdAndSessionIdOrderByCreatedAtAsc(tenantId, sessionId);
+  }
+
+  /**
+   * 根据 runtimeExecutionId 找到对应的 assistant placeholder，用于轮询回填结果。
+   * 避免 duplicate：只更新已有的 placeholder，不新建消息。
+   */
+  @Transactional(readOnly = true)
+  public ChatMessage findAssistantByExecutionId(String runtimeExecutionId) {
+    String tenantId = TenantContext.tenantId();
+    return messageRepository
+        .findByTenantIdAndRuntimeExecutionIdAndRole(tenantId, runtimeExecutionId, ChatMessage.MessageRole.ASSISTANT)
+        .orElse(null);
+  }
+
+  @Transactional
+  public ChatMessage updateAssistantResult(String messageId, String content, MessageStatus status) {
+    ChatMessage msg = messageRepository.findById(messageId)
+        .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
+    msg.updateResult(content, status);
+    return messageRepository.save(msg);
+  }
+
+  @Transactional
+  public ChatMessage updateMessageStatus(String messageId, MessageStatus status) {
+    ChatMessage msg = messageRepository.findById(messageId)
+        .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
+    msg.updateStatus(status);
+    return messageRepository.save(msg);
+  }
+}
