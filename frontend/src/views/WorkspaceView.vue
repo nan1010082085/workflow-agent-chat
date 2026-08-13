@@ -199,7 +199,14 @@ function useBaseModel() {
         >
           <template #tools>
             <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
-            <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
+            <el-tooltip
+              v-if="mode === 'agent'"
+              :content="selectedAgent?.name ? `当前：${selectedAgent.name}` : '取消选择智能体'"
+              placement="top"
+              :show-after="200"
+            >
+              <button class="mode-action" type="button" aria-label="取消选择智能体" @click="useBaseModel">取消选择</button>
+            </el-tooltip>
             <el-tooltip content="智能体" placement="top" :show-after="200">
               <button class="workflow-toggle" type="button" aria-label="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
                 <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -226,7 +233,14 @@ function useBaseModel() {
       >
         <template #tools>
           <ModelPicker v-if="mode === 'model'" v-model="selectedModel" :models="modelStore.models" :loading="modelStore.loading" />
-          <button v-if="mode === 'agent'" class="mode-action" type="button" @click="useBaseModel">取消选择</button>
+          <el-tooltip
+            v-if="mode === 'agent'"
+            :content="selectedAgent?.name ? `当前：${selectedAgent.name}` : '取消选择智能体'"
+            placement="top"
+            :show-after="200"
+          >
+            <button class="mode-action" type="button" aria-label="取消选择智能体" @click="useBaseModel">取消选择</button>
+          </el-tooltip>
           <el-tooltip content="智能体" placement="top" :show-after="200">
             <button class="workflow-toggle" type="button" aria-label="智能体" :aria-expanded="showWorkflows" @click="showWorkflows = !showWorkflows">
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>

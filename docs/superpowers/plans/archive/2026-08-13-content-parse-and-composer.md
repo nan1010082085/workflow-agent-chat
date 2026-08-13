@@ -1,6 +1,8 @@
 # 内容解析与用户接话 Implementation Plan
 
-> **For agentic workers:** 按任务勾选实施；本计划已在同会话落地。
+> **Status:** `ARCHIVED` · `DONE` · 2026-08-13  
+> **Do not re-implement.** 已落地并部署；后续相关需求开新计划，勿在此文件续写任务。  
+> **落地分支：** `cursor/agent-plus-tooltip`（含 `f7986e6` 等）
 
 **Goal:** 对齐 `ai/app` 的消息拆段契约，升级正文渲染与结果展示，并让 Composer 按助手能力诚实接话（含文件能力未开放提示）。
 
@@ -22,7 +24,7 @@
 
 | 文件 | 职责 |
 |---|---|
-| `docs/superpowers/plans/2026-08-13-content-parse-and-composer.md` | 本计划 |
+| `docs/superpowers/plans/archive/2026-08-13-content-parse-and-composer.md` | 本计划（已归档） |
 | `frontend/src/utils/textParser.ts` | 拆段 + Markdown（升级） |
 | `frontend/src/components/message/MessageParts.vue` | 按 part 渲染 |
 | `frontend/src/components/message/DocumentSummaryList.vue` | 文档摘要卡 |
@@ -55,8 +57,19 @@
 - [x] 展示能力提示（文本 / 文件即将开放 / 需要确认）
 - [x] 含 `file` 时显示禁用上传按钮 + tooltip「文件能力即将开放」
 - [x] WorkspaceView 传入当前助手能力
+- [x] 文本区与工具栏分离（避免多行内容被底部控件遮挡）
 
 ### Task 5：验收
 
 - [x] `tsx` 脚本覆盖 split + markdown 样例
 - [x] 前端 `pnpm build` 通过
+
+---
+
+## 范围外（未纳入本计划 / 仍按产品路线图）
+
+| 项 | 状态 |
+|---|---|
+| 真实文件/图片上传闭环（PRD P1 / TASKS O-06） | 未做，仅诚实占位 |
+| ai/app 级 Artifact 可交互编辑、Schema/Flow 卡片 | 未做 |
+| 产品总计划 Phase 0–4 全量勾选 | 见 `docs/DEVELOPMENT_PLAN.md` / `docs/TASKS.md`，非本计划范围 |
