@@ -405,11 +405,11 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 </template>
 
 <style scoped>
-.message { display: flex; gap: 12px; max-width: 900px; margin: 0 auto 22px; align-items: flex-start; }
+.message { display: flex; gap: 12px; max-width: 1040px; margin: 0 auto 22px; align-items: flex-start; }
 .message.user { justify-content: flex-end; }
 .message :deep(.app-mark) { margin-top: 2px; }
-.bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 760px; min-width: 0; width: 100%; }
-.message.user .bubble-wrap { align-items: flex-end; max-width: 640px; }
+.bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 880px; min-width: 0; width: 100%; }
+.message.user .bubble-wrap { align-items: flex-end; max-width: 720px; }
 .result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
 .message.user .result-wrap { align-items: flex-end; }
 .tip {
@@ -423,6 +423,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   padding: 12px 16px;
   width: fit-content;
   max-width: 100%;
+  font-size: 14px;
   line-height: 1.7;
   background: var(--c-surface);
   border: 1px solid var(--c-border);

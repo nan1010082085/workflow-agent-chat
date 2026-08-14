@@ -213,10 +213,12 @@ function onWsClick() {
       <slot name="panel" />
     </div>
     <div class="composer-field" :class="{ disabled }">
-      <!-- 聚焦时沿边框路径绕行的流光 -->
+      <!-- 贴合边框的双向流光（顺/逆时针对向绕行） -->
       <svg class="stream-ring" aria-hidden="true" focusable="false">
-        <rect class="stream-ring-trail" pathLength="100" />
-        <rect class="stream-ring-path" pathLength="100" />
+        <rect class="stream-ring-trail stream-cw" pathLength="100" />
+        <rect class="stream-ring-path stream-cw" pathLength="100" />
+        <rect class="stream-ring-trail stream-ccw" pathLength="100" />
+        <rect class="stream-ring-path stream-ccw" pathLength="100" />
       </svg>
       <div v-if="pending.length" class="pending-list">
         <div
@@ -308,7 +310,7 @@ function onWsClick() {
 </template>
 
 <style scoped>
-.composer { position: relative; flex: none; width: min(840px, calc(100% - 48px)); margin: 0 auto 20px; padding-top: 14px; }
+.composer { position: relative; flex: none; width: min(960px, calc(100% - 48px)); margin: 0 auto 20px; padding-top: 14px; }
 .composer::before { content: none; }
 .composer-field {
   position: relative;
@@ -334,7 +336,7 @@ function onWsClick() {
   box-shadow: none;
 }
 
-/** 贴合边框的流光层（仅描边，不挡交互） */
+/** 贴合边框的双向流光层（仅描边，不挡交互） */
 .stream-ring {
   position: absolute;
   inset: 0;
@@ -364,28 +366,45 @@ function onWsClick() {
 }
 /** 拖尾：同色青绿，长而轻 */
 .stream-ring-trail {
-  stroke: rgba(13, 107, 103, .28);
-  stroke-width: 1.35;
-  stroke-dasharray: 34 66;
+  stroke: rgba(13, 107, 103, .26);
+  stroke-width: 1.3;
+  stroke-dasharray: 28 72;
 }
-/** 亮头：青白高光，沿边框流动、不跳色 */
+.stream-ring-trail.stream-ccw {
+  stroke: rgba(13, 107, 103, .18);
+  stroke-dasharray: 22 78;
+}
+/** 亮头：青白高光 */
 .stream-ring-path {
   stroke: #9fd9d2;
   stroke-width: 2;
-  stroke-dasharray: 10 90;
+  stroke-dasharray: 9 91;
   filter:
-    drop-shadow(0 0 2px rgba(159, 217, 210, .75))
-    drop-shadow(0 0 6px rgba(13, 107, 103, .28));
+    drop-shadow(0 0 2px rgba(159, 217, 210, .7))
+    drop-shadow(0 0 6px rgba(13, 107, 103, .26));
 }
-.composer-field:focus-within .stream-ring-trail,
-.composer-field:focus-within .stream-ring-path,
-.composer-field:hover:not(.disabled) .stream-ring-trail,
-.composer-field:hover:not(.disabled) .stream-ring-path {
-  animation: stream-along-border 2.8s linear infinite;
+.stream-ring-path.stream-ccw {
+  stroke: #b8e6e0;
+  stroke-width: 1.7;
+  stroke-dasharray: 7 93;
+  filter:
+    drop-shadow(0 0 2px rgba(184, 230, 224, .65))
+    drop-shadow(0 0 5px rgba(13, 107, 103, .2));
+}
+.composer-field:focus-within .stream-cw,
+.composer-field:hover:not(.disabled) .stream-cw {
+  animation: stream-cw 2.8s linear infinite;
+}
+.composer-field:focus-within .stream-ccw,
+.composer-field:hover:not(.disabled) .stream-ccw {
+  animation: stream-ccw 3.2s linear infinite;
 }
 
-@keyframes stream-along-border {
+@keyframes stream-cw {
   to { stroke-dashoffset: -100; }
+}
+@keyframes stream-ccw {
+  to { stroke-dashoffset: 100; }
 }
 
 @media (prefers-reduced-motion: reduce) {

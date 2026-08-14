@@ -360,7 +360,7 @@ const processing = computed(() =>
 .panel-title { display: flex; flex: none; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .conversation { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; background: transparent; }
 .empty-content { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; padding:24px 0; }
-.welcome { width:min(860px,calc(100% - 48px)); padding:0 28px 20px; text-align:center; }
+.welcome { width:min(960px,calc(100% - 48px)); padding:0 28px 20px; text-align:center; }
 .welcome-mark { margin:0 auto; }
 .welcome h1 { margin:12px 0 8px; font-size:30px; }
 .welcome p { margin:0; color:var(--c-text-secondary); }

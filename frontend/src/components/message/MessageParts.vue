@@ -131,19 +131,19 @@ function downloadPart(part: EnrichedPart) {
 </template>
 
 <style scoped>
-.message-parts { min-width: 0; width: fit-content; max-width: 100%; }
-.md-block { min-width: 0; width: fit-content; max-width: 100%; }
+.message-parts { min-width: 0; width: fit-content; max-width: 100%; font-size: 14px; }
+.md-block { min-width: 0; width: fit-content; max-width: 100%; font-size: 14px; }
 .md-block :deep(p) { margin: 0 0 0.55em; line-height: 1.7; }
 .md-block :deep(p:last-child) { margin-bottom: 0; }
 .md-block :deep(.table-scroll) {
   overflow-x: auto;
   margin: 10px 0;
-  max-width: min(100%, 720px);
+  max-width: min(100%, 840px);
   border: 1px solid var(--c-border);
   border-radius: 8px;
   background: #fff;
 }
-.md-block :deep(table) { border-collapse: collapse; width: 100%; font-size: 13px; }
+.md-block :deep(table) { border-collapse: collapse; width: 100%; font-size: 14px; }
 .md-block :deep(th),
 .md-block :deep(td) { border-bottom: 1px solid var(--c-border); padding: 8px 10px; text-align: left; vertical-align: top; }
 .md-block :deep(th) { background: #f3f6f6; font-weight: 650; }
@@ -165,7 +165,7 @@ function downloadPart(part: EnrichedPart) {
   margin-top: 14px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--c-border-soft, #e9efef);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--c-text);
 }
 .md-block :deep(h2:first-child) { margin-top: 0; }
