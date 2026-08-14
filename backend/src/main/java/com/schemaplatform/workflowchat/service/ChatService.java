@@ -10,7 +10,9 @@ import com.schemaplatform.workflowchat.runtime.ExecutionStatusDto;
 import com.schemaplatform.workflowchat.runtime.ModelAdapter;
 import com.schemaplatform.workflowchat.runtime.RuntimeAdapter;
 import com.schemaplatform.workflowchat.tenant.TenantContext;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -34,6 +36,16 @@ public class ChatService {
   private static final int WORKFLOW_HISTORY_MAX_TURNS = 20;
   /** 单条历史内容截断，避免 invoke 体过大 */
   private static final int WORKFLOW_HISTORY_MAX_CHARS = 2000;
+  /** 无附件时，粘贴正文合成 paste.txt 的最短长度（对齐 document-parse 回退） */
+  private static final int PASTE_AS_FILE_MIN_CHARS = 20;
+
+  /**
+   * 助手模式身份约束：专注本助手职责，不暴露基础平台品牌。
+   */
+  private static final String AGENT_FOCUS_HINT =
+      "【澄语助手约束】你是当前已选工作流助手。请专注本助手职责与用户当前任务；"
+          + "不要提及或介绍 schema-platform / 基础平台或底层实现；"
+          + "若被问身份，以本助手名称与职责回答。\n\n";
 
   private final SessionService sessionService;
   private final MessageService messageService;
@@ -86,8 +98,9 @@ public class ChatService {
     ChatMessage userMsg = messageService.saveUserMessage(sessionId, normalized);
     List<ChatAttachment> attachments =
         uploadService.bindToMessage(userMsg.getId(), sessionId, attachmentIds);
-    String runtimeInput = normalized + UploadService.formatAttachmentContext(attachments);
+    String runtimeInput = AGENT_FOCUS_HINT + normalized + UploadService.formatAttachmentContext(attachments);
     List<RuntimeAdapter.InvokeFile> invokeFiles = uploadService.toInvokeFiles(attachments);
+    invokeFiles = withPasteFallbackFile(invokeFiles, normalized);
 
     if (firstMessage) {
       session = sessionService.applyAutoTitleIfNeeded(sessionId, normalized);
@@ -147,7 +160,7 @@ public class ChatService {
     }
 
     List<ModelAdapter.Message> llmMessages = new ArrayList<>();
-    llmMessages.add(new ModelAdapter.Message("system", buildAgentAwarenessPrompt()));
+    llmMessages.add(new ModelAdapter.Message("system", buildAgentAwarenessPrompt(modelId)));
     for (ChatMessage m : history) {
       if (m.getContent() == null || m.getContent().isBlank()) continue;
       String hist = m.getContent();
@@ -238,12 +251,23 @@ public class ChatService {
     return session;
   }
 
-  /** 注入澄语产品与已发布助手目录，避免模型否认「智能体」存在。 */
-  private String buildAgentAwarenessPrompt() {
+  /**
+   * 注入澄语产品与已发布助手目录，避免模型否认「智能体」存在，并约束对外身份。
+   * @param modelId 当前选用模型（可空）
+   */
+  private String buildAgentAwarenessPrompt(String modelId) {
     StringBuilder sb = new StringBuilder();
     sb.append("你正在「澄语」对话产品中。用户可选用基础模型，或切换到已发布的工作流助手。\n");
+    sb.append("【身份规则】对外身份是「澄语」助手；不要自称 schema-platform、基础平台或其他底层平台品牌；");
+    sb.append("不要解释底层实现或平台架构。\n");
+    sb.append("若用户询问「你是谁」，回答你是澄语助手即可。\n");
+    if (modelId != null && !modelId.isBlank()) {
+      sb.append("若用户询问所用模型，可告知当前选用模型为「").append(modelId.trim()).append("」。\n");
+    } else {
+      sb.append("若用户询问所用模型且未指定具体模型，请如实说明模型名称未知，不要编造平台品牌。\n");
+    }
     sb.append("若用户询问有哪些智能体/助手/Agent，请根据下列已发布列表介绍，");
-    sb.append("并引导其在界面中选择对应助手开始对话；不要声称系统没有智能体或无法获知列表。\n");
+    sb.append("并引导其在界面中选择对应助手开始对话；不要声称系统没有智能体或无法获知列表；不要扯平台实现。\n");
     try {
       List<AgentDto> agents = agentCatalogService.listAgents().stream()
           .filter(AgentDto::published)
@@ -281,6 +305,26 @@ public class ChatService {
       return "（见附件）";
     }
     return text;
+  }
+
+  /**
+   * 无真实附件时，把足够长的粘贴正文合成 text/plain，写入平台 $input.file。
+   * 与平台 document-parse 的 message 回退互补，覆盖粘贴合同/纪要场景。
+   * @param files 已有附件
+   * @param content 本轮用户正文
+   * @return 可能追加了 paste.txt 的列表
+   */
+  private static List<RuntimeAdapter.InvokeFile> withPasteFallbackFile(
+      List<RuntimeAdapter.InvokeFile> files, String content) {
+    if (files != null && !files.isEmpty()) {
+      return files;
+    }
+    String text = content == null ? "" : content.trim();
+    if (text.length() < PASTE_AS_FILE_MIN_CHARS) {
+      return files == null ? List.of() : files;
+    }
+    String b64 = Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8));
+    return List.of(new RuntimeAdapter.InvokeFile("paste.txt", "text/plain", b64));
   }
 
   /**

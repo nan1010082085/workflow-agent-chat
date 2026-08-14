@@ -1,36 +1,36 @@
 
 --- gui-document-summary ---
 STATUS COMPLETED notes=[] ok=True
-### 核心主题
-本次周会（2026-08-12）由产品、研发、设计三方参与，聚焦澄语 HITL 流程缺陷修复与文档助手评测覆盖两大问题，并明确排期与责任分工。
+## 会议纪要摘要：周会（2026-08-12）
 
-### 关键要点
-- **议题一：澄语 HITL 拒绝后无后续**：确认问题存在，已排期修复。
-- **决议一**：本周五（8月14日）前上线“拒绝后引导”功能。
-- **议题二：文档助手评测覆盖不足**：需扩充评测场景。
-- **决议二**：文档类助手入口调整为“对话可用”，替代原独立入口。
+**核心主题**：产品、研发、设计三方周会，聚焦澄语 HITL 缺陷修复与文档助手评测优化。
 
-### 决议结论
-- 本周五前完成拒绝后续引导功能上线。
-- 文档类助手统一改为对话式入口，不再单独设立入口。
+### 议题
+1. **澄语 HITL 拒绝后无后续**：问题已确认，排期修复。
+2. **文档助手评测覆盖不足**：需在本周内补齐评测覆盖。
 
-### 待办事项
-- **张三**：负责修改 webhook 入口配置。
-- **李四**：负责补齐 PDF 解析场景的联调测试。
+### 决议
+- 本周五前上线“拒绝后续引导”功能。
+- 文档类助手改为对话可用入口。
+
+### 待办
+- **张三**：修改 webhook 入口。
+- **李四**：补充 PDF 解析联调。
 
 --- gui-document-summary ---
 STATUS COMPLETED notes=[] ok=True
-### 核心主题
-本次周会围绕澄语 HITL 拒绝后无后续、文档助手评测覆盖不足两大议题展开，明确修复与优化安排。
+## 核心主题
+2026-08-12周会主要围绕澄语HITL（人工介入）流程缺陷和文档助手评测不足两项问题展开讨论，并明确修复排期与责任分工。
 
-### 关键要点
-- 澄语 HITL 拒绝后缺少后续引导，已排期修复。
-- 文档助手评测覆盖不足，计划本周内补齐。
-- 决议：本周五前上线拒绝后续引导功能；文档类助手改为对话可用入口。
-- 待办分工：张三负责修改 webhook 入口，李四负责补齐 PDF 解析联调。
+## 关键要点
+- **澄语 HITL 拒绝后无后续**：问题已确认，已排期修复，计划本周五前上线拒绝后的引导流程。
+- **文档助手评测覆盖不足**：需在本周内补齐评测覆盖范围。
+- **文档类助手入口调整**：改为对话可用入口，以提升可用性。
+- **待办分工**：张三负责修改 webhook 入口，李四负责补充 PDF 解析联调。
 
-### 结论或建议
-各项工作需按决议时间节点推进，确保修复与评测按时完成，并落实人员分工，保障功能顺利上线。
+## 结论或建议
+- 两项议题均已有明确时间节点和负责人，建议按排期推进并及时验收。
+- 文档助手入口调整和评测补齐需协同完成，建议产品、研发、设计保持同步。
 
 --- gui-contract-extract ---
 STATUS COMPLETED notes=[] ok=True
@@ -39,20 +39,21 @@ STATUS COMPLETED notes=[] ok=True
   "effectiveDate": "2026-08-01",
   "expiryDate": null,
   "totalAmount": "人民币壹拾贰万元整（¥120,000）",
-  "paymentTerms": "分两期支付：1. 签约后5个工作日内支付40%；2. 验收通过后10个工作日内支付60%。",
+  "paymentTerms": "分两期支付：签约后5个工作日内支付40%；验收通过后10个工作日内支付60%",
   "keyClauses": [
     {
       "clause": "服务内容与周期",
-      "content": "乙方为甲方提供企业软件实施服务，周期90天。",
+      "content": "乙方为甲方提供企业软件实施服务，服务周期90天。",
       "riskLevel": "low"
     },
     {
-      "clause": "合同金额与付款",
-      "content": "总金额人民币壹拾贰万元整（¥120,000），签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。",
+      "clause": "合同金额与支付",
+      "content": "合同总金额人民币120,000元，分两期支付：签约后5个工作日支付40%，验收通过后10个工作日支付60%。",
       "riskLevel": "medium"
     },
     {
-      "clause": "违约责…
+      "clause": "违约金与解除权",
+…
 
 --- gui-contract-extract ---
 STATUS COMPLETED notes=[] ok=True
@@ -60,58 +61,25 @@ STATUS COMPLETED notes=[] ok=True
   "parties": ["澄语科技有限公司", "华腾贸易有限公司"],
   "effectiveDate": "2026-08-01",
   "expiryDate": null,
-  "totalAmount": "人民币120,000元",
-  "paymentTerms": "签约后5个工作日内支付40%；验收通过后10个工作日内支付60%",
+  "totalAmount": "人民币壹拾贰万元整（¥120,000）",
+  "paymentTerms": "签约后5个工作日内支付40%（¥48,000），验收通过后10个工作日内支付60%（¥72,000）",
   "keyClauses": [
     {
       "clause": "服务内容",
       "content": "乙方为甲方提供企业软件实施服务，周期90天。",
-      "riskLevel": "low"
-    },
-    {
-      "clause": "付款条款",
-      "content": "总金额人民币12万元，分两期支付：签约后5个工作日内支付40%，验收通过后10个工作日内支付60%。",
       "riskLevel": "medium"
     },
     {
-      "clause": "违约责任",
-      "content": "任何一方逾期付款或交付…
+      "clause": "合同金额与支付",
+      "content": "总金额¥120,000，分两期支付：签约后5个工作日内支付40%；验收通过后10个工作日内支付60%。",
+      "riskLevel": "medium"
+    },
+    {
+      "clause": "违约责…
 
 --- gui-contract-risk-tag ---
-STATUS COMPLETED notes=[] ok=True
-{
-  "overallRisk": "medium",
-  "clauses": [
-    {
-      "clause": "服务内容",
-      "riskLevel": "medium",
-      "issue": "服务内容描述过于笼统，仅约定'企业软件实施服务'，未明确具体功能范围、交付标准、验收 criteria 及服务里程碑，易引发履约范围争议。"
-    },
-    {
-      "clause": "合同金额与支付",
-      "riskLevel": "medium",
-      "issue": "签约后即支付40%预付款，且未与具体交付成果挂钩，若乙方中途违约或服务不达标，甲方追回预付款存在风险；同时未约定验收具体流程和标准，付款条件模糊。"
-    },
-    {
-      "clause": "违约责任",
-      "riskLevel": "medium",
-      "issue": "违约金为合同总额的20%，即24,000元，可能超过实际损失，根据《民法典》相关规定，过高违约金可能被法院调减；且仅约定逾期超过15日可…
-
---- gui-resume-screening ---
-STATUS COMPLETED notes=[] ok=True
-{
-  "candidate": {
-    "name": "张三",
-    "education": "本科",
-    "experience": "3年",
-    "skills": ["Java", "Spring Cloud", "MySQL", "Redis", "Docker"]
-  },
-  "matchScore": 85,
-  "strengths": ["具备3年后端开发经验，符合年限要求", "熟悉Java、Spring生态、MySQL、Redis等核心技能", "有订单服务重构经验，QPS提升40%，体现实际项目能力"],
-  "weaknesses": ["简历中未明确提到使用Spring框架（仅提到Spring Boot/Cloud，但属于Spring生态）", "工作经历描述较简略，缺乏更多技术细节和项目规模信息"],
-  "recommendation": "yes",
-  "reason": "候选人基本满足岗位要求，技能匹配度高，经验年限符合，具备实际项目优化能力，建议进入面试环节"
-}
+STATUS COMPLETED notes=['MISSING:风险,违约'] ok=False
+{"approved":true,"action":"approve","comment":"确认继续","payload":"确认继续"}
 
 --- gui-resume-screening ---
 STATUS COMPLETED notes=[] ok=True
@@ -122,11 +90,27 @@ STATUS COMPLETED notes=[] ok=True
     "experience": "2年",
     "skills": ["Java", "Spring Cloud", "MySQL", "Redis", "Docker"]
   },
-  "matchScore": 72,
-  "strengths": ["学历与岗位匹配", "有实际项目经验，订单服务重构并提升QPS", "技能栈覆盖Java后端常用技术"],
-  "weaknesses": ["工作年限较短", "未提及大数据量或高并发场景细节", "缺少具体项目规模描述"],
+  "matchScore": 78,
+  "strengths": ["技能匹配度高，掌握Spring/MySQL/Redis", "有实际项目经验，订单服务重构并提升性能", "学历符合要求"],
+  "weaknesses": ["工作经验不足3年，仅2年左右", "简历中未提及Kafka相关细节，实际使用深度需确认"],
   "recommendation": "yes",
-  "reason": "候选人具备计算机本科背景和2年后端开发经验，核心技能匹配，有实际性能优化成果，但经验尚浅，建议考虑。"
+  "reason": "候选人技能与岗位高度匹配，项目经历体现一定技术能力，但工作年限略低于3年要求，综合评估可推荐进入面试。"
+}
+
+--- gui-resume-screening ---
+STATUS COMPLETED notes=[] ok=True
+{
+  "candidate": {
+    "name": "张三",
+    "education": "本科",
+    "experience": "2年",
+    "skills": ["Java", "Spring Boot", "MySQL", "Redis", "Kafka", "Docker", "Spring Cloud"]
+  },
+  "matchScore": 75,
+  "strengths": ["具备Java后端开发核心技能", "熟悉常用中间件和框架", "有项目优化经验，QPS提升40%"],
+  "weaknesses": ["工作年限较短，经验相对有限", "简历未体现具体项目规模及业绩细节"],
+  "recommendation": "yes",
+  "reason": "候选人学历背景和技能栈与Java后端开发岗位较为匹配，虽经验仅2年但具备实际项目经验，可考虑录用。"
 }
 
 --- gui-expense-audit ---
@@ -139,19 +123,18 @@ STATUS COMPLETED notes=[] ok=True
       "description": "高铁票 北京-上海",
       "amount": 553,
       "compliant": false,
-      "reason": "未提供高铁票报销凭证，附件中的发票号码无法对应"
+      "reason": "报销单附件仅列示一个发票号码，无法确认对应高铁票据，存在票据缺失"
     },
     {
       "description": "出租车",
       "amount": 86,
       "compliant": false,
-      "reason": "缺少出租车发票或对应票据"
+      "reason": "缺少对应的出租车发票，票据不完整"
     }
   ],
   "anomalies": [
-    "报销日期 2026-08-10 为未来日期，存在异常",
-    "附件仅提供一个发票号码，无法覆盖高铁票和出租车两项费用",
-    "缺少出租车票或高铁票的正式报销凭证"
+    "附件仅提供一个发票号码，无法覆盖高铁票和出租车两笔费用",
+    "报销日期为未来日期（2026-08-10），需核实费用是否真实发生"
   ],
   "suggestion": "need_review"
 }
@@ -168,60 +151,51 @@ STATUS COMPLETED notes=[] ok=True
     },
     {
       "topic": "违约金比例",
-      "docA": "合同总额的20%",
-      "docB": "合同总额的10%",
+      "docA": "合同总额的 20%",
+      "docB": "合同总额的 10%",
       "conflict": true
     }
   ],
   "consistencyIssues": [
-    "两份合同在总金额和违约金比例上存在直接矛盾，需明确最终采用哪一版本",
-    "若金额变更，分期支付对应的金额需重新核算，但文档B未明确是否同步调整付款比例"
+    "两份文档对于合同金额和违约金比例存在矛盾，且未说明哪份为最终有效版本，会导致执行依据不明确。"
   ],
   "mergeSuggestions": [
-    "建议双方协商确定最终合同总金额（12万元或10万元），并在同一版本中统一修改",
-    "违约金比例应依据最终合同金额和商业风险重新确认，避免20%与10%并存",
- …
+    "双方应协商确定最终合同金额和违约金比例，并重新签署一份统一版本；建议明确修改日期和生效条款，废弃旧版本以避免歧义。"
+  ]
+}
 
 --- gui-doc-image-recognition ---
 STATUS COMPLETED notes=[] ok=True
 {
   "type": "document",
-  "filename": "chat-message.txt",
-  "summary": "该文档为一张报销发票的OCR文本，包含发票代码、开票日期、金额、销方和购方信息。",
+  "filename": "paste.txt",
+  "summary": "该文档是一张报销发票的OCR文本，包含发票代码、开票日期、金额、销方和购方等信息。",
   "sections": [
     {
       "title": "发票信息",
-      "content": "发票代码 044001234567；开票日期 2026-08-10；金额 553.00；销方 中国铁路12306；购方 澄语科技。"
+      "content": "发票代码：044001234567；开票日期：2026-08-10；金额：553.00；销方：中国铁路12306；购方：澄语科技。"
     }
   ],
   "keyPoints": [
-    "开票日期：2026-08-10",
     "金额：553.00元",
+    "开票日期：2026-08-10",
     "销方：中国铁路12306",
-    "购方：澄语科技",
-    "发票代码：044001234567"
+    "发票代码：044001234567",
+    "购方：澄语科技"
   ]
 }
 
 --- gui-contract-extract ---
 STATUS COMPLETED notes=[] ok=True
-{
-  "parties": [],
-  "effectiveDate": null,
-  "expiryDate": null,
-  "totalAmount": "CNY 120000",
-  "paymentTerms": null,
-  "keyClauses": [],
-  "risks": ["合同文本内容极不完整，仅有合同金额，缺少合同双方、签署日期、付款方式、履行期限等关键条款，无法有效约束合同各方", "合同金额为固定金额，但无对应权利义务说明，可能引发争议"]
-}
+{"parties":[],"effectiveDate":null,"expiryDate":null,"totalAmount":"CNY 120000","paymentTerms":null,"keyClauses":[{"clause":"合同金额","content":"合同总金额为人民币120,000元，未明确付款方式、付款时间及发票要求","riskLevel":"medium"}],"risks":["合同仅载明金额，缺少合同主体、生效日期、付款条款、履行期限等关键内容，可能因约定不明引发争议","未约定违约责任和争议解决方式，发生纠纷时维权依据不足"]}
 
 --- gui-doc-image-recognition ---
 STATUS COMPLETED notes=[] ok=True
 {
   "type": "image",
   "filename": "",
-  "summary": "一张纯深红色（砖红/暗红）的无细节平面图片，无任何文字或图形元素。",
-  "visualDescription": "整张图片被均匀的深红色完全填充，视觉上呈现为单一平面色块，无其他颜色、图形、界面元素、文字或复杂结构，整体简洁且无变化，适合作为背景、填充或测试用途。",
+  "summary": "纯红色矩形色块",
+  "visualDescription": "画面为单一的纯红色平面，无任何环境、物体或人物元素，整体呈现均匀、无层次的色彩填充，无构图、焦点或空间深度，静态且极简，无文字信息。",
   "fields": [],
   "tables": []
 }
@@ -231,7 +205,7 @@ STATUS COMPLETED notes=[] ok=True
 [gui-document-summary] mode=attachment PASS notes=[]
 [gui-contract-extract] mode=paste PASS notes=[]
 [gui-contract-extract] mode=attachment PASS notes=[]
-[gui-contract-risk-tag] mode=paste PASS notes=[]
+[gui-contract-risk-tag] mode=paste FAIL notes=['MISSING:风险,违约']
 [gui-resume-screening] mode=paste PASS notes=[]
 [gui-resume-screening] mode=attachment PASS notes=[]
 [gui-expense-audit] mode=paste PASS notes=[]
@@ -239,4 +213,4 @@ STATUS COMPLETED notes=[] ok=True
 [gui-doc-image-recognition] mode=paste PASS notes=[]
 [gui-contract-extract] mode=attachment PASS notes=[]
 [gui-doc-image-recognition] mode=attachment PASS notes=[]
-wrote docs/eval/latest_doc_agents.json passed=12 failed=0
+wrote docs/eval/latest_doc_agents.json passed=11 failed=1

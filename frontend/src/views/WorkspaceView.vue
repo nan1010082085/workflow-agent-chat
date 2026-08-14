@@ -199,10 +199,30 @@ function useBaseModel() {
 }
 
 /**
- * 打开处理信息抽屉（可带入某条消息的思考/步骤）。
+ * 打开处理信息抽屉。
+ * 优先使用指定消息；否则匹配当前 run，或取最近一条含过程元数据的助手消息。
  */
 function openProcess(message?: Message) {
-  processMessage.value = message || null
+  if (message) {
+    processMessage.value = message
+  } else {
+    const msgs = chatStore.messages
+    const run = mode.value === 'agent' ? chatStore.currentRun : null
+    const matched = run?.runtimeExecutionId
+      ? msgs.find((m) => m.role === 'assistant' && m.runtimeExecutionId === run.runtimeExecutionId)
+      : null
+    processMessage.value = matched
+      || [...msgs].reverse().find((m) =>
+        m.role === 'assistant'
+        && (Boolean(m.thinking)
+          || Boolean(m.toolCalls?.length)
+          || Boolean(m.workflowExecution)
+          || m.status === 'RUNNING'
+          || m.status === 'WAITING_INPUT'
+          || m.status === 'FAILED'))
+      || [...msgs].reverse().find((m) => m.role === 'assistant')
+      || null
+  }
   showProcess.value = true
 }
 
@@ -324,7 +344,9 @@ const processing = computed(() =>
       :run="mode === 'agent' ? chatStore.currentRun : null"
       :agent="selectedAgent"
       :message="processMessage"
-      @close="showProcess = false"
+      :model-name="mode === 'model' ? (modelStore.selected()?.name || null) : null"
+      :mode="mode"
+      @close="showProcess = false; processMessage = null"
       @cancel="() => { showProcess = false; chatStore.currentRun && chatStore.cancelRun(chatStore.currentRun.runId) }"
     />
   </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import type { Message, RunStatusView, WaitingField, WaitingPayload } from '../types'
 import AppMark from './AppMark.vue'
 import MessageParts from './message/MessageParts.vue'
@@ -220,6 +220,68 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   if (tool.result !== undefined) return '已完成'
   return '处理中'
 }
+
+/** 思考过程展开态：流式时自动展开，结束后平滑收起 */
+const thinkingOpen = ref(false)
+/** 用户是否手动切换过折叠，避免自动收起覆盖手动展开 */
+const thinkingUserToggled = ref(false)
+const thinkingBodyEl = ref<HTMLElement | null>(null)
+const toolsOpen = ref(false)
+
+const isThinkingStream = computed(() =>
+  isAssistant.value
+    && props.message.status === 'RUNNING'
+    && Boolean(props.message.thinking),
+)
+
+/**
+ * 按消息状态同步思考折叠：RUNNING 展开，结束态自动收起。
+ */
+watch(
+  () => [props.message.status, Boolean(props.message.thinking?.trim())] as const,
+  ([status, hasThinking]) => {
+    if (!hasThinking) {
+      thinkingOpen.value = false
+      thinkingUserToggled.value = false
+      return
+    }
+    if (status === 'RUNNING') {
+      thinkingOpen.value = true
+      thinkingUserToggled.value = false
+      return
+    }
+    if (!thinkingUserToggled.value) thinkingOpen.value = false
+  },
+  { immediate: true },
+)
+
+/**
+ * 流式思考时把内容滚到底，避免限高后看不到最新片段。
+ */
+watch(
+  () => props.message.thinking,
+  async () => {
+    if (!isThinkingStream.value) return
+    await nextTick()
+    const el = thinkingBodyEl.value
+    if (el) el.scrollTop = el.scrollHeight
+  },
+)
+
+/**
+ * 切换思考过程展开。
+ */
+function toggleThinking() {
+  thinkingOpen.value = !thinkingOpen.value
+  thinkingUserToggled.value = true
+}
+
+/**
+ * 切换处理步骤展开。
+ */
+function toggleTools() {
+  toolsOpen.value = !toolsOpen.value
+}
 </script>
 
 <template>
@@ -324,22 +386,59 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
-      <!-- 2. 过程信息：默认折叠 -->
-      <details
-        v-if="isAssistant && message.thinking"
+      <!-- 2. 过程信息：可动画折叠；流式限高，结束自动收起 -->
+      <div
+        v-if="isAssistant && message.thinking?.trim()"
         class="detail-block"
-        :open="message.status === 'RUNNING'"
+        :class="{ open: thinkingOpen, streaming: isThinkingStream }"
       >
-        <summary>思考过程</summary>
-        <div class="detail-content">{{ message.thinking }}</div>
-      </details>
-      <details v-if="isAssistant && message.toolCalls?.length" class="detail-block">
-        <summary>处理步骤（{{ message.toolCalls.length }}）</summary>
-        <div v-for="tool in message.toolCalls" :key="tool.id || tool.name" class="tool-row">
-          <strong>{{ tool.name }}</strong>
-          <span :class="{ err: Boolean(tool.error) }">{{ toolStatus(tool) }}</span>
+        <button
+          type="button"
+          class="detail-summary"
+          :aria-expanded="thinkingOpen"
+          @click="toggleThinking"
+        >
+          <span class="chevron" aria-hidden="true" />
+          <span>思考过程</span>
+          <span v-if="isThinkingStream" class="live-dot" aria-hidden="true" />
+        </button>
+        <div class="detail-collapse" :aria-hidden="!thinkingOpen">
+          <div class="detail-collapse-inner">
+            <div
+              ref="thinkingBodyEl"
+              class="detail-content"
+              :class="{ streaming: isThinkingStream }"
+            >{{ message.thinking }}</div>
+          </div>
         </div>
-      </details>
+      </div>
+      <div
+        v-if="isAssistant && message.toolCalls?.length"
+        class="detail-block"
+        :class="{ open: toolsOpen }"
+      >
+        <button
+          type="button"
+          class="detail-summary"
+          :aria-expanded="toolsOpen"
+          @click="toggleTools"
+        >
+          <span class="chevron" aria-hidden="true" />
+          <span>处理步骤（{{ message.toolCalls.length }}）</span>
+        </button>
+        <div class="detail-collapse">
+          <div class="detail-collapse-inner">
+            <div
+              v-for="tool in message.toolCalls"
+              :key="tool.id || tool.name"
+              class="tool-row"
+            >
+              <strong>{{ tool.name }}</strong>
+              <span :class="{ err: Boolean(tool.error) }">{{ toolStatus(tool) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 3. 状态芯片 -->
       <span
@@ -410,8 +509,19 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .message :deep(.app-mark) { margin-top: 2px; }
 .bubble-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 880px; min-width: 0; width: 100%; }
 .message.user .bubble-wrap { align-items: flex-end; max-width: 720px; }
-.result-wrap { display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
+.result-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  animation: msg-in .28s ease both;
+}
 .message.user .result-wrap { align-items: flex-end; }
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
 .tip {
   margin: 0;
   padding: 0 2px;
@@ -451,38 +561,120 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   color: var(--c-running);
 }
 .detail-block {
+  width: fit-content;
   max-width: 100%;
   color: var(--c-text-muted);
   font-size: 12px;
   border: 1px solid var(--c-border-soft, var(--c-border));
-  border-radius: 10px;
-  background: rgba(255,255,255,.55);
-  padding: 2px 10px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .55);
+  padding: 0 8px;
+  transition:
+    width .28s ease,
+    background .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
 }
-.detail-block summary {
-  cursor: pointer;
-  padding: 6px 0;
-  list-style: none;
+.detail-block.open {
+  width: 100%;
+  background: rgba(255, 255, 255, .72);
+}
+.detail-block.streaming {
+  border-color: color-mix(in srgb, var(--c-running) 28%, var(--c-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-running) 10%, transparent);
+}
+.detail-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 5px 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 6px;
 }
-.detail-block summary::-webkit-details-marker { display: none; }
-.detail-block summary::before {
-  content: '▸';
+.detail-summary:hover { color: var(--c-text-secondary); }
+.chevron {
   display: inline-block;
-  margin-right: 6px;
-  transition: transform .15s ease;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent currentColor;
+  opacity: .7;
+  transition: transform .22s ease;
+  flex: none;
 }
-.detail-block[open] summary::before { transform: rotate(90deg); }
+.detail-block.open .chevron { transform: rotate(90deg); }
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-running);
+  animation: blink 1.4s infinite both;
+  margin-left: 2px;
+}
+/** grid 0fr/1fr：折叠高度可插值，避免 details 瞬间塌缩 */
+.detail-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows .3s ease;
+}
+.detail-block.open .detail-collapse { grid-template-rows: 1fr; }
+.detail-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
 .detail-content {
-  margin-top: 2px;
-  padding: 8px 10px;
-  background: var(--c-bg);
+  margin: 0;
+  padding: 0;
+  background: transparent;
   border-radius: 8px;
   white-space: pre-wrap;
   line-height: 1.55;
   color: var(--c-text-secondary);
+  max-height: 14em;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity .22s ease,
+    transform .22s ease,
+    padding .22s ease,
+    margin .22s ease,
+    background-color .22s ease;
 }
-.tool-row { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; }
+.detail-block.open .detail-content {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  background: var(--c-bg);
+  overflow-y: auto;
+  opacity: 1;
+  transform: none;
+  transition-delay: .04s;
+}
+/** 流式思考限高，避免消息区被撑得过高；顶部淡出旧内容，底部最新可读 */
+.detail-block.open .detail-content.streaming {
+  max-height: 6.4em;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 100%);
+}
+.tool-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  background: var(--c-bg);
+  border-radius: 8px;
+}
 .err { color: var(--c-danger); }
 .waiting-hint { color: var(--c-warning); background: #fdf2df; border-color: #f0d9a8; }
 .failed-hint { color: var(--c-danger); background: var(--c-danger-soft); border-color: #f0c4be; }
@@ -591,6 +783,7 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
   font-weight: 600;
   background: #eef2f2;
   color: var(--c-text-secondary);
+  animation: chip-in .24s ease both;
 }
 .chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .chip-running { color: var(--c-running); background: #e8f4ff; }
@@ -598,4 +791,22 @@ function toolStatus(tool: NonNullable<Message['toolCalls']>[number]): string {
 .chip-success { color: var(--c-primary); background: var(--c-primary-soft); }
 .chip-failed { color: var(--c-danger); background: var(--c-danger-soft); }
 .chip-cancelled { color: var(--c-text-muted); }
+@keyframes chip-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-wrap,
+  .chip,
+  .live-dot,
+  .dots i {
+    animation: none;
+  }
+  .detail-block,
+  .detail-collapse,
+  .detail-content,
+  .chevron {
+    transition: none;
+  }
+}
 </style>

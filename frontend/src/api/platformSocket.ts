@@ -257,11 +257,24 @@ export function reconnectPlatformSocket(): void {
 }
 
 /** 组装注入平台 historySummary 的澄语上下文（助手目录 + 近期消息） */
-export function buildChengyuHistorySummary(agents: Agent[], priorMessages: Message[]): string {
+export function buildChengyuHistorySummary(
+  agents: Agent[],
+  priorMessages: Message[],
+  options?: { modelName?: string | null },
+): string {
   const lines: string[] = [
     '【澄语产品说明】你正在「澄语」对话产品中。用户可选用基础模型，或切换到已发布的工作流助手。',
-    '若用户询问有哪些智能体/助手/Agent，请根据下列已发布列表介绍，并引导其在界面中选择助手；不要声称系统没有智能体。',
+    '【身份规则】对外身份是「澄语」助手；不要自称 schema-platform、基础平台或其他底层平台品牌；不要解释底层实现。',
+    '若用户询问「你是谁」，回答你是澄语助手即可。',
+    '若用户询问有哪些智能体/助手/Agent，请根据下列已发布列表介绍，并引导其在界面中选择助手；不要声称系统没有智能体；不要扯平台实现。',
   ]
+
+  const modelName = options?.modelName?.trim()
+  if (modelName) {
+    lines.push(`若用户询问所用模型，可告知当前选用模型为「${modelName}」。`)
+  } else {
+    lines.push('若用户询问所用模型且未指定具体模型，请如实说明模型名称未知，不要编造平台品牌。')
+  }
 
   const published = agents.filter((a) => a.published !== false)
   if (published.length === 0) {
@@ -293,7 +306,9 @@ export function buildChengyuHistorySummary(agents: Agent[], priorMessages: Messa
  */
 export async function streamModelChatViaPlatform(input: StreamModelChatInput): Promise<StreamModelChatResult> {
   const s = await ensurePlatformSocket()
-  const historySummary = buildChengyuHistorySummary(input.agents, input.priorMessages)
+  const historySummary = buildChengyuHistorySummary(input.agents, input.priorMessages, {
+    modelName: input.llmModel,
+  })
   streaming.value = true
 
   return new Promise((resolve, reject) => {

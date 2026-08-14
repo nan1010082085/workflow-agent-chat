@@ -57,15 +57,48 @@ export function formatAnalyzerDump(content: string): string {
 }
 
 /**
- * 供气泡渲染的正文：优先可读文本，JSON dump 自动转写。
+ * 把平台 Runtime 技术错误转成用户可读说明。
+ * @param {string} content
+ * @returns {string}
+ */
+export function humanizeRuntimeError(content: string): string {
+  const t = (content || '').trim()
+  if (!t) return ''
+  if (/未指定上传文件流|未指定图片上传流|\$input\.file|请上传文件|请上传图片/.test(t)) {
+    return [
+      '## 需要文档或图片',
+      '',
+      '这个助手需要你提供待处理的内容。你可以：',
+      '',
+      '1. **粘贴正文**（合同、纪要、简历等）后发送',
+      '2. **上传附件**（txt / pdf / 图片）后再试',
+      '',
+      '若刚粘贴过仍失败，请新建对话重试，或换用支持文件的助手。',
+    ].join('\n')
+  }
+  if (/上传流不是图片类型/.test(t)) {
+    return [
+      '## 需要图片附件',
+      '',
+      '当前助手按图片识别处理。请上传 PNG / JPG 等图片，或改用文档类助手处理纯文本。',
+    ].join('\n')
+  }
+  if (/Workflow not found|document-parse/i.test(t) && t.length < 120) {
+    return '助手暂时不可用，请稍后重试或换一个助手。'
+  }
+  return content
+}
+
+/**
+ * 供气泡渲染的正文：优先可读文本，JSON dump / 技术错误自动转写。
  * @param {string | null | undefined} content
  * @returns {string}
  */
 export function normalizeAssistantContent(content: string | null | undefined): string {
   const raw = (content || '').trim()
   if (!raw) return ''
-  if (!isNodeJsonDump(raw)) return content || ''
-  return formatAnalyzerDump(raw) || ''
+  if (isNodeJsonDump(raw)) return formatAnalyzerDump(raw) || ''
+  return humanizeRuntimeError(content || '')
 }
 
 /**
@@ -74,5 +107,5 @@ export function normalizeAssistantContent(content: string | null | undefined): s
  * @returns {boolean}
  */
 export function contentHasQuestionSection(content: string): boolean {
-  return /##\s*(需要你补充|确认项|待确认)/.test(content || '')
+  return /##\s*(需要你补充|确认项|待确认|需要文档或图片)/.test(content || '')
 }

@@ -210,7 +210,7 @@ def judge(text: str, needles: list[str], min_len: int = 40) -> list[str]:
         "合规": ["合规", "compliant", "不合规", "异常"],
         "分": ["分", "评分", "score"],
         "待办": ["待办", "todo", "行动"],
-        "决议": ["决议", "决定", "decision"],
+        "决议": ["决议", "决定", "decision", "结论", "建议"],
     }
     miss = []
     for n in needles:
