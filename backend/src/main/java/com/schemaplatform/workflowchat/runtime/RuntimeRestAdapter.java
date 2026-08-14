@@ -360,6 +360,10 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       if (output.has("confirmQuestions") && output.has("message") && !hasNonBlankTextField(output)) {
         return true;
       }
+      // HITL 批准回声
+      if (output.has("approved") && (output.has("comment") || output.has("action") || output.has("payload"))) {
+        return true;
+      }
     }
     if (extracted == null || extracted.isBlank()) return false;
     String t = extracted.trim();
@@ -504,6 +508,7 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
 
   /**
    * 平台 toExecution 常不带顶层 output；从 end / 末个成功节点提取可读文本。
+   * 跳过 HITL 批准回声（approved/comment），避免盖住上游分析结果。
    */
   private String extractNodeText(JsonNode nodeRecords) {
     if (nodeRecords == null || !nodeRecords.isArray() || nodeRecords.isEmpty()) return "";
@@ -513,7 +518,9 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       String nodeType = text(n, "nodeType").toLowerCase();
       String nodeName = text(n, "nodeName");
       String status = text(n, "status").toLowerCase();
-      String extracted = extractTextFromOutput(n.get("output"));
+      JsonNode output = n.get("output");
+      if (isHitlApproveEcho(output)) continue;
+      String extracted = extractTextFromOutput(output);
       if (extracted.isBlank()) continue;
       if ("success".equals(status) || "completed".equals(status)) {
         lastSuccess = extracted;
@@ -523,6 +530,16 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
       }
     }
     return firstNonBlank(endText, lastSuccess);
+  }
+
+  /**
+   * HITL 批准后节点 output 常为 {approved, comment, ...}，对用户无阅读价值。
+   */
+  private boolean isHitlApproveEcho(JsonNode output) {
+    if (output == null || !output.isObject()) return false;
+    if (!output.has("approved")) return false;
+    return output.has("comment") || output.has("action") || output.has("payload")
+        || output.has("upstreamOutput");
   }
 
   private String extractTextFromOutput(JsonNode output) {

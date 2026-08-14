@@ -83,6 +83,9 @@ export function humanizeRuntimeError(content: string): string {
       '当前助手按图片识别处理。请上传 PNG / JPG 等图片，或改用文档类助手处理纯文本。',
     ].join('\n')
   }
+  if (/"approved"\s*:\s*true/.test(t) && /"comment"\s*:/.test(t) && t.length < 280) {
+    return '已确认。若结果未更新，请稍候刷新，或继续追问以查看完整分析。'
+  }
   if (/Workflow not found|document-parse/i.test(t) && t.length < 120) {
     return '助手暂时不可用，请稍后重试或换一个助手。'
   }

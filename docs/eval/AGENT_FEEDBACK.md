@@ -64,10 +64,11 @@ python3 scripts/real_dialog_eval.py --only intelligent,parity,dashboard \
 
 ## 4. 下一轮智能体迭代清单（按优先级）
 
-1. **智能助手 v2 HITL**：模糊输入「帮我弄一下」——本轮复测已变为正常澄清问句（无「系统路由」误判）；后续继续压缩 confirmQuestions 长度与字段重复。  
-2. **平台热修补进主仓**：把 expert/intent/summarizer/llm/agentLoop 变更合入 schema-platform 源码与发布，避免 PM2 热文件漂移。  
-3. **保留的 12 个非核心助手**：各补 1 组真实业务多轮（合同/报销/简历/客服），不过关再改图或下架。  
-4. **澄语侧**：Catalog 可增加可选 allowlist（双保险），避免平台误重新发布演示工作流又灌进助手列表。
+1. ~~文档族 paste `$input.file` 硬失败~~（2026-08-14 已修：message→paste.txt + vision text-fallback；文档族 12/12）  
+2. ~~HITL 批准回声盖住分析结果~~（同日：resume 保留上游 lastOutput + Chat 过滤 approve JSON）  
+3. **平台热修补进主仓**：把 document-parse / vision / executor resume 与既有 expert/intent/summarizer 变更合入 schema-platform 源码与发布。  
+4. Catalog `supportedInputs` 按图声明 file/image，澄语 Composer 能力条对齐。  
+5. 扫描件 PDF / 复杂版式专项样例并入门禁。
 
 ## 5. 对「测试没有反馈、没有智能体迭代」的澄清
 
