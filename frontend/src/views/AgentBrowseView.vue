@@ -26,6 +26,7 @@ async function startChat(agent: Agent) {
 function caps(a: Agent): string[] {
   const caps: string[] = ['文本']
   if (a.supportedInputs?.includes('file')) caps.push('文件')
+  if (a.supportedInputs?.includes('image')) caps.push('图片')
   if (a.hitlCapable) caps.push('需要确认')
   return caps
 }

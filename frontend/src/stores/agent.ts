@@ -3,6 +3,25 @@ import { ref } from 'vue'
 import { api } from '../api/client'
 import type { Agent } from '../types'
 
+/**
+ * 文档/图片类 slug 在 Catalog 未声明 file 时的前端兜底能力。
+ * @param {string} slug
+ * @param {string[]} inputs
+ * @returns {string[]}
+ */
+function enrichSupportedInputs(slug: string, inputs: string[]): string[] {
+  const set = new Set(inputs?.length ? inputs : ['text'])
+  const s = (slug || '').toLowerCase()
+  const needsFile = /document|contract|resume|expense|multi-doc|doc-image|image|pdf|ocr|vision/.test(s)
+  const needsImage = /image|vision|ocr|doc-image/.test(s)
+  if (needsFile) set.add('file')
+  if (needsImage) {
+    set.add('image')
+    set.add('file')
+  }
+  return [...set]
+}
+
 export const useAgentStore = defineStore('agent', () => {
   const agents = ref<Agent[]>([])
   const loading = ref(false)
@@ -19,7 +38,7 @@ export const useAgentStore = defineStore('agent', () => {
         name: a.name,
         description: a.description,
         icon: a.icon,
-        supportedInputs: a.supportedInputs || [],
+        supportedInputs: enrichSupportedInputs(a.slug || '', a.supportedInputs || []),
         hitlCapable: !!a.hitlCapable,
         version: a.version,
         updatedAt: a.updatedAt,
@@ -27,7 +46,6 @@ export const useAgentStore = defineStore('agent', () => {
       }))
     } catch (e: any) {
       error.value = e.message || '获取 Agent 列表失败'
-      agents.value = []
     } finally {
       loading.value = false
     }

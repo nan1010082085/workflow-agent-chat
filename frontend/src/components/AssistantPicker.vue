@@ -14,6 +14,7 @@ const agents = computed(() => agentStore.agents)
 function caps(a: Agent): string[] {
   const list: string[] = ['文本']
   if (a.supportedInputs?.includes('file')) list.push('文件')
+  if (a.supportedInputs?.includes('image')) list.push('图片')
   if (a.hitlCapable) list.push('需要确认')
   return list
 }

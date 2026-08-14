@@ -1,0 +1,1368 @@
+{
+  "marker": "20260814-072135",
+  "rounds": 5,
+  "agents": 15,
+  "models": 3,
+  "agent_passed": 68,
+  "agent_failed": 7,
+  "model_passed": 0,
+  "model_failed": 15,
+  "attach_passed": 0,
+  "attach_failed": 1,
+  "issues": [
+    {
+      "type": "catalog_supportedInputs",
+      "slug": "gui-multi-doc-compare",
+      "severity": "high"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-smart-form-search",
+      "round": 4,
+      "notes": [
+        "EMPTY_REPLY",
+        "BAD_STATUS:ERROR"
+      ],
+      "preview": "",
+      "severity": "high"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-smart-form-search",
+      "round": 5,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-dashboard-assist",
+      "round": 1,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-dashboard-assist",
+      "round": 2,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-dashboard-assist",
+      "round": 3,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-dashboard-assist",
+      "round": 4,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "agent_dialog",
+      "slug": "gui-dashboard-assist",
+      "round": 5,
+      "notes": [
+        "SESSION:401"
+      ],
+      "preview": null,
+      "severity": "medium"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": null,
+      "round": 1,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": null,
+      "round": 2,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": null,
+      "round": 3,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": null,
+      "round": 4,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": null,
+      "round": 5,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": null,
+      "round": 1,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": null,
+      "round": 2,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": null,
+      "round": 3,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": null,
+      "round": 4,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": null,
+      "round": 5,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": null,
+      "round": 1,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": null,
+      "round": 2,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": null,
+      "round": 3,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": null,
+      "round": 4,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "model_dialog",
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": null,
+      "round": 5,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "attachment",
+      "filename": null,
+      "notes": [
+        "SESSION:401"
+      ],
+      "severity": "high"
+    },
+    {
+      "type": "ux_static",
+      "severity": "high",
+      "finding": "MessageAttachmentList 仅图片有预览弹层；PDF/docx/xlsx 只有外链下载，无类型徽章与 PDF iframe 预览"
+    }
+  ],
+  "agent_results": [
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "round": 1,
+      "sessionId": "a320fcf9-60b9-41cd-9929-b7c20a7e0dc9",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "# 会议纪要摘要\n\n**核心主题**：周会讨论附件预览与全量评测工作安排。\n\n**关键要点**：\n- 议题：附件预览功能与全量评测。\n- 决议：本周内完成全助手循环评测。\n- 待办：张三负责补充 PDF 预览功能；李四负责补充 xlsx 联调。\n\n**结论或建议**：按计划推进各项任务，确保本周完成全量评测目标。",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "round": 2,
+      "sessionId": "ada28e63-5c8d-42f1-981a-e732e6c5d03d",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "议题：附件预览与全量评测\n\n结论：本周完成全助手循环评测\n\n待办：\n- 张三：补 PDF 预览\n- 李四：补 xlsx 联调",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "round": 3,
+      "sessionId": "bcb026a7-6e2c-4773-b86a-4db30f4c7729",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "### 会议纪要摘要\n\n**议题**  \n附件预览功能与全量评测工作。\n\n**结论**  \n本周内完成全助手循环评测。\n\n**待办事项**  \n- 张三：补充 PDF 预览功能。  \n- 李四：补充 xlsx 联调工作。",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "round": 4,
+      "sessionId": "ea8491dc-c210-4c2f-a6d1-3004e335592a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "### 周会纪要摘要（2026-08-14）\n\n**议题：** 附件预览与全量评测\n\n**结论：** 本周完成全助手循环评测\n\n**待办：**\n- 张三：补 PDF 预览\n- 李四：补 xlsx 联调",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-document-summary",
+      "name": "文档摘要",
+      "round": 5,
+      "sessionId": "764b4857-c890-408f-a738-b7948cb113a6",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 核心主题\n周会（2026-08-14）围绕附件预览与全量评测展开，确定本周完成全助手循环评测。\n\n## 关键要点\n- **议题**：附件预览与全量评测。\n- **决议**：本周完成全助手循环评测。\n\n## 结论或建议\n- **待办事项**：\n  - 张三：补 PDF 预览功能。\n  - 李四：补 xlsx 联调。",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "round": 1,
+      "sessionId": "5abe4750-b076-40fa-ae2c-c7adc923d8c9",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"type\": \"document\",\n  \"filename\": \"paste.txt\",\n  \"summary\": \"文档为一张发票的 OCR 文本，包含发票金额、开票日期、销售方和购买方信息，并指示进行结构化提取。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票金额：¥553.00；开票日期：2026-08-10；销方：中国铁路12306；购方：澄语科技。\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票金额：¥553.00\",\n    \"开票日期：2026-08-10\",\n    \"销方：中国铁路12306\",\n    \"购方：澄语科技\"\n  ]\n}",
+      "supportedInputs": [
+        "text",
+        "file",
+        "image"
+      ]
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "round": 2,
+      "sessionId": "9507da44-1e29-4b1e-8060-c47b09e98ea6",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"type\": \"document\",\n  \"filename\": \"paste.txt\",\n  \"summary\": \"该文档为一张发票的OCR识别文本，包含发票金额、开票日期、销方和购方信息。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票金额：¥553.00\\n开票日期：2026-08-10\\n销方：中国铁路12306\\n购方：澄语科技\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票金额：¥553.00\",\n    \"开票日期：2026-08-10\",\n    \"销方：中国铁路12306\",\n    \"购方：澄语科技\"\n  ]\n}",
+      "supportedInputs": [
+        "text",
+        "file",
+        "image"
+      ]
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "round": 3,
+      "sessionId": "60a1a04a-49e9-4783-b147-c769759589ba",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"type\": \"document\",\n  \"filename\": \"paste.txt\",\n  \"summary\": \"该文档为一张发票的OCR识别文本，包含发票金额、开票日期、销售方和购买方信息，金额为553元，开票日期为2026年8月10日，销售方为中国铁路12306，购买方为澄语科技。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票金额：¥553.00\\n开票日期：2026-08-10\\n销方：中国铁路12306\\n购方：澄语科技\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票金额为553.00元\",\n    \"开票日期为2026-08-10\",\n    \"销售方为中国铁路12306\",\n    \"购买方为澄语科技\"\n  ]\n}",
+      "supportedInputs": [
+        "text",
+        "file",
+        "image"
+      ]
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "round": 4,
+      "sessionId": "3633f5b6-4e56-4f3d-9fce-bf024f608b44",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"type\": \"document\",\n  \"filename\": \"paste.txt\",\n  \"summary\": \"发票 OCR 文本，包含发票金额、开票日期、销方和购方信息。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票金额：¥553.00\\n开票日期：2026-08-10\\n销方：中国铁路12306\\n购方：澄语科技\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票金额为553.00元\",\n    \"开票日期为2026-08-10\",\n    \"销方为中国铁路12306\",\n    \"购方为澄语科技\"\n  ]\n}",
+      "supportedInputs": [
+        "text",
+        "file",
+        "image"
+      ]
+    },
+    {
+      "slug": "gui-doc-image-recognition",
+      "name": "文档 / 图片识别",
+      "round": 5,
+      "sessionId": "9a0508e5-4cb5-496a-8f7e-ab0d63413ed8",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"type\": \"document\",\n  \"filename\": \"paste.txt\",\n  \"summary\": \"文档为发票OCR文本，包含金额、开票日期、销方和购方信息。\",\n  \"sections\": [\n    {\n      \"title\": \"发票信息\",\n      \"content\": \"发票金额：¥553.00；开票日期：2026-08-10；销方：中国铁路12306；购方：澄语科技。\"\n    }\n  ],\n  \"keyPoints\": [\n    \"发票金额：¥553.00\",\n    \"开票日期：2026-08-10\",\n    \"销方：中国铁路12306\",\n    \"购方：澄语科技\"\n  ]\n}",
+      "supportedInputs": [
+        "text",
+        "file",
+        "image"
+      ]
+    },
+    {
+      "slug": "gui-intelligent-assistant",
+      "name": "智能助手问答",
+      "round": 1,
+      "sessionId": "d298b5dc-5abf-4966-a216-d6cf14bcc27a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "本次检索到的均为流程类 Schema（采购、请假、加班等审批），流程用于解决多节点审批流转与任务交接问题；未检索到表单相关数据，暂无法说明表单作用，建议补充表单关键词进一步查询。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-intelligent-assistant",
+      "name": "智能助手问答",
+      "round": 2,
+      "sessionId": "728f8239-5f8a-4b74-8553-291d47b6c76f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "表单负责结构化数据采集与录入，解决业务数据规范化与提交问题；流程负责审批流转与协同，如请假、采购等按节点（经理→网关→VP/财务）自动推进，解决跨角色审批与任务分发问题。二者结合实现从数据填报到审批完成的业务闭环。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-intelligent-assistant",
+      "name": "智能助手问答",
+      "round": 3,
+      "sessionId": "57fa37f8-f2a1-46b2-805f-3bc51b6dab93",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "从检索结果看，流程解决业务审批流转问题，例如采购审批依次经经理、金额网关、VP/财务节点，请假审批经部门经理到HR。关于表单的定义与作用，本次检索未找到相关结果，建议查阅表单配置文档。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-intelligent-assistant",
+      "name": "智能助手问答",
+      "round": 4,
+      "sessionId": "c464937a-3735-46d0-b492-b744f485ebbb",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "表单用于采集业务数据（如请假、加班申请内容），流程用于定义审批节点与流转路径（如经理→HR）。两者结合：表单承载信息，流程驱动流转，共同完成业务审批闭环。知识库中暂无表单专项说明，以上推断来自流程实例，建议查阅表单相关文档核实。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-intelligent-assistant",
+      "name": "智能助手问答",
+      "round": 5,
+      "sessionId": "e330ae2e-7a08-4121-b5ae-7a0a84752499",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "表单用于业务数据的录入、存储与展示，解决数据怎么收集和管的问题；流程用于审批路由与流转编排，如采购审批需经理→金额网关→VP/财务逐级审核，解决事情怎么走的问题。二者配合，表单承载数据，流程驱动协作。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "round": 1,
+      "sessionId": "8978c036-6ea0-43d5-9200-545407603287",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"parties\": [\"澄语科技\", \"华腾贸易\"],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"120000元\",\n  \"paymentTerms\": \"未明确约定\",\n  \"keyClauses\": [\n    {\n      \"clause\": \"合同主体\",\n      \"content\": \"甲方为澄语科技，乙方为华腾贸易。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"合同金额\",\n      \"content\": \"合同总金额为120000元。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"逾期超…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "round": 2,
+      "sessionId": "fc39a9c6-df3f-486c-adeb-51b32011027b",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"parties\": [\"甲方澄语科技\", \"乙方华腾贸易\"],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"120000元\",\n  \"paymentTerms\": \"未明确约定付款时间与方式；仅约定合同金额120000元\",\n  \"keyClauses\": [\n    {\n      \"clause\": \"合同主体\",\n      \"content\": \"甲方为澄语科技，乙方为华腾贸易。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"合同金额\",\n      \"content\": \"合同总金额为120000元。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"违约…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "round": 3,
+      "sessionId": "4abd3d8c-b71c-438a-bb3b-9eba5312df6f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"parties\": [\"澄语科技\", \"华腾贸易\"],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"120000元\",\n  \"paymentTerms\": null,\n  \"keyClauses\": [\n    {\n      \"clause\": \"合同主体\",\n      \"content\": \"甲方为澄语科技，乙方为华腾贸易。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"合同金额\",\n      \"content\": \"合同总金额为120000元。\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"逾期超过15…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "round": 4,
+      "sessionId": "f20a04c8-6692-454b-bec1-956d27cfae56",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"parties\": [\"澄语科技\", \"华腾贸易\"],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"120000元\",\n  \"paymentTerms\": null,\n  \"keyClauses\": [\n    {\n      \"clause\": \"合同主体\",\n      \"content\": \"甲方为澄语科技，乙方为华腾贸易\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"合同金额\",\n      \"content\": \"合同总金额为120000元\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"逾期超过15日，…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-extract",
+      "name": "合同条款提取",
+      "round": 5,
+      "sessionId": "4eb45c1e-4ba4-4b5e-9dfd-46c89c76427c",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"parties\": [\"澄语科技\", \"华腾贸易\"],\n  \"effectiveDate\": null,\n  \"expiryDate\": null,\n  \"totalAmount\": \"120000元\",\n  \"paymentTerms\": \"未载明\",\n  \"keyClauses\": [\n    {\n      \"clause\": \"合同主体\",\n      \"content\": \"甲方为澄语科技，乙方为华腾贸易\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"合同金额\",\n      \"content\": \"合同总金额为120000元\",\n      \"riskLevel\": \"low\"\n    },\n    {\n      \"clause\": \"违约责任\",\n      \"content\": \"逾期超过15日…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-chat-parity-assistant",
+      "name": "智能助手 v2",
+      "round": 1,
+      "sessionId": "d3deec70-4216-4a10-bc78-eec9c5d26301",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "**主题：关于发票 INV-2026-0814 的付款提醒**\n\n尊敬的客户，\n\n您好！\n\n此邮件是关于发票 **INV-2026-0814** 的付款提醒，金额为 **¥8,600**。\n\n该款项已逾期，烦请您在 **3 个工作日内** 完成付款。如已安排付款，请忽略此邮件；如有任何疑问，请及时与我们联系。\n\n感谢您的配合！\n\n此致\n敬礼\n\n[您的姓名]\n[您的职位]\n[公司名称]\n[联系电话]",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-chat-parity-assistant",
+      "name": "智能助手 v2",
+      "round": 2,
+      "sessionId": "9564ae55-5058-4824-b409-fb1158713536",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好：\n\n温馨提醒，贵司发票 INV-2026-0814（金额：¥8600）已到期，烦请于 3 个工作日内安排付款。\n\n如已付款，请忽略此邮件；如有任何问题，请及时与我们联系。感谢您的配合！\n\n此致  \n[你的姓名]  \n[你的职位]  \n[联系方式]",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-chat-parity-assistant",
+      "name": "智能助手 v2",
+      "round": 3,
+      "sessionId": "ea1db327-f8d0-4bf3-bf25-3c49b8d655a4",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "尊敬的客户：\n\n您好！\n\n烦请查收发票 INV-2026-0814（金额：¥8600），该笔款项已到期，请于**3个工作日内**完成付款。\n\n如已安排付款，请忽略此邮件；如有任何问题，欢迎随时联系。\n\n感谢配合！\n\n此致  \n[您的姓名]",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-chat-parity-assistant",
+      "name": "智能助手 v2",
+      "round": 4,
+      "sessionId": "d9686e82-d707-4ce2-afa0-a65e0518c4c5",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "**主题：关于发票 INV-2026-0814 的付款提醒**\n\n尊敬的[客户姓名/公司名称]：\n\n您好！\n\n借此邮件提醒您，发票 INV-2026-0814（金额：¥8600）的付款期限已过/即将到期。烦请您在3个工作日内完成付款。\n\n如果您已安排付款，请忽略此邮件。如有任何疑问，欢迎随时与我联系。\n\n感谢您的配合！\n\n此致\n敬礼\n\n[您的姓名]\n[您的职位]\n[您的联系方式]",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-chat-parity-assistant",
+      "name": "智能助手 v2",
+      "round": 5,
+      "sessionId": "8e96f7d9-7143-4f42-89ef-c49b6a1f9f7f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "尊敬的[客户/财务负责人姓名]：\n\n烦请知悉，我方发票 INV-2026-0814（金额：¥8,600）现已到期，请于 **3 个工作日内** 完成付款。\n\n如已安排付款，请忽略此邮件；如有任何问题或需确认付款信息，请随时与我联系。\n\n感谢配合！\n\n此致  \n[你的姓名]",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-requirement-gated-build",
+      "name": "需求门控构建",
+      "round": 1,
+      "sessionId": "31e273ad-7b3f-4680-b96f-b6297f060b5d",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "<answer>\n好的，我先澄清 2 个关键问题，确认后立即给你完整落地步骤：\n\n**问题 1：审批链路怎么设计？**\n- 由谁提交？（员工本人，还是可代他人提交？）\n- 审批节点有哪些？例如：直属主管审批 → 部门经理 → HR 备案？\n- 是否需要按请假时长分流？如 ≤3 天仅主管审批，＞3 天需总监加签（这会用到排他网关条件分支）？\n\n**问题 2：申请表单需要收集哪些信息？**\n- 必填字段通常是：请假类型（事假/病假/年假等）、开始时间、结束时间、请假天数、请假事由。\n- 是否还需要补充字段：紧急联系人、附件（病假证明）、请假类型细分等？\n- 审批环节是否需要在同一表单上填写审批意见？\n\n---\n\n**确认后的落地步骤（框架）如下：**\n\n1. **生成流程结构**：开始 → 提交请假申请（申请人本人填写）→ 审批节点（按你的链路配置单人/会签/条件分支）→ 结束；\n2. **生…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-requirement-gated-build",
+      "name": "需求门控构建",
+      "round": 2,
+      "sessionId": "cc4954b5-880c-4b50-abb5-c1165852edeb",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "<answer>\n好的，开始前我需要先和你确认 2 个关键问题，这决定了流程的骨架结构：\n\n**问题 1：审批链路与分流规则**\n- 请假审批是几级？比如「直属主管单人审批」就够了，还是需要「主管 → 部门经理」多级？\n- 是否按请假天数分流？例如：≤3 天主管审批即可，>3 天需要追加总经理审批（这种情况会用到排他网关做条件分支）。\n- 是否涉及多人会签（如同一部门的多个主管共同审批）？\n\n**问题 2：申请表单与数据字段**\n- 请假申请需要收集哪些字段？例如：请假类型（事假/病假/年假）、开始时间、结束时间、请假天数、事由说明。\n- 请假天数是由表单自动计算，还是人工填写？\n- 系统中是否已有可复用的请假表单，还是需要我新建一份？\n\n---\n\n**你确认以上 2 点后，落地步骤如下：**\n\n1. **确认审批链**：根据你的回答确定节点顺序与网关分支（单人 / 多级 / 按天数分流）…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-requirement-gated-build",
+      "name": "需求门控构建",
+      "round": 3,
+      "sessionId": "e4d0b921-efdb-4b68-962a-25f63abb9592",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "<answer>\n好的，在生成请假审批流程前，需要先和你确认 2 个关键问题：\n\n**问题 1：审批层级与分流规则**\n- 请假需要几级审批？单级（仅直属主管）还是多级（主管 → 部门经理 → HR/总经理）？\n- 是否需要按请假时长分流？例如：≤3 天主管直接审批，>3 天需加签部门经理或总经理？\n\n**问题 2：表单采集与查看方式**\n- 请假申请需要采集哪些字段？例如：请假类型（事假/病假/年假）、起止日期、请假时长、请假原因、紧急联系人等？\n- 审批人是否需要只读查看申请表单（view 模式）？是否需要会签/或签多人审批？\n\n**落地步骤（确认后执行）：**\n1. 按你确认的审批层级与分流规则，生成完整 FlowGraph（含排他网关条件分支）\n2. 按确认的字段生成请假申请表单，并绑定到\"提交申请\"节点（edit 模式）\n3. 审批节点绑定同一表单并设为 view 只读模式\n4.…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-requirement-gated-build",
+      "name": "需求门控构建",
+      "round": 4,
+      "sessionId": "d5c2a4b8-dd61-4856-b27b-3bae0bb61313",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "<answer>\n好的，作为员工请假审批助手，我先澄清 2 个决定流程结构的关键问题，确认后再给您落地步骤。\n\n**问题 1：审批链如何设计？**\n- 请假是否需要分级审批（如：≤3 天只需直属主管审批，>3 天追加部门经理或总经理审批）？\n- 每级审批人是固定角色（如「直属主管」「部门经理」）还是可指定具体人员？\n- 审批方式是单人审批、会签（需全部通过）还是或签（任一通过即可）？\n- 是否需要抄送 HR 或记录到考勤系统？\n\n**问题 2：申请表单需要收集哪些信息？**\n- 必填字段通常包括：请假类型（事假/病假/年假等）、开始时间、结束时间、请假天数、请假事由。\n- 是否需要额外的附件（如病假证明）、紧急联系人、或交接安排字段？\n- 审批人在审批时是否可以填写审批意见、修改请假时长，或退回补充材料？\n\n请您回答以上 2 个问题，我将据此给出清晰的落地步骤（流程构建 → 表单绑定 → …",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-requirement-gated-build",
+      "name": "需求门控构建",
+      "round": 5,
+      "sessionId": "7f86ea19-c67d-4c27-adde-cf2d620da73a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "<answer>\n在开始落地前，先和你确认 2 个关键问题：\n\n**问题 1：审批规则是单一审批还是分级审批？**\n- A. 单一审批：所有请假统一由直接主管审批即可；\n- B. 分级审批：按请假天数分流（如 ≤3 天主管审批，>3 天需经理或总经理加签）；\n- C. 其他自定义规则（如按请假类型分流：年假/事假/病假走不同审批链）。\n\n**问题 2：是否需要绑定请假申请表单？**\n- A. 需要：表单包含请假类型、开始时间、结束时间、请假天数、请假事由等字段，员工提交时填写，审批人只读查看；\n- B. 不需要：仅走流程，不收集结构化表单数据。\n\n---\n\n**确认以上 2 点后，落地步骤为：**\n1. **构建流程**：开始 → 提交请假申请 →（按你选择的审批规则配置审批节点/网关）→ 结束，并给审批节点指定指派人（角色）；\n2. **绑定表单**（若需要）：生成请假申请表单并绑定到\"…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-cs-kb-reply",
+      "name": "客服知识库回复",
+      "round": 1,
+      "sessionId": "fd082632-84cb-48c3-b411-72fabcbd0014",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好，非常抱歉，根据目前知识库中的检索结果，暂未找到关于“重置表单发布权限”的直接操作说明。知识库中现有内容主要涉及招聘需求审批、采购审批、公文审批、用印审批及离职审批等流程表单的审批配置，未包含权限重置相关的具体步骤。\n\n建议您提供更多上下文信息（例如具体是哪个表单、权限异常的具体表现），或转接人工客服，由技术支持人员为您进一步排查和处理。感谢您的理解与支持！",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-cs-kb-reply",
+      "name": "客服知识库回复",
+      "round": 2,
+      "sessionId": "9e69cf24-76b0-456f-a99f-cc907ae2c77f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好，关于“如何重置表单发布权限”的问题，我们已为您检索了知识库，但当前未找到与此操作直接相关的说明文档或帮助内容。为避免提供不准确的信息，建议您联系人工客服或技术支持人员，由他们为您详细解答并协助处理。给您带来不便，敬请谅解。",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-cs-kb-reply",
+      "name": "客服知识库回复",
+      "round": 3,
+      "sessionId": "8baa8bb4-4273-4345-b44e-8385e3f3ca77",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好，关于“如何重置表单发布权限”的问题，我们已为您检索了知识库，但当前知识库中暂未收录与表单发布权限重置直接相关的操作指引。检索到的内容主要涉及各类审批流程（如招聘需求审批、采购审批、公文审批等），与您所询问的功能暂无直接关联。\n\n建议您通过以下方式获取进一步帮助：\n1. 联系贵司平台管理员或系统维护人员，确认表单发布权限的具体配置方式；\n2. 转接人工客服，由专人协助您处理。\n\n如需转接人工服务，请告知我们，我们将尽快为您安排。感谢您的理解与支持！",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-cs-kb-reply",
+      "name": "客服知识库回复",
+      "round": 4,
+      "sessionId": "3460178f-6f77-4388-8fa8-8103fd726305",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好，关于“如何重置表单发布权限”的问题，我们已在知识库中进行检索，但未找到与该操作直接匹配的相关说明。目前知识库中主要包含各类审批流程（如招聘需求审批、采购审批、公文审批等）的相关信息，暂无表单发布权限重置的具体指引。\n\n建议您联系技术支持或人工客服进一步协助处理，以便尽快为您解决问题。感谢您的理解与支持！",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-cs-kb-reply",
+      "name": "客服知识库回复",
+      "round": 5,
+      "sessionId": "0a5d2c80-284d-4887-85a0-688e77434993",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "您好，关于您提出的“如何重置表单发布权限”问题，我已在知识库中进行检索，但当前知识库中未找到与“表单发布权限重置”直接相关的操作说明或流程指引。为避免给您提供不准确的信息，建议您将该问题转接至人工客服或联系您的系统管理员，由专业人员为您进一步排查和解答。感谢您的理解与支持！",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "round": 1,
+      "sessionId": "8d334c62-cbf1-4bc2-975d-fe52716aa77e",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"differences\": [\n    {\"topic\": \"合同金额\", \"docA\": \"120000\", \"docB\": \"100000\", \"conflict\": true},\n    {\"topic\": \"违约金比例\", \"docA\": \"20%\", \"docB\": \"10%\", \"conflict\": true}\n  ],\n  \"consistencyIssues\": [\n    \"两版条款在合同金额和违约金比例上存在明显冲突，无法同时满足。\",\n    \"未提供历史文档，无法结合历史版本判断哪一版为最新修订或有效版本。\"\n  ],\n  \"mergeSuggestions\": [\n    \"需与合同双方确认最新有效版本，统一合同金额和违约金比例。\",\n    \"若以A版为准，则金额120000、违约金20%；若以B版为准，则金额100000、违约金10%。\",\n   …",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "round": 2,
+      "sessionId": "a907da95-ede7-4097-8b22-2ed1b870b5ae",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"differences\": [\n    {\"topic\": \"金额\", \"docA\": \"120000\", \"docB\": \"100000\", \"conflict\": true},\n    {\"topic\": \"违约金比例\", \"docA\": \"20%\", \"docB\": \"10%\", \"conflict\": true}\n  ],\n  \"consistencyIssues\": [\"两版在金额和违约金比例上均存在矛盾，需明确最终生效版本\"],\n  \"mergeSuggestions\": [\"建议双方协商确认最终金额与违约金比例，或根据合同上下文选择更合理的一版作为基准\"]\n}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "round": 3,
+      "sessionId": "7a72e462-8571-4ea9-b794-b5a59c5ed860",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"differences\": [\n    {\"topic\": \"金额\", \"docA\": \"120000\", \"docB\": \"100000\", \"conflict\": true},\n    {\"topic\": \"违约金比例\", \"docA\": \"20%\", \"docB\": \"10%\", \"conflict\": true}\n  ],\n  \"consistencyIssues\": [\"两版条款在金额和违约金比例上均存在矛盾，无法确定有效版本\"],\n  \"mergeSuggestions\": [\"需要双方协商统一金额和违约金比例，并签署补充协议\", \"若存在历史版本，应以最新修订且经双方确认为准\"]\n}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "round": 4,
+      "sessionId": "ff59f9ba-6637-4ce7-aed3-db1f21608446",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"differences\": [\n    {\"topic\": \"金额\", \"docA\": \"120000\", \"docB\": \"100000\", \"conflict\": true},\n    {\"topic\": \"违约金比例\", \"docA\": \"20%\", \"docB\": \"10%\", \"conflict\": true}\n  ],\n  \"consistencyIssues\": [\n    \"两版条款在金额和违约金比例上均存在矛盾，需明确以哪一版为准\"\n  ],\n  \"mergeSuggestions\": [\n    \"核实合同真实意图，确定最终金额与违约金比例，并同步修改另一版\",\n    \"若无法确定，应由双方协商一致后重新出具统一条款\"\n  ]\n}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-multi-doc-compare",
+      "name": "多文档对比",
+      "round": 5,
+      "sessionId": "c1b8792e-c375-43f9-86d1-3d4ca4824f0f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"differences\": [\n    {\"topic\": \"金额\", \"docA\": \"120000\", \"docB\": \"100000\", \"conflict\": true},\n    {\"topic\": \"违约金比例\", \"docA\": \"20%\", \"docB\": \"10%\", \"conflict\": true}\n  ],\n  \"consistencyIssues\": [],\n  \"mergeSuggestions\": [\"建议双方协商统一金额和违约金比例，并在最终条款中明确唯一版本\"]\n}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "round": 1,
+      "sessionId": "07d0ca6d-8d51-4fa7-8c12-a5457c769951",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"overallRisk\": \"medium\",\n  \"clauses\": [\n    {\n      \"clause\": \"总金额条款\",\n      \"riskLevel\": \"low\",\n      \"issue\": \"仅约定总金额120000，未明确币种、支付方式、支付期限及发票要求，履行中容易产生争议。\"\n    },\n    {\n      \"clause\": \"违约金条款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"约定违约金20%，未明确计算基数（合同总额还是未履行部分），且未考虑实际损失，过高时可能被法院调整，需进一步明确。\"\n    },\n    {\n      \"clause\": \"争议管辖条款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"约定争议提交甲方所在地…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "round": 2,
+      "sessionId": "5067ab19-d0f7-43f1-8499-5022e0339769",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"overallRisk\": \"medium\",\n  \"clauses\": [\n    {\n      \"clause\": \"总金额\",\n      \"riskLevel\": \"low\",\n      \"issue\": \"仅约定总金额120000，未明确币种、支付方式、支付期限及发票等配套条款，可能导致付款纠纷或履约争议。\"\n    },\n    {\n      \"clause\": \"违约金\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"违约金比例20%未区分具体违约情形，可能因过高或过低被法院调整；同时未明确违约金计算基数及与损失赔偿的关系，存在法律适用风险。\"\n    },\n    {\n      \"clause\": \"争议解决\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"约定由甲…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "round": 3,
+      "sessionId": "13405a27-c1ca-4212-81eb-2bd85cb814ff",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"overallRisk\": \"medium\",\n  \"clauses\": [\n    {\n      \"clause\": \"合同总金额\",\n      \"riskLevel\": \"low\",\n      \"issue\": \"仅约定金额为120000，未明确币种（如人民币/美元），且未约定支付方式、期限及发票等细节，容易产生履行争议。\"\n    },\n    {\n      \"clause\": \"违约金条款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"违约金约定为20%，比例可能偏高，若超过实际损失30%，法院可能调减；且未明确违约金计算基数、触发情形及与其他救济措施的关系，存在争议风险。\"\n    },\n    {\n      \"clause\": \"争议解决条款\",\n      \"riskLevel\": \"medium\",\n   …",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "round": 4,
+      "sessionId": "676a09b9-abe0-43cd-9af5-1ff6696e6fdf",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"overallRisk\": \"medium\",\n  \"clauses\": [\n    {\n      \"clause\": \"合同总金额\",\n      \"riskLevel\": \"low\",\n      \"issue\": \"总金额明确为120000，无重大风险。\"\n    },\n    {\n      \"clause\": \"违约金条款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"违约金为合同总金额的20%，虽然未明显过高，但未明确计算基础及损失范围，若实际损失较低，可能面临被法院调减的风险。\"\n    },\n    {\n      \"clause\": \"争议管辖条款\",\n      \"riskLevel\": \"medium\",\n      \"issue\": \"约定由甲方所在地法院管辖，对乙方而言可能增加诉讼成本，且若甲方利用格式条…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-contract-risk-tag",
+      "name": "合同风险标注",
+      "round": 5,
+      "sessionId": "534b2d05-56c3-4a65-9320-035e11f5acbd",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"overallRisk\":\"medium\",\"clauses\":[{\"clause\":\"合同金额条款\",\"riskLevel\":\"medium\",\"issue\":\"总金额为120000，但未明确币种、支付方式、支付节点及税费承担，可能导致付款争议。\"},{\"clause\":\"违约金条款\",\"riskLevel\":\"medium\",\"issue\":\"违约金比例为20%，若该比例超过实际损失的30%，根据《民法典》规定可能被法院调减；同时未明确违约金计算基数和上限。\"},{\"clause\":\"争议解决条款\",\"riskLevel\":\"medium\",\"issue\":\"约定由甲方所在地法院管辖，对乙方不利，且仅写'甲方所在地'未明确具体法院，可能产生管辖争议。\"}],\"recommendations\":[\"明确合同总金额的币种、含税情况、支付方式和时间节点；\",\"约定违约金以实际损失为基础，…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "round": 1,
+      "sessionId": "9305db18-f5f2-4952-84bb-96a78be3d45a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年\",\n    \"skills\": [\"Java\", \"Spring\", \"MySQL\", \"Redis\"]\n  },\n  \"matchScore\": 82,\n  \"strengths\": [\"掌握Java后端核心技能\", \"熟悉Spring、MySQL、Redis等常用技术栈\", \"有订单服务重构的实际项目经验\"],\n  \"weaknesses\": [\"工作经验仅2年，深度可能不足\", \"未提及分布式、高并发等进阶技能\"],\n  \"recommendation\": \"yes\",\n  \"reason\": \"候选人技能与Java后端岗位要求高度匹配，具备实际项目经验，虽经验年限较短，但整体适合岗位。\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "round": 2,
+      "sessionId": "61191a74-3942-49a9-93f5-fa5ba87c32e6",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年\",\n    \"skills\": [\"Java\", \"Spring\", \"MySQL\", \"Redis\"]\n  },\n  \"matchScore\": 80,\n  \"strengths\": [\"Java后端技术栈匹配度高\", \"具备订单服务重构的实际项目经验\", \"核心技能覆盖常见后端需求\"],\n  \"weaknesses\": [\"工作年限较短，经验相对不足\", \"未提及微服务、分布式、高并发等高级技能\"],\n  \"recommendation\": \"yes\",\n  \"reason\": \"候选人技术栈与Java后端岗位高度匹配，具备相关项目经验，但经验年限较短，适合初级或中级后端开发岗位。\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "round": 3,
+      "sessionId": "96a7a9a8-d252-492d-b380-4ae8fd9d54ba",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年\",\n    \"skills\": [\"Java\", \"Spring\", \"MySQL\", \"Redis\"]\n  },\n  \"matchScore\": 80,\n  \"strengths\": [\n    \"核心技能匹配：Java/Spring/MySQL/Redis均为Java后端常用技术栈\",\n    \"有订单服务重构经验，体现一定的系统设计和问题解决能力\",\n    \"本科学历，满足多数岗位的学历要求\"\n  ],\n  \"weaknesses\": [\n    \"工作经验仅2年，相对初级\",\n    \"未提及微服务、分布式、消息队列等高级技能\",\n    \"缺少项目细节，无法评估实际复杂度和规模\"\n  ],\n  \"recommenda…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "round": 4,
+      "sessionId": "7e3fe465-fe81-4cbe-8e77-d024eabdf282",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年\",\n    \"skills\": [\"Java\", \"Spring\", \"MySQL\", \"Redis\"]\n  },\n  \"matchScore\": 80,\n  \"strengths\": [\n    \"熟悉Java后端核心技能栈，包含Spring、MySQL、Redis\",\n    \"有订单服务重构经验，具备一定的实战能力\",\n    \"本科学历，符合大多数企业基础学历要求\"\n  ],\n  \"weaknesses\": [\n    \"工作年限仅2年，经验相对较少\",\n    \"简历信息较简略，缺少项目细节和具体成果\",\n    \"未提及分布式、消息队列等高级技能\"\n  ],\n  \"recommendation\": \"yes\",\n  …",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-resume-screening",
+      "name": "简历筛选",
+      "round": 5,
+      "sessionId": "ad313f98-88ea-488b-a421-8255ee810087",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"candidate\": {\n    \"name\": \"张三\",\n    \"education\": \"本科\",\n    \"experience\": \"2年\",\n    \"skills\": [\"Java\", \"Spring\", \"MySQL\", \"Redis\"]\n  },\n  \"matchScore\": 85,\n  \"strengths\": [\n    \"技术栈与Java后端岗位高度匹配（Java/Spring/MySQL/Redis）\",\n    \"有订单服务重构的实际项目经验\"\n  ],\n  \"weaknesses\": [\n    \"工作年限仅2年，经验相对有限\",\n    \"简历内容较为简略，缺乏技术深度细节\"\n  ],\n  \"recommendation\": \"yes\",\n  \"reason\": \"候选人技术栈完全符合Java后端要求，具备相关项目经验，但经验年限较短，建议进…",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "round": 1,
+      "sessionId": "8a66a3dc-56ea-4de3-bf19-b88cd581ba17",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"compliant\": false,\n  \"totalAmount\": 719,\n  \"items\": [\n    {\n      \"description\": \"差旅费\",\n      \"amount\": 639,\n      \"compliant\": true,\n      \"reason\": \"差旅费金额合理，符合报销标准\"\n    },\n    {\n      \"description\": \"餐补\",\n      \"amount\": 80,\n      \"compliant\": false,\n      \"reason\": \"餐补超标80元，不符合报销规定\"\n    }\n  ],\n  \"anomalies\": [\"餐补超标80元\"],\n  \"suggestion\": \"need_review\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "round": 2,
+      "sessionId": "69b376a4-9d9c-407d-902e-c668890ee59a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"compliant\": false,\n  \"totalAmount\": 719,\n  \"items\": [\n    {\n      \"description\": \"差旅费\",\n      \"amount\": 639,\n      \"compliant\": true,\n      \"reason\": \"差旅费合规\"\n    },\n    {\n      \"description\": \"餐补超标\",\n      \"amount\": 80,\n      \"compliant\": false,\n      \"reason\": \"餐补超标80元，不合规\"\n    }\n  ],\n  \"anomalies\": [\"餐补超标80元\"],\n  \"suggestion\": \"need_review\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "round": 3,
+      "sessionId": "97ddb792-e31c-48f8-8e9f-a1869fe89186",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"compliant\": false,\n  \"totalAmount\": 719,\n  \"items\": [\n    {\n      \"description\": \"差旅\",\n      \"amount\": 639,\n      \"compliant\": true,\n      \"reason\": \"差旅费用符合标准\"\n    },\n    {\n      \"description\": \"餐补\",\n      \"amount\": 80,\n      \"compliant\": false,\n      \"reason\": \"餐补超标80元，不符合报销标准\"\n    }\n  ],\n  \"anomalies\": [\"餐补超标80元\"],\n  \"suggestion\": \"need_review\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "round": 4,
+      "sessionId": "259b5793-9e0a-46be-b461-f9e41b6fba1f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"compliant\": false,\n  \"totalAmount\": 719,\n  \"items\": [\n    {\n      \"description\": \"差旅费\",\n      \"amount\": 639,\n      \"compliant\": true,\n      \"reason\": \"差旅费金额合理，符合报销标准\"\n    },\n    {\n      \"description\": \"餐补超标部分\",\n      \"amount\": 80,\n      \"compliant\": false,\n      \"reason\": \"餐补超标80元，不符合报销标准\"\n    }\n  ],\n  \"anomalies\": [\"餐补超标80元，需扣减或补说明\"],\n  \"suggestion\": \"need_review\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-expense-audit",
+      "name": "报销单审核",
+      "round": 5,
+      "sessionId": "aaeb8c34-a8f4-4a87-9f9b-dae86a73e693",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"compliant\": false,\n  \"totalAmount\": 719,\n  \"items\": [\n    {\n      \"description\": \"差旅费\",\n      \"amount\": 639,\n      \"compliant\": true,\n      \"reason\": \"差旅费金额合理，未发现异常\"\n    },\n    {\n      \"description\": \"餐补超标\",\n      \"amount\": 80,\n      \"compliant\": false,\n      \"reason\": \"餐补超标80元，不符合餐补报销标准\"\n    }\n  ],\n  \"anomalies\": [\"餐补超标80元\"],\n  \"suggestion\": \"need_review\"\n}",
+      "supportedInputs": [
+        "text",
+        "file"
+      ]
+    },
+    {
+      "slug": "gui-feedback-analysis",
+      "name": "客户反馈分析",
+      "round": 1,
+      "sessionId": "33311eb5-d60d-40ce-b2bc-01c70fb5e611",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"summary\": { \"total\": 3, \"positive\": 1, \"neutral\": 0, \"negative\": 2 },\n  \"topThemes\": [\n    { \"theme\": \"审批流程效率\", \"count\": 1, \"sentiment\": \"negative\" },\n    { \"theme\": \"界面设计\", \"count\": 1, \"sentiment\": \"positive\" },\n    { \"theme\": \"导出功能稳定性\", \"count\": 1, \"sentiment\": \"negative\" }\n  ],\n  \"insights\": [\n    \"负面反馈集中在流程效率和功能稳定性，正面反馈体现在界面设计。\",\n    \"审批慢和导出失败是当前体验的主要痛点，需优先解决。\",\n    \"简洁易用的界面设计获得认可，应作为产品优势…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-feedback-analysis",
+      "name": "客户反馈分析",
+      "round": 2,
+      "sessionId": "e1c8fe0f-9bb8-4075-a117-077bcc9dbc7f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"summary\": { \"total\": 3, \"positive\": 1, \"neutral\": 0, \"negative\": 2 },\n  \"topThemes\": [\n    { \"theme\": \"审批流程效率\", \"count\": 1, \"sentiment\": \"negative\" },\n    { \"theme\": \"界面设计体验\", \"count\": 1, \"sentiment\": \"positive\" },\n    { \"theme\": \"数据导出功能稳定性\", \"count\": 1, \"sentiment\": \"negative\" }\n  ],\n  \"insights\": [\n    \"负面反馈集中在流程效率和功能稳定性上，是当前主要痛点。\",\n    \"正面反馈体现在界面设计上，说明现有设计语言获得用户认可。\",\n    \"所有负面反馈均对应明确可执行的改进…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-feedback-analysis",
+      "name": "客户反馈分析",
+      "round": 3,
+      "sessionId": "9eb2345f-fd35-4ced-9681-e1ae579c7674",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"summary\": {\n    \"total\": 3,\n    \"positive\": 1,\n    \"neutral\": 0,\n    \"negative\": 2\n  },\n  \"topThemes\": [\n    {\n      \"theme\": \"审批速度\",\n      \"count\": 1,\n      \"sentiment\": \"negative\"\n    },\n    {\n      \"theme\": \"界面设计\",\n      \"count\": 1,\n      \"sentiment\": \"positive\"\n    },\n    {\n      \"theme\": \"导出功能\",\n      \"count\": 1,\n      \"sentiment\": \"negative\"\n    }\n  ],\n  \"insights\": [\n    \"客户对审批速度不满意，认为…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-feedback-analysis",
+      "name": "客户反馈分析",
+      "round": 4,
+      "sessionId": "cc0c9e63-fd38-4515-90f5-34df347ea44d",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"summary\": { \"total\": 3, \"positive\": 1, \"neutral\": 0, \"negative\": 2 },\n  \"topThemes\": [\n    { \"theme\": \"审批流程\", \"count\": 1, \"sentiment\": \"negative\" },\n    { \"theme\": \"界面设计\", \"count\": 1, \"sentiment\": \"positive\" },\n    { \"theme\": \"导出功能\", \"count\": 1, \"sentiment\": \"negative\" }\n  ],\n  \"insights\": [\n    \"负面反馈集中在审批和导出两个核心功能，需优先改进\",\n    \"界面设计获得正面评价，应保持并作为产品优势\"\n  ],\n  \"actionItems\": [\n    \"优化审批流程，减少用户等待…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-feedback-analysis",
+      "name": "客户反馈分析",
+      "round": 5,
+      "sessionId": "e29d2774-67f7-4c2a-bded-ce4d4d8d2897",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\n  \"summary\": {\n    \"total\": 3,\n    \"positive\": 1,\n    \"neutral\": 0,\n    \"negative\": 2\n  },\n  \"topThemes\": [\n    {\n      \"theme\": \"审批效率\",\n      \"count\": 1,\n      \"sentiment\": \"negative\"\n    },\n    {\n      \"theme\": \"界面体验\",\n      \"count\": 1,\n      \"sentiment\": \"positive\"\n    },\n    {\n      \"theme\": \"导出功能\",\n      \"count\": 1,\n      \"sentiment\": \"negative\"\n    }\n  ],\n  \"insights\": [\n    \"审批流程是用户的主要痛点，…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-memory-assistant",
+      "name": "记忆增强助手",
+      "round": 1,
+      "sessionId": "0ca5b498-f6e4-4256-9ef4-d43b90884553",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"extracted\":[],\"written\":[],\"autoWritten\":0}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-memory-assistant",
+      "name": "记忆增强助手",
+      "round": 2,
+      "sessionId": "fea90bf9-3251-4cb8-823a-edb833ee6bfd",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"extracted\":[],\"written\":[],\"autoWritten\":0}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-memory-assistant",
+      "name": "记忆增强助手",
+      "round": 3,
+      "sessionId": "437fcf29-8e17-4d3b-9610-c69eeaf12fac",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"extracted\":[],\"written\":[],\"autoWritten\":0}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-memory-assistant",
+      "name": "记忆增强助手",
+      "round": 4,
+      "sessionId": "8e9e33c7-aa38-406a-acc0-012b12f87dd0",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"extracted\":[],\"written\":[],\"autoWritten\":0}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-memory-assistant",
+      "name": "记忆增强助手",
+      "round": 5,
+      "sessionId": "b2dc2639-ed04-4ed5-9d96-222b53e4b24b",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "{\"extracted\":[],\"written\":[],\"autoWritten\":0}",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 1,
+      "sessionId": "ba084dbe-3deb-4aad-9ab7-bbac92362ce2",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已检索到相关表单，以下是汇总与建议。\n\n## 检索到的相关表单（来自知识库检索）\n\n| 名称 | 类型 | 相似度 | 说明 |\n|------|------|--------|------|\n| **请假申请** | form | 78%~79% | 核心申请表，已存在于系统中 |\n| **请假详情** | layout | 78%~80% | 请假详情的展示布局 |\n| **请假审批** | flow | 68%~71% | 标准审批流：**部门经理 → HR** |\n| **请假台账** | search_list | 70%~71% | 请假记录查询列表 |\n| **请假统计** | chart | 70% | 请假数据统计分析图表 |\n\n> 说明：本次检索命中的「请假申请」表单未返回具体字段明细（fieldNames/widgetTypes 为空），因此以下字段建议为**结合检索…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 2,
+      "sessionId": "079b0c48-b4b6-4091-a673-dc3a08cc7431",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已检索到相关表单体系，下面为你汇总结果并给出字段建议。\n\n## 检索结果（来自 rag__search）\n\n检索到完整的「请假」业务表单集群，核心命中如下：\n\n| 表单/实体 | 类型 | 相似度 | 说明 |\n|---|---|---|---|\n| **请假申请** | form | 82% | 请假提交主表单 |\n| 请假详情 | layout | 81% | 请假记录详情页 |\n| 请假统计 | chart | 76% | 请假数据统计 |\n| 请假台账 | search_list | 76% | 请假记录查询列表 |\n| **请假审批** | flow | 68% | 审批流程：部门经理 → HR |\n\n其中「请假申请」表单与「请假审批」流程配合，构成了完整的\"提交 → 审批\"闭环。\n\n## 5 个核心字段建议\n\n> 说明：检索到的「请假申请」表单未返回字段级元数据，以下字段建议结…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 3,
+      "sessionId": "348e0af5-0653-4d6b-a844-eeaff7c2bb6a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 检索结果\n\n我已在知识库中定位到与「请假申请」直接相关的表单，检索到的信息如下：\n\n**检索到的相关 Schema（来自 rag__search）：**\n| 名称 | 类型 | 相似度 |\n|------|------|--------|\n| **请假申请** | 表单 form | 80%–89% |\n| 请假详情 | 布局 layout | 80%–86% |\n| 请假台账 | 列表 search_list | 74%–81% |\n| 请假统计 | 图表 chart | 72%–78% |\n| 请假审批 | 流程 flow | 69%–72%（标准审批链路：部门经理 → HR） |\n\n> 说明：知识库中\"请假申请\"表单已存在且命中度很高，但检索返回的元数据未带出该表单的字段级明细（fieldNames/widgetTypes 为空），因此下方字段建议为**基于检索到的表单体系 +…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 4,
+      "sessionId": "7b461cd1-ef97-47c0-882c-9eb9a18974fe",
+      "status": "ERROR",
+      "ok": false,
+      "notes": [
+        "EMPTY_REPLY",
+        "BAD_STATUS:ERROR"
+      ],
+      "contentPreview": "",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 5
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 1
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 2
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 3
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 4
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 5
+    }
+  ],
+  "model_results": [
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 1
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 2
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 3
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 4
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 5
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 1
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 2
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 3
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 4
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 5
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 1
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 2
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 3
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 4
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ],
+      "round": 5
+    }
+  ],
+  "attach_results": [
+    {
+      "ok": false,
+      "notes": [
+        "SESSION:401"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,349 @@
+{
+  "marker": "20260814-073741",
+  "rounds": 5,
+  "agents": 2,
+  "models": 3,
+  "agent_passed": 9,
+  "agent_failed": 1,
+  "model_passed": 15,
+  "model_failed": 0,
+  "attach_passed": 5,
+  "attach_failed": 0,
+  "issues": [
+    {
+      "type": "agent_dialog",
+      "slug": "gui-smart-form-search",
+      "round": 1,
+      "notes": [
+        "EMPTY_REPLY",
+        "BAD_STATUS:RUNNING"
+      ],
+      "preview": "",
+      "severity": "high"
+    },
+    {
+      "type": "ux_static",
+      "severity": "high",
+      "finding": "MessageAttachmentList 仅图片有预览弹层；PDF/docx/xlsx 只有外链下载，无类型徽章与 PDF iframe 预览"
+    }
+  ],
+  "agent_results": [
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 1,
+      "sessionId": "a3398cc9-4c21-49ab-8eb1-e2e62a6a0cdc",
+      "status": "RUNNING",
+      "ok": false,
+      "notes": [
+        "EMPTY_REPLY",
+        "BAD_STATUS:RUNNING"
+      ],
+      "contentPreview": "",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 2,
+      "sessionId": "48c55fb1-00c5-4533-8378-db2242a47c93",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 检索结果\n\n我已在知识库中检索到与「请假申请」相关的表单体系，具体如下：\n\n**来自检索的信息：**\n| 表单 | 类型 | 相似度 |\n|------|------|--------|\n| **请假申请** | form（表单） | 80% |\n| 请假详情 | layout（详情布局） | 81% |\n| 请假审批 | flow（审批流程：部门经理 → HR） | 70% |\n| 请假台账 | search_list（查询列表） | 73% |\n| 请假统计 | chart（统计图表） | 73% |\n\n可见知识库中已存在完整的「请假申请」表单，且配套有「请假审批」流程（部门经理审批 → HR 归档）。不过检索返回的元数据中未包含该表单的具体字段明细（fieldNames/widgetTypes 为空），因此以下 5 个核心字段建议综合了检索到的表单定位与通用请假场景最佳实践：\n…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 3,
+      "sessionId": "e4e8c5a6-cab6-4930-8886-62c12cd2574d",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我已从知识库检索到相关信息，下面为您汇总「请假申请」表单的字段建议。\n\n## 📋 检索结果\n\n知识库中已存在完整的请假业务闭环，检索到以下相关内容（相似度）：\n- **请假申请**（表单，相似度 79%）— 即本次目标表单\n- **请假审批**（流程，相似度 71%）— 标准请假审批：**部门经理 → HR**\n- **请假详情**（布局页，80%）与 **请假台账**（列表页，72%）、**请假统计**（图表，71%）— 申请后的配套页面\n\n> 注：知识库中该表单暂未暴露字段级元数据（组件类型/字段名未结构化录入），以下 5 个核心字段建议结合检索到的请假业务闭环与通用请假场景实践给出。\n\n## ✅ 「请假申请」5 个核心字段建议\n\n| 序号 | 字段名 | 组件类型 | 说明 |\n|---|---|---|---|\n| 1 | **请假人**（applicant） | input | …",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 4,
+      "sessionId": "2275eac5-a114-4466-b299-3fcdf6ac3460",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已为您完成检索，知识库中确实存在完整的「请假」系列表单，以下是基于检索结果整理的核心字段建议。\n\n## 检索结果概览（来自检索）\n\n| 名称 | 类型 | 相似度 |\n|------|------|--------|\n| 请假申请 | 表单 form | 80% |\n| 请假详情 | 布局 layout | 81% |\n| 请假台账 | 列表 search_list | 73% |\n| 请假统计 | 图表 chart | 72% |\n| 请假审批 | 流程 flow（部门经理 → HR） | 68% |\n\n知识库中「请假申请」表单已存在且与您的需求高度匹配，可在此基础上设计字段（组件类型建议依据检索到的表单体系与通用实践）。\n\n## 推荐 5 个核心字段\n\n1. **请假人（申请人）** — 建议组件：`select`（从员工通讯录选择）或 `input`\n   - 用于标识发起人，也是后…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-smart-form-search",
+      "name": "智能表单检索",
+      "round": 5,
+      "sessionId": "bb2a52b7-eb97-4a2c-aaa7-aec4542d2fc6",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已为您完成检索，以下是结果汇总与建议：\n\n## 📋 检索结果\n\n通过知识库检索，命中了与「请假申请」高度相关的表单：\n\n| 表单名称 | 类型 | 相似度 |\n|---------|------|--------|\n| **请假申请** | form | 78% |\n| **请假详情** | layout | 80% |\n| 请假统计 | chart | 71% |\n| 请假台账 | search_list | 71% |\n| 出差申请 / 加班申请 | form | 61% |\n\n> 以上信息来自知识库检索结果；检索到的「请假申请」表单未返回明确的字段级元数据，因此以下字段建议结合了同类表单（出差申请、加班申请等）的通用设计经验得出。\n\n## ✅ 请假申请表单的 5 个核心字段建议\n\n1. **请假类型**（`leaveType`，下拉选择）\n   用于区分事假、病假、年假、调休、婚假、…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "name": "仪表盘助手",
+      "round": 1,
+      "sessionId": "916a59d8-5d19-45da-a5b8-06a286aa6af8",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "### 核心指标与图表（电商周报 5 个）\n\n- **GMV（商品交易总额）**  \n  - 图表类型：**面积趋势图 / 折线图**  \n  - 含义：本周所有达成订单的总金额，是营收核心指标。  \n  - 为什么适合：周报需要快速判断大盘走势，面积图能突出销量峰谷与周同比曲线，一眼识别增长或下滑。\n\n- **订单量**  \n  - 图表类型：**柱状图（按日）**  \n  - 含义：本周成功支付的订单总数，反映业务活跃度。  \n  - 为什么适合：柱状图清晰展示每日订单波动，与 GMV 趋势联动，可定位“周中低谷”或“周末高峰”。\n\n- **转化率（访客→成交）**  \n  - 图表类型：**折线图 + 周目标参考线**  \n  - 含义：本周访问用户中完成支付的比例，衡量流量承接效率。  \n  - 为什么适合：转化率是漏斗关键一步，折线图配合参考线能快速判断是否达标，监控每日波动是否…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "name": "仪表盘助手",
+      "round": 2,
+      "sessionId": "451ec592-9a05-4270-8cab-09292fbd0c0d",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 电商周报仪表盘设计建议\n\n### 推荐指标与图表\n\n以下为电商周报的 5 个核心指标，每个指标均给出含义、适合图表与选用理由。\n\n- **周销售额（GMV）**  \n  - 图表类型：**柱状图 + 趋势线**  \n  - 指标含义：本周累计成交金额，可拆分每日销售额。  \n  - 为什么适合：柱状图清晰对比每日或每周体量，叠加趋势线可快速判断整体上升/下降态势，并支持与上周、上月同期对比。\n\n- **周订单量**  \n  - 图表类型：**折线图**（按日展示）  \n  - 指标含义：本周成功下单的订单总数。  \n  - 为什么适合：订单量波动性较强，折线图能直观反映每周峰值和低谷，便于发现活动日、周末效应等规律。\n\n- **支付转化率**  \n  - 图表类型：**漏斗图**  \n  - 指标含义：从访客 → 加购 → 下单 → 支付 各环节的转化率。  \n  - 为什么适合：漏…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "name": "仪表盘助手",
+      "round": 3,
+      "sessionId": "c240d269-eb78-49e4-ba2c-69c710b15a8f",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 推荐指标与图表\n\n- **GMV（成交总额）**  \n  - 指标含义：当周已支付订单的总金额，直接反映整体营收规模。  \n  - 图表类型：**近 8 周柱状趋势图** + 顶部数字卡片（含环比箭头）。  \n  - 适合原因：周报需要一眼看清业绩是涨是跌，柱状趋势能快速对比每周高低，数字卡片便于播报。\n\n- **订单量（有效订单数）**  \n  - 指标含义：当周成功下单且未取消的订单数量，衡量业务体量。  \n  - 图表类型：**折线图（近 8 周）**，可叠加 7 日移动平均线。  \n  - 适合原因：订单量波动比 GMV 更微观，折线图能体现趋势变化和异常波动，方便追踪活动效果。\n\n- **客单价（平均每单金额）**  \n  - 指标含义：GMV ÷ 订单量，反映每位用户的购买力与商品组合情况。  \n  - 图表类型：**柱线组合图**（GMV 柱状 + 客单价折线，双 Y …",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "name": "仪表盘助手",
+      "round": 4,
+      "sessionId": "5a1644aa-17ec-46de-b754-8ddc0b4992fe",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "以下为电商周报仪表盘的可落地设计建议，假设使用对象为运营负责人，数据周期为「本周 vs 上周」。\n\n## 推荐指标与图表\n\n- **周销售额（GMV）** —— 图表：双轴折线图 + 柱状图  \n  本周累计成交金额，是业绩第一指标。用柱状图展示每日销售额，叠加上周同期折线，既能看整体趋势，也能快速定位「哪天掉量/冲高」。\n\n- **有效订单数** —— 图表：数值卡片 + 按日柱状图  \n  本周已支付且未取消的订单总量。柱状图按天展示，可直观看到周末峰值或工作日低谷；顶部卡片用大数字呈现「本周总量 + 日均」，方便周会汇报。\n\n- **客单价** —— 图表：每日折线图  \n  客单价 = 销售额 ÷ 订单数。通过每日趋势能看出大促结束后是否回落、满减活动是否真正拉动连带购买，比只看销售额更利于归因。\n\n- **访客→支付转化率** —— 图表：漏斗图 + 每日转化率折线图  \n  漏…",
+      "supportedInputs": [
+        "text"
+      ]
+    },
+    {
+      "slug": "gui-dashboard-assist",
+      "name": "仪表盘助手",
+      "round": 5,
+      "sessionId": "b9f3a902-4efb-402f-bc22-e3de70b46b7a",
+      "status": "COMPLETED",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 推荐指标与图表\n\n1. **周 GMV（成交总额）**  \n   - 图表类型：折线图（按日展示周内 GMV 趋势）  \n   - 为什么适合：直观反映本周整体营收走势，识别高峰/低谷日，便于周复盘和下周目标制定。\n\n2. **周订单量**  \n   - 图表类型：柱状图（按日展示订单数，叠加周同比/环比）  \n   - 为什么适合：与 GMV 互补，判断订单规模是否健康，同时暴露促销活动导致的销量波动是否合理。\n\n3. **支付转化率**  \n   - 图表类型：漏斗图（浏览→加购→下单→支付）或单值趋势线  \n   - 为什么适合：核心效率指标。漏斗能定位流失环节，周趋势线可判断整体转化水平是否在提升，是优化流量质量的依据。\n\n4. **客单价**  \n   - 图表类型：KPI 卡片 + 周环比对比（带涨跌箭头）  \n   - 为什么适合：反映每单平均消费能力，与 GMV 结合…",
+      "supportedInputs": [
+        "text"
+      ]
+    }
+  ],
+  "model_results": [
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": "DeepSeek V4 Flash",
+      "round": 1,
+      "sessionId": "034f290d-3d77-43b0-812e-b775cd02dfb5",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，专注于智能对话与文档处理。我可以帮您完成摘要、识别、问答、审核等多种任务。请直接告诉我您的需求。一加一等于二。"
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": "DeepSeek V4 Flash",
+      "round": 2,
+      "sessionId": "903117a8-62d7-4b63-97fa-50d3d3842740",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，一个智能对话助手。我可以解答问题、提供信息并协助完成多种任务。我会以中文为您提供简洁准确的回答。  \n1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": "DeepSeek V4 Flash",
+      "round": 3,
+      "sessionId": "f5fa82ca-37b0-44fd-95e8-59141aa24975",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，专门提供中文对话服务。  \n我可以帮你解答问题、处理文档和分析信息。  \n请随时向我提问，我会尽力帮助。  \n1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": "DeepSeek V4 Flash",
+      "round": 4,
+      "sessionId": "1c839308-97d1-45af-9618-0a9a75feff70",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，一款智能对话产品。我可以解答问题、处理文档、提供分析建议。1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81d8db200988807d6a9",
+      "name": "DeepSeek V4 Flash",
+      "round": 5,
+      "sessionId": "47f649d4-1883-494d-a4ff-4d492e7e1f8c",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，一个能够解答问题、处理文档和提供智能服务的对话伙伴。我可以协助你完成摘要、识别、对比等多种任务。至于你的问题：1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": "Mimo v2.5",
+      "round": 1,
+      "sessionId": "0f89d905-0a1f-49e6-96aa-7a671b4e29bf",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，专注于为您提供智能问答与任务协助。  \n我基于先进的语言模型，具备广泛的知识和推理能力。  \n我可以处理文档、分析合同、辅助决策，并支持多场景应用。  \n\n1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": "Mimo v2.5",
+      "round": 2,
+      "sessionId": "d7235a88-ee18-4054-ab8b-add27adfca4e",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，能为您处理文档、分析数据或解答问题。我的回答会清晰且符合您的需求。1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": "Mimo v2.5",
+      "round": 3,
+      "sessionId": "a0831732-b305-478f-9b3f-b6c2241703cc",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，可以协助处理文档分析、问答和工作流任务。我能够根据您的需求灵活调用多种智能工具，提供精准、高效的回答与解决方案。无论是日常答疑还是复杂任务，我都能以清晰友好的方式为您提供支持。  \n\n1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": "Mimo v2.5",
+      "round": 4,
+      "sessionId": "999ff37f-7154-476b-b2c5-ca6286ba899b",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语智能助手，能够帮你处理文档分析、知识问答、合同提取等多种任务。我可以理解你的需求，用自然语言与你交流，让复杂的工作变得更简单高效。无论你遇到什么问题，都可以随时找我帮忙。\n\n关于你的问题：**1 + 1 = 2**。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6b1",
+      "name": "Mimo v2.5",
+      "round": 5,
+      "sessionId": "5a3cd5bc-03ca-478e-8d2d-a0df9bb0ac08",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "你好！我是澄语助手，一个智能对话工具。我可以帮助你处理文档分析、知识问答、需求搭建等多种任务。只需简单描述你的需求，我就能为你提供专业的帮助。\n\n1+1 等于 2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": "DeepSeek V4 Pro",
+      "round": 1,
+      "sessionId": "95f45e0c-3a28-41d8-bc03-9a2a7e12a021",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，可以为你解答问题、处理文档或推荐合适的智能助手。我会根据你的需求提供清晰、可执行的中文回复。1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": "DeepSeek V4 Pro",
+      "round": 2,
+      "sessionId": "20d26c4f-b8de-416b-8e2e-84b7d023e963",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，可以协助你解答问题、解析文档和分析内容。我支持选用基础模型或切换已发布的工作流助手来完成任务。我还能处理知识库问答、合同提取、表单检索等常见业务需求。  \n一加一等于二。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": "DeepSeek V4 Pro",
+      "round": 3,
+      "sessionId": "534d5dd6-b773-4e30-9c72-f3de9d9798d9",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，专注于提供清晰、可靠的对话与任务支持。我可以协助文档处理、知识问答、流程梳理等场景。1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": "DeepSeek V4 Pro",
+      "round": 4,
+      "sessionId": "be4972ae-72cb-4d42-bef7-4415223f3df7",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手。  \n我可以在对话与工作流场景中为你提供文档处理、知识库问答、合同分析、表单检索等帮助。  \n1+1等于2。"
+    },
+    {
+      "modelId": "6a54b81e8db200988807d6ae",
+      "name": "DeepSeek V4 Pro",
+      "round": 5,
+      "sessionId": "1e2d206b-0ddd-4503-826f-c1f75e76c27b",
+      "ok": true,
+      "notes": [],
+      "contentPreview": "我是澄语助手，专注于用中文协助你完成文档处理、知识问答、合同解析等任务。  \n我还能根据你的需求，引导你选用界面中已发布的不同工作流助手。  \n我会用简洁、可落地的方式给出结果。  \n1+1等于二。"
+    }
+  ],
+  "attach_results": [
+    {
+      "filename": "note.txt",
+      "contentType": "text/plain",
+      "uploadCode": 200,
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已根据附件 note.txt（内容：**Contract amount 120000, penalty 20%**，即合同金额 12 万、违约金 20%）完成检索，结果如下。\n\n## 检索结果汇总（信息来自 rag__search 检索）\n\n**与\"合同\"最直接相关的实体：**\n| 表单名称 | 类型 | 相似度 | 说明 |\n|---------|------|--------|------|\n| 合同台账 | 列表页（search_list）| 75%~79% | 命中 ",
+      "status": "COMPLETED"
+    },
+    {
+      "filename": "contract.pdf",
+      "contentType": "application/pdf",
+      "uploadCode": 200,
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已根据附件 contract.pdf（合同文件）完成检索，结果如下。\n\n## 检索结果汇总（信息来自 rag__search 检索）\n\n**合同核心匹配（Schema）：**\n| 表单名称 | 类型 | 相似度 | 说明 |\n|---------|------|--------|------|\n| 合同台账 | 列表页（search_list）| **79%（两个实例）** | 合同信息登记/查询的主台账 |\n| 合同详情 | 详情页（layout）| **75%** | 展",
+      "status": "COMPLETED"
+    },
+    {
+      "filename": "scan.png",
+      "contentType": "image/png",
+      "uploadCode": 200,
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已根据附件 scan.png（扫描件）完成检索，结果如下。\n\n## 检索结果汇总（信息来自 rag__search 检索）\n\n**说明**：scan.png 为极小扫描件图片，无法直接解析图内文字。以下按\"扫描件\"常见场景（票据/证件/合同归档）做了三轮语义检索，给出候选。\n\n**票据/凭证类（相似度最高）：**\n| 表单名称 | 类型 | 相似度 | 适用场景 |\n|---------|------|--------|---------|\n| 发票登记 | 表单 | **7",
+      "status": "COMPLETED"
+    },
+    {
+      "filename": "clause.docx",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "uploadCode": 200,
+      "ok": true,
+      "notes": [],
+      "contentPreview": "## 检索结果汇总（信息来自 rag__search 检索）\n\n**与\"条款/合同条文\"最直接匹配：**\n| 表单名称 | 类型 | 相似度 | 说明 |\n|---------|------|--------|------|\n| 合同台账 | 列表页（search_list）| **85%（两个实例）** | 条款对应的合同信息登记/查询主台账 |\n| 合同详情 | 详情页（layout）| 70%~74% | 展示合同及条款明细 |\n\n**关联业务表单：**\n| 表单名称 ",
+      "status": "COMPLETED"
+    },
+    {
+      "filename": "amount.xlsx",
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "uploadCode": 200,
+      "ok": true,
+      "notes": [],
+      "contentPreview": "已完成附件 amount.xlsx（金额类表格）的检索，结果如下。\n\n## 检索结果汇总（信息来自 rag__search 检索）\n\n**金额台账类（相似度最高，适合批量金额数据登记/查询）：**\n| 表单名称 | 类型 | 相似度 | 适用场景 |\n|---------|------|--------|---------|\n| 付款台账 | 列表页（search_list）| **79%** | 付款金额明细的登记/对账 |\n| 发票台账 | 列表页 | **78%** |",
+      "status": "COMPLETED"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+=== full catalog eval marker=20260814-073741 agents=2 models=3 rounds=5 ===
+[gui-smart-form-search] R1 RUNNING FAIL notes=['EMPTY_REPLY', 'BAD_STATUS:RUNNING']
+[gui-smart-form-search] R2 COMPLETED PASS notes=[]
+[gui-smart-form-search] R3 COMPLETED PASS notes=[]
+[gui-smart-form-search] R4 COMPLETED PASS notes=[]
+[gui-smart-form-search] R5 COMPLETED PASS notes=[]
+[gui-dashboard-assist] R1 COMPLETED PASS notes=[]
+[gui-dashboard-assist] R2 COMPLETED PASS notes=[]
+[gui-dashboard-assist] R3 COMPLETED PASS notes=[]
+[gui-dashboard-assist] R4 COMPLETED PASS notes=[]
+[gui-dashboard-assist] R5 COMPLETED PASS notes=[]
+[model:DeepSeek V4 Flash] R1 PASS notes=[]
+[model:DeepSeek V4 Flash] R2 PASS notes=[]
+[model:DeepSeek V4 Flash] R3 PASS notes=[]
+[model:DeepSeek V4 Flash] R4 PASS notes=[]
+[model:DeepSeek V4 Flash] R5 PASS notes=[]
+[model:Mimo v2.5] R1 PASS notes=[]
+[model:Mimo v2.5] R2 PASS notes=[]
+[model:Mimo v2.5] R3 PASS notes=[]
+[model:Mimo v2.5] R4 PASS notes=[]
+[model:Mimo v2.5] R5 PASS notes=[]
+[model:DeepSeek V4 Pro] R1 PASS notes=[]
+[model:DeepSeek V4 Pro] R2 PASS notes=[]
+[model:DeepSeek V4 Pro] R3 PASS notes=[]
+[model:DeepSeek V4 Pro] R4 PASS notes=[]
+[model:DeepSeek V4 Pro] R5 PASS notes=[]
+[attach:note.txt] PASS notes=[]
+[attach:contract.pdf] PASS notes=[]
+[attach:scan.png] PASS notes=[]
+[attach:clause.docx] PASS notes=[]
+[attach:amount.xlsx] PASS notes=[]
+
+=== FULL CATALOG SUMMARY ===
+agents 9/10
+models 15/15
+attach 5/5
+issues=2 wrote docs/eval/full_catalog_rerun_agents.json docs/eval/FULL_CATALOG_ISSUES.md

@@ -234,6 +234,10 @@ public class UploadService {
       case "txt", "md" -> "text/plain";
       case "csv" -> "text/csv";
       case "json" -> "application/json";
+      case "doc" -> "application/msword";
+      case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "xls" -> "application/vnd.ms-excel";
+      case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       default -> "application/octet-stream";
     };
   }

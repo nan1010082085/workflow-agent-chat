@@ -1,0 +1,5 @@
+models [('6a54b81d8db200988807d6a9', 'DeepSeek V4 Flash'), ('6a54b81e8db200988807d6b1', 'Mimo v2.5'), ('6a54b81e8db200988807d6ae', 'DeepSeek V4 Pro')]
+[model:DeepSeek V4 Flash] R1 PASS notes=[]
+[model:DeepSeek V4 Flash] R2 PASS notes=[]
+[model:DeepSeek V4 Flash] R3 PASS notes=[]
+[model:DeepSeek V4 Flash] R4 PASS notes=[]
