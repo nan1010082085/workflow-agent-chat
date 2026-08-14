@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AppMark from '../components/AppMark.vue'
@@ -15,6 +15,42 @@ const displayName = ref('')
 const tenantCode = ref('')
 const submitting = ref(false)
 const localError = ref('')
+/** 渐进步骤：身份 → 凭证 →（注册时）资料 */
+const step = ref(1)
+const showAdvanced = ref(false)
+const touched = ref<Record<string, boolean>>({})
+
+const usernameRef = ref<HTMLInputElement | null>(null)
+const passwordRef = ref<HTMLInputElement | null>(null)
+const displayNameRef = ref<HTMLInputElement | null>(null)
+
+const usernameOk = computed(() => username.value.trim().length >= 2)
+const passwordOk = computed(() => password.value.length >= 1)
+const passwordStrongOk = computed(() => {
+  if (mode.value !== 'register') return passwordOk.value
+  const p = password.value
+  return p.length >= 8 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p)
+})
+
+const canContinueIdentity = computed(() => usernameOk.value)
+const canSubmit = computed(() => {
+  if (!usernameOk.value || !passwordOk.value || submitting.value) return false
+  if (mode.value === 'register' && !passwordStrongOk.value) return false
+  return true
+})
+
+const usernameHint = computed(() => {
+  if (!touched.value.username || usernameOk.value) return ''
+  return '用户名至少 2 个字符'
+})
+const passwordHint = computed(() => {
+  if (!touched.value.password) return ''
+  if (!password.value) return '请输入密码'
+  if (mode.value === 'register' && !passwordStrongOk.value) {
+    return '至少 8 位，需含大小写字母和数字'
+  }
+  return ''
+})
 
 /**
  * 登录或注册成功后进入对话。
@@ -25,12 +61,14 @@ async function goWorkspace() {
 }
 
 /**
- * 使用平台账号登录 Chat（UI 为 Chat 自建）。
+ * 使用平台账号登录 Chat。
  */
 async function onLogin() {
   localError.value = ''
-  if (!username.value.trim() || !password.value) {
-    localError.value = '请输入用户名和密码'
+  markTouched('username')
+  markTouched('password')
+  if (!canSubmit.value) {
+    localError.value = usernameHint.value || passwordHint.value || '请完善登录信息'
     return
   }
   submitting.value = true
@@ -53,8 +91,10 @@ async function onLogin() {
  */
 async function onRegister() {
   localError.value = ''
-  if (!username.value.trim() || !password.value) {
-    localError.value = '请输入用户名和密码'
+  markTouched('username')
+  markTouched('password')
+  if (!canSubmit.value) {
+    localError.value = usernameHint.value || passwordHint.value || '请完善注册信息'
     return
   }
   submitting.value = true
@@ -72,16 +112,45 @@ async function onRegister() {
   }
 }
 
+function markTouched(key: string) {
+  touched.value = { ...touched.value, [key]: true }
+}
+
+/**
+ * 从身份步进入凭证步。
+ */
+async function continueToCredentials() {
+  markTouched('username')
+  if (!canContinueIdentity.value) return
+  step.value = Math.max(step.value, 2)
+  await nextTick()
+  passwordRef.value?.focus()
+}
+
 function switchMode(next: 'login' | 'register') {
   mode.value = next
   localError.value = ''
   auth.error = null
+  touched.value = {}
+  step.value = usernameOk.value ? 2 : 1
+  showAdvanced.value = false
 }
+
+watch(username, (v) => {
+  if (v.trim().length >= 2 && step.value < 2) {
+    step.value = 2
+  }
+})
+
+watch(mode, async () => {
+  await nextTick()
+  if (step.value >= 2) passwordRef.value?.focus()
+  else usernameRef.value?.focus()
+})
 </script>
 
 <template>
   <div class="login-page">
-    <!-- 氛围背景：渐变雾 + 漂移光斑 + 点阵 -->
     <div class="bg" aria-hidden="true">
       <div class="bg-wash" />
       <div class="orb orb-a" />
@@ -123,37 +192,98 @@ function switchMode(next: 'login' | 'register') {
           </button>
         </div>
 
+        <div class="progress" aria-hidden="true">
+          <span :class="{ on: step >= 1, done: step > 1 }" />
+          <span :class="{ on: step >= 2, done: canSubmit }" />
+        </div>
+
         <p class="mode-hint">
-          {{ mode === 'login' ? '登录后继续你的对话' : '注册账号，即可开始对话' }}
+          <template v-if="step < 2">先输入你的账号</template>
+          <template v-else-if="mode === 'login'">输入密码后进入对话</template>
+          <template v-else>设置密码，完成注册</template>
         </p>
 
-        <label class="field">
+        <!-- 步骤 1：身份 -->
+        <label class="field reveal" style="--d: 0ms">
           <span>用户名</span>
-          <input v-model="username" autocomplete="username" autofocus />
-        </label>
-        <label v-if="mode === 'register'" class="field">
-          <span>显示名称 <em>可选</em></span>
-          <input v-model="displayName" autocomplete="nickname" placeholder="默认与用户名相同" />
-        </label>
-        <label class="field">
-          <span>密码</span>
           <input
-            v-model="password"
-            type="password"
-            :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+            ref="usernameRef"
+            v-model="username"
+            autocomplete="username"
+            autofocus
+            :aria-invalid="Boolean(usernameHint)"
+            @blur="markTouched('username')"
+            @keydown.enter.prevent="continueToCredentials"
           />
+          <small v-if="usernameHint" class="field-msg">{{ usernameHint }}</small>
         </label>
-        <p v-if="mode === 'register'" class="hint">
-          密码至少 8 位，需包含大小写字母和数字（平台策略）。
-        </p>
-        <label v-if="mode === 'login'" class="field optional">
-          <span>租户编码 <em>可选</em></span>
-          <input v-model="tenantCode" placeholder="默认与平台一致" autocomplete="organization" />
-        </label>
+
+        <!-- 步骤 2：凭证（用户名有效后渐进展开） -->
+        <div v-if="step >= 2" class="cred-block">
+          <label
+            v-if="mode === 'register'"
+            class="field reveal"
+            style="--d: 40ms"
+          >
+            <span>显示名称 <em>可选</em></span>
+            <input
+              ref="displayNameRef"
+              v-model="displayName"
+              autocomplete="nickname"
+              placeholder="默认与用户名相同"
+            />
+          </label>
+
+          <label class="field reveal" style="--d: 80ms">
+            <span>密码</span>
+            <input
+              ref="passwordRef"
+              v-model="password"
+              type="password"
+              :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+              :aria-invalid="Boolean(passwordHint)"
+              @blur="markTouched('password')"
+            />
+            <small v-if="passwordHint" class="field-msg">{{ passwordHint }}</small>
+          </label>
+
+          <p v-if="mode === 'register'" class="hint reveal" style="--d: 100ms">
+            密码至少 8 位，需包含大小写字母和数字。
+          </p>
+
+          <div v-if="mode === 'login'" class="advanced reveal" style="--d: 120ms">
+            <button
+              type="button"
+              class="advanced-toggle"
+              :aria-expanded="showAdvanced"
+              @click="showAdvanced = !showAdvanced"
+            >
+              {{ showAdvanced ? '收起选项' : '更多选项' }}
+            </button>
+            <label v-if="showAdvanced" class="field optional">
+              <span>租户编码 <em>可选</em></span>
+              <input v-model="tenantCode" placeholder="默认与平台一致" autocomplete="organization" />
+            </label>
+          </div>
+        </div>
 
         <p v-if="localError || auth.error" class="err" role="alert">{{ localError || auth.error }}</p>
 
-        <button type="submit" class="btn btn-primary submit" :disabled="submitting">
+        <button
+          v-if="step < 2"
+          type="button"
+          class="btn btn-primary submit"
+          :disabled="!canContinueIdentity"
+          @click="continueToCredentials"
+        >
+          继续
+        </button>
+        <button
+          v-else
+          type="submit"
+          class="btn btn-primary submit"
+          :disabled="!canSubmit"
+        >
           <template v-if="mode === 'login'">{{ submitting ? '登录中…' : '进入对话' }}</template>
           <template v-else>{{ submitting ? '注册中…' : '注册并进入' }}</template>
         </button>
@@ -176,7 +306,6 @@ function switchMode(next: 'login' | 'register') {
   background: #e8f1f0;
 }
 
-/* —— 背景层 —— */
 .bg {
   position: absolute;
   inset: 0;
@@ -253,7 +382,6 @@ function switchMode(next: 'login' | 'register') {
   gap: 22px;
 }
 
-/* —— 品牌区（首屏主角） —— */
 .hero {
   text-align: center;
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -314,23 +442,47 @@ function switchMode(next: 'login' | 'register') {
   color: var(--c-text-secondary);
   transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
-.tabs button:hover {
-  color: var(--c-text);
-}
+.tabs button:hover { color: var(--c-text); }
 .tabs button.active {
   background: var(--c-surface);
   color: var(--c-primary);
   box-shadow: var(--shadow-sm);
 }
-.tabs button:active {
-  transform: scale(0.98);
+.tabs button:active { transform: scale(0.98); }
+
+.progress {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: -2px;
 }
+.progress span {
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(13, 107, 103, 0.12);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.progress span.on { background: rgba(13, 107, 103, 0.35); }
+.progress span.done { background: var(--c-primary); }
 
 .mode-hint {
   margin: -2px 0 2px;
   font-size: 12px;
   color: var(--c-text-muted);
   text-align: center;
+  min-height: 1.2em;
+  transition: opacity 0.2s ease;
+}
+
+.cred-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reveal {
+  animation: field-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
 }
 
 .field {
@@ -345,6 +497,11 @@ function switchMode(next: 'login' | 'register') {
   color: var(--c-text-muted);
   font-size: 11px;
   margin-left: 4px;
+}
+.field-msg {
+  font-size: 12px;
+  color: var(--c-danger);
+  line-height: 1.4;
 }
 input {
   height: 42px;
@@ -361,12 +518,27 @@ input:focus {
   border-color: var(--c-primary);
   box-shadow: 0 0 0 3px rgba(13, 107, 103, 0.14);
 }
+input[aria-invalid='true'] {
+  border-color: rgba(196, 74, 74, 0.55);
+}
 .hint {
   margin: -6px 0 0;
   font-size: 12px;
   color: var(--c-text-muted);
   line-height: 1.5;
 }
+.advanced-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  color: var(--c-primary);
+  cursor: pointer;
+  font-weight: 600;
+}
+.advanced-toggle:hover { text-decoration: underline; }
+.advanced .field { margin-top: 10px; }
+
 .err {
   margin: 0;
   color: var(--c-danger);
@@ -378,26 +550,27 @@ input:focus {
   justify-content: center;
   font-weight: 600;
   margin-top: 4px;
-  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   box-shadow: 0 8px 20px rgba(13, 107, 103, 0.22);
 }
 .submit:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(13, 107, 103, 0.28);
 }
-.submit:active:not(:disabled) {
-  transform: translateY(0);
+.submit:active:not(:disabled) { transform: translateY(0); }
+.submit:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 @keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes field-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes mark-breathe {
   0%, 100% { transform: translateY(0); }
@@ -437,20 +610,20 @@ input:focus {
   .hero,
   .tagline,
   .login-card,
+  .reveal,
   .err {
     animation: none !important;
   }
   .hero,
   .tagline,
-  .login-card {
+  .login-card,
+  .reveal {
     opacity: 1;
     transform: none;
   }
 }
 
 @media (max-width: 480px) {
-  .login-card {
-    padding: 20px 16px 18px;
-  }
+  .login-card { padding: 20px 16px 18px; }
 }
 </style>

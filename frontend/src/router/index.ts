@@ -29,6 +29,7 @@ router.beforeEach(async (to) => {
   if (!auth.bootstrapped) {
     await auth.bootstrap()
   }
+  // 公开页：未登录可进；已登录访问 /login 才回对话（避免未鉴权完成时误进 Chat）
   if (to.meta.public) {
     if (auth.isAuthenticated && to.name === 'login') {
       return { path: '/chat' }
