@@ -60,7 +60,7 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
     if (exec == null) {
       return new ExecutionStatusDto(runtimeExecutionId,
           ExecutionStatusDto.RunStatusDto.UNKNOWN, null, null, "执行不存在: " + runtimeExecutionId,
-          null, List.of(), Instant.now(), null);
+          null, List.of(), Instant.now(), null, null, null, null, null);
     }
     // 非 HITL 的 running 推进到 completed
     if (exec.status == ExecutionStatusDto.RunStatusDto.RUNNING) {

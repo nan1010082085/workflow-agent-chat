@@ -197,7 +197,11 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
             null,
             parsed.nodes(),
             parsed.startedAt(),
-            parsed.finishedAt());
+            parsed.finishedAt(),
+            parsed.tip(),
+            parsed.toolCallsJson(),
+            parsed.documentSummariesJson(),
+            parsed.workflowExecutionJson());
       }
       return parsed;
     } catch (Exception e) {

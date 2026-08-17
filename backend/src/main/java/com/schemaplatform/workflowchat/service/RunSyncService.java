@@ -94,7 +94,7 @@ public class RunSyncService {
     } else if (run.getStatus() == RunStatus.WAITING_INPUT) {
       // resume HTTP 已成功时，即使平台瞬时仍回 waiting，也推进为 RUNNING，避免重复 resume
       run.markRunning();
-      updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
+      updateAssistantMessage(run, null, null, MessageStatus.RUNNING, null, null, null, null);
     }
 
     ChatRun saved = runService.save(run);
