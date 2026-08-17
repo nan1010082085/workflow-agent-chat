@@ -38,12 +38,14 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const list = await api.listMessages(sessionId)
       if (seq !== fetchSeq) return
-      messages.value = list.map((m: any) => ({
+messages.value = list.map((m: any) => ({
         id: m.id, role: m.role, content: m.content,
         runtimeExecutionId: m.runtimeExecutionId,
         status: m.status, createdAt: m.createdAt,
-        thinking: m.thinking, tip: m.tip, toolCalls: m.toolCalls,
-        documentSummaries: m.documentSummaries, workflowExecution: m.workflowExecution,
+        thinking: m.thinking, tip: m.tip,
+        toolCalls: m.toolCalls || undefined,
+        documentSummaries: m.documentSummaries || undefined,
+        workflowExecution: m.workflowExecution || undefined,
         attachments: m.attachments || [],
       }))
       loadedSessionId.value = sessionId

@@ -14,4 +14,6 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, String
 
   List<ChatSession> findTop20ByTenantIdAndUserIdAndStatusOrderByUpdatedAtDesc(
       String tenantId, String userId, SessionStatus status);
+
+  long countByTenantIdAndUserIdAndStatus(String tenantId, String userId, SessionStatus status);
 }

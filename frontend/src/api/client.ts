@@ -96,6 +96,15 @@ function userMessage(code: string, status: number): string {
   return messages[code] || (status >= 500 ? '服务暂时不可用，请稍后重试' : '请求未完成，请稍后重试')
 }
 
+
+function parseJsonField(value: any): any {
+  if (!value) return undefined;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch { return undefined; }
+  }
+  return value;
+}
+
 export const api = {
   login: (data: { username: string; password: string; tenantCode?: string }) =>
     request<Record<string, unknown>>('/chat/auth/login', { method: 'POST', body: JSON.stringify(data) }, false),
@@ -115,12 +124,37 @@ export const api = {
   listAgents: () => request<any[]>('/chat/agents'),
 
   listSessions: () => request<any[]>('/chat/sessions'),
+  listAllSessions: async (page = 0, size = 50) => {
+    const result = await request<{ sessions: any[]; total: number; page: number; size: number; totalPages: number }>(
+      `/chat/sessions/all?page=${page}&size=${size}`
+    );
+    return {
+      sessions: result.sessions.map((s: any) => ({
+        id: s.id, title: s.title, agentId: s.agentId, agentName: s.agentName,
+        platformConversationId: s.platformConversationId || null,
+        status: s.status, createdAt: s.createdAt, updatedAt: s.updatedAt,
+      })),
+      total: result.total,
+      page: result.page,
+      size: result.size,
+      totalPages: result.totalPages,
+    };
+  },
+
   createSession: (data: { title?: string; agentId?: string; agentName?: string }) =>
     request<any>('/chat/sessions', { method: 'POST', body: JSON.stringify(data) }),
   updateSessionTitle: (sessionId: string, title: string) =>
     request<any>(`/chat/sessions/${sessionId}/title`, { method: 'PATCH', body: JSON.stringify({ title }) }),
 
-  listMessages: (sessionId: string) => request<any[]>(`/chat/sessions/${sessionId}/messages`),
+  listMessages: async (sessionId: string) => {
+    const messages = await request<any[]>(`/chat/sessions/${sessionId}/messages`);
+    return messages.map((m: any) => ({
+      ...m,
+      toolCalls: parseJsonField(m.toolCalls),
+      documentSummaries: parseJsonField(m.documentSummaries),
+      workflowExecution: parseJsonField(m.workflowExecution),
+    }));
+  },
   sendMessage: (sessionId: string, data: { agentId: string; content: string; attachmentIds?: string[] }) =>
     request<any>(`/chat/sessions/${sessionId}/messages`, { method: 'POST', body: JSON.stringify(data) }),
   completeInSession: (sessionId: string, data: { modelId: string; content: string; attachmentIds?: string[] }) =>

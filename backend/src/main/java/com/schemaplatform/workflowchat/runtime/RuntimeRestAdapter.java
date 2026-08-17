@@ -339,13 +339,130 @@ public class RuntimeRestAdapter implements RuntimeAdapter {
     List<ExecutionStatusDto.NodeTimelineDto> nodes = parseNodes(nodeRecords);
     Instant startedAt = parseInstant(data, "startedAt");
     Instant finishedAt = parseInstant(data, "finishedAt");
+    // 提取扩展字段
+    String tip = extractTip(nodeRecords);
+    String toolCallsJson = extractToolCalls(nodeRecords);
+    String documentSummariesJson = extractDocumentSummaries(nodeRecords);
+    String workflowExecutionJson = buildWorkflowExecution(executionId, status, nodeRecords, startedAt, finishedAt);
+
     return new ExecutionStatusDto(
-        executionId, status, blankToNull(output), blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt);
+        executionId, status, blankToNull(output), blankToNull(thinking), errorMessage, waiting, nodes, startedAt, finishedAt,
+        tip, toolCallsJson, documentSummariesJson, workflowExecutionJson);
   }
 
   /**
    * 节点结构化 dump（需求分析/路由等）不应直接当用户可见正文。
    */
+  
+
+  /**
+   * 从节点记录提取提示信息。
+   */
+  private String extractTip(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    for (JsonNode n : nodeRecords) {
+      JsonNode output = n.get("output");
+      if (output != null && output.isObject()) {
+        String tip = text(output, "tip");
+        if (tip != null && !tip.isBlank()) return tip;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 从节点记录提取工具调用信息。
+   */
+  private String extractToolCalls(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    List<Map<String, Object>> toolCalls = new ArrayList<>();
+    for (JsonNode n : nodeRecords) {
+      String nodeType = text(n, "nodeType").toLowerCase();
+      if (!nodeType.contains("tool") && !nodeType.contains("mcp")) continue;
+      JsonNode output = n.get("output");
+      if (output == null || !output.isObject()) continue;
+      Map<String, Object> call = new java.util.LinkedHashMap<>();
+      call.put("id", text(n, "nodeId"));
+      call.put("name", text(n, "nodeName"));
+      call.put("arguments", output.has("arguments") ? output.get("arguments") : Map.of());
+      if (output.has("result")) {
+        call.put("result", output.get("result"));
+      }
+      if (output.has("error")) {
+        call.put("error", text(output, "error"));
+      }
+      toolCalls.add(call);
+    }
+    if (toolCalls.isEmpty()) return null;
+    try {
+      return objectMapper.writeValueAsString(toolCalls);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * 从节点记录提取文档摘要。
+   */
+  private String extractDocumentSummaries(JsonNode nodeRecords) {
+    if (nodeRecords == null || !nodeRecords.isArray()) return null;
+    List<Map<String, Object>> summaries = new ArrayList<>();
+    for (JsonNode n : nodeRecords) {
+      String nodeType = text(n, "nodeType").toLowerCase();
+      if (!nodeType.contains("document") && !nodeType.contains("parse")) continue;
+      JsonNode output = n.get("output");
+      if (output == null || !output.isObject()) continue;
+      Map<String, Object> summary = new java.util.LinkedHashMap<>();
+      summary.put("documentId", text(n, "nodeId"));
+      summary.put("filename", text(output, "filename"));
+      summary.put("summary", text(output, "summary"));
+      if (output.has("pageCount")) {
+        summary.put("pageCount", output.get("pageCount").asInt());
+      }
+      summaries.add(summary);
+    }
+    if (summaries.isEmpty()) return null;
+    try {
+      return objectMapper.writeValueAsString(summaries);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * 构建工作流执行详情。
+   */
+  private String buildWorkflowExecution(String executionId, ExecutionStatusDto.RunStatusDto status,
+      JsonNode nodeRecords, Instant startedAt, Instant finishedAt) {
+    Map<String, Object> execution = new java.util.LinkedHashMap<>();
+    execution.put("executionId", executionId);
+    execution.put("status", status.name());
+    if (startedAt != null) execution.put("startedAt", startedAt.toString());
+    if (finishedAt != null) execution.put("finishedAt", finishedAt.toString());
+    if (startedAt != null && finishedAt != null) {
+      execution.put("durationMs", java.time.Duration.between(startedAt, finishedAt).toMillis());
+    }
+    if (nodeRecords != null && nodeRecords.isArray()) {
+      List<Map<String, Object>> nodes = new ArrayList<>();
+      for (JsonNode n : nodeRecords) {
+        Map<String, Object> node = new java.util.LinkedHashMap<>();
+        node.put("nodeId", text(n, "nodeId"));
+        node.put("nodeName", text(n, "nodeName"));
+        node.put("nodeType", text(n, "nodeType"));
+        node.put("status", text(n, "status"));
+        if (n.has("startedAt")) node.put("startedAt", text(n, "startedAt"));
+        if (n.has("finishedAt")) node.put("finishedAt", text(n, "finishedAt"));
+        nodes.add(node);
+      }
+      execution.put("nodeRecords", nodes);
+    }
+    try {
+      return objectMapper.writeValueAsString(execution);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   private boolean isNonProseNodeDump(JsonNode output, String extracted) {
     if (output != null && output.isObject()) {
       if (output.has("confirmQuestions") || output.has("completeness")

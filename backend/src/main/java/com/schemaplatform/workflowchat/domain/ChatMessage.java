@@ -36,6 +36,22 @@ public class ChatMessage {
   /** 助手思考过程（可选）。 */
   @Column(name = "thinking", columnDefinition = "LONGTEXT")
   private String thinking;
+  /** 提示信息（可选）。 */
+  @Column(name = "tip", columnDefinition = "TEXT")
+  private String tip;
+
+  /** 工具调用记录（JSON）。 */
+  @Column(name = "tool_calls", columnDefinition = "JSON")
+  private String toolCallsJson;
+
+  /** 文档摘要（JSON）。 */
+  @Column(name = "document_summaries", columnDefinition = "JSON")
+  private String documentSummariesJson;
+
+  /** 工作流执行详情（JSON）。 */
+  @Column(name = "workflow_execution", columnDefinition = "JSON")
+  private String workflowExecutionJson;
+
 
   @Column(name = "runtime_execution_id", length = 128)
   private String runtimeExecutionId;
@@ -125,6 +141,15 @@ public class ChatMessage {
   public MessageRole getRole() { return role; }
   public String getContent() { return content; }
   public String getThinking() { return thinking; }
+  public String getTip() { return tip; }
+  public void setTip(String tip) { this.tip = tip; }
+  public String getToolCallsJson() { return toolCallsJson; }
+  public void setToolCallsJson(String toolCallsJson) { this.toolCallsJson = toolCallsJson; }
+  public String getDocumentSummariesJson() { return documentSummariesJson; }
+  public void setDocumentSummariesJson(String documentSummariesJson) { this.documentSummariesJson = documentSummariesJson; }
+  public String getWorkflowExecutionJson() { return workflowExecutionJson; }
+  public void setWorkflowExecutionJson(String workflowExecutionJson) { this.workflowExecutionJson = workflowExecutionJson; }
+
   public String getRuntimeExecutionId() { return runtimeExecutionId; }
   public MessageStatus getStatus() { return status; }
   public Instant getCreatedAt() { return createdAt; }

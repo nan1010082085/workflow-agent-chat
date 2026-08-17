@@ -21,6 +21,11 @@ const router = createRouter({
       name: 'session',
       component: () => import('../views/WorkspaceView.vue'),
     },
+    {
+      path: '/history',
+      name: 'history',
+      component: () => import('../views/HistoryView.vue'),
+    },
   ],
 })
 

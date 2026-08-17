@@ -149,6 +149,7 @@ export interface ModelTurnResult {
   thinking?: string | null
   status: MessageStatus
   sessionTitle?: string
+  platformConversationId?: string | null
 }
 
 export interface CreateSessionRequest {

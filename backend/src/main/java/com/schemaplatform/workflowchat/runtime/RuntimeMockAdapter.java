@@ -84,7 +84,8 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
       waiting = exec.waitingPayload;
     }
     return new ExecutionStatusDto(runtimeExecutionId, exec.status,
-        exec.output, exec.thinking, exec.error, waiting, List.of(), exec.startedAt, exec.finishedAt);
+        exec.output, exec.thinking, exec.error, waiting, List.of(), exec.startedAt, exec.finishedAt,
+        null, null, null, buildMockWorkflowExecution(exec));
   }
 
   @Override
@@ -139,6 +140,25 @@ public class RuntimeMockAdapter implements RuntimeAdapter {
       this.slug = slug;
       this.status = initial;
       this.startedAt = Instant.now();
+    }
+  }
+
+
+  private String buildMockWorkflowExecution(MockExecution exec) {
+    Map<String, Object> execution = new java.util.LinkedHashMap<>();
+    execution.put("executionId", exec.executionId);
+    execution.put("workflowId", exec.slug);
+    execution.put("workflowName", exec.slug);
+    execution.put("status", exec.status.name());
+    execution.put("startedAt", exec.startedAt.toString());
+    if (exec.finishedAt != null) {
+      execution.put("finishedAt", exec.finishedAt.toString());
+      execution.put("durationMs", java.time.Duration.between(exec.startedAt, exec.finishedAt).toMillis());
+    }
+    try {
+      return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(execution);
+    } catch (Exception e) {
+      return null;
     }
   }
 }

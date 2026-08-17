@@ -173,6 +173,13 @@ function formatTime(iso: string): string {
       </section>
     </div>
     <div class="sidebar-footer">
+      <button class="history-btn" type="button" @click="router.push('/history')">
+        <svg viewBox="0 0 16 16" width="14" height="14">
+          <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M8 5v3l2 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        全部历史
+      </button>
       <div v-if="showFolderInput" class="folder-create">
         <input v-model="folderName" placeholder="目录名称" @keyup.enter="addFolder" />
         <button type="button" @click="addFolder">创建</button>
@@ -234,4 +241,25 @@ function formatTime(iso: string): string {
 .session-item:hover .move-btn,
 .session-item:focus-within .move-btn { opacity: 1; }
 .move-btn:hover { color: var(--c-primary); border-color: var(--c-primary); }
+
+.history-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px dashed var(--c-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.history-btn:hover {
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
 </style>

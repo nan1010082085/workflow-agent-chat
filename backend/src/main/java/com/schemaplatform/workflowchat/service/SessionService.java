@@ -39,6 +39,25 @@ public class SessionService {
         tenantId, userId, SessionStatus.ACTIVE);
   }
 
+
+
+  @Transactional(readOnly = true)
+  public List<ChatSession> listAllSessions(int page, int size) {
+    String tenantId = TenantContext.tenantId();
+    String userId = TenantContext.userId();
+    org.springframework.data.domain.Pageable pageable = 
+        org.springframework.data.domain.PageRequest.of(page, size, 
+            org.springframework.data.domain.Sort.by("updatedAt").descending());
+    return sessionRepository.findByTenantIdAndUserIdAndStatusOrderByUpdatedAtDesc(
+        tenantId, userId, SessionStatus.ACTIVE, pageable).getContent();
+  }
+
+  @Transactional(readOnly = true)
+  public long countSessions() {
+    String tenantId = TenantContext.tenantId();
+    String userId = TenantContext.userId();
+    return sessionRepository.countByTenantIdAndUserIdAndStatus(tenantId, userId, SessionStatus.ACTIVE);
+  }
   @Transactional(readOnly = true)
   public ChatSession getSession(String sessionId) {
     String tenantId = TenantContext.tenantId();

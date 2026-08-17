@@ -16,7 +16,12 @@ public record ExecutionStatusDto(
     WaitingPayloadDto waiting,
     List<NodeTimelineDto> nodes,
     Instant startedAt,
-    Instant finishedAt
+    Instant finishedAt,
+    // 扩展字段：工具调用、文档摘要、工作流执行详情、提示信息
+    String tip,
+    String toolCallsJson,
+    String documentSummariesJson,
+    String workflowExecutionJson
 ) {
   public enum RunStatusDto {
     RUNNING, COMPLETED, FAILED, WAITING_INPUT, CANCELLED, UNKNOWN

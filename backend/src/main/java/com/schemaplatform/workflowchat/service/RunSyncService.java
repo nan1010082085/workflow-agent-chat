@@ -202,12 +202,35 @@ public class RunSyncService {
     return RunStatusView.from(saved, status);
   }
 
-  private void applyStatus(ChatRun run, ExecutionStatusDto status) {
+private void applyStatus(ChatRun run, ExecutionStatusDto status) {
     switch (status.status()) {
       case COMPLETED -> {
         run.markCompleted();
-        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.COMPLETED);
+        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.COMPLETED,
+            status.tip(), status.toolCallsJson(), status.documentSummariesJson(), status.workflowExecutionJson());
       }
+      case FAILED -> {
+        run.markFailed(status.errorMessage());
+        updateAssistantMessage(run, status.errorMessage(), null, MessageStatus.FAILED,
+            null, null, null, null);
+      }
+      case WAITING_INPUT -> {
+        run.markWaiting();
+        // 把需求分析/确认问题写入助手正文，前端气泡不再空白
+        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.WAITING_INPUT,
+            status.tip(), status.toolCallsJson(), status.documentSummariesJson(), status.workflowExecutionJson());
+      }
+      case CANCELLED -> {
+        run.markCancelled();
+        updateAssistantMessage(run, null, null, MessageStatus.CANCELLED, null, null, null, null);
+      }
+      case RUNNING -> {
+        run.markRunning();
+        updateAssistantMessage(run, null, null, MessageStatus.RUNNING, null, null, null, null);
+      }
+      case UNKNOWN -> log.warn("Runtime 返回未知状态 run={}", run.getId());
+    }
+  }
       case FAILED -> {
         run.markFailed(status.errorMessage());
         updateAssistantMessage(run, status.errorMessage(), null, MessageStatus.FAILED);
@@ -229,7 +252,8 @@ public class RunSyncService {
     }
   }
 
-  private void updateAssistantMessage(ChatRun run, String content, String thinking, MessageStatus status) {
+private void updateAssistantMessage(ChatRun run, String content, String thinking, MessageStatus status,
+      String tip, String toolCallsJson, String documentSummariesJson, String workflowExecutionJson) {
     ChatMessage placeholder = messageService.findAssistantByExecutionId(run.getRuntimeExecutionId());
     if (placeholder != null) {
       if (content != null) {
@@ -237,6 +261,10 @@ public class RunSyncService {
       } else {
         messageService.updateMessageStatus(placeholder.getId(), status);
       }
+      // 更新扩展字段
+      messageService.updateMessageExtensions(placeholder.getId(), tip, toolCallsJson, documentSummariesJson, workflowExecutionJson);
+    }
+  }
     }
   }
 
