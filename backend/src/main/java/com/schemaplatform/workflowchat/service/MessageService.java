@@ -1,19 +1,6 @@
 package com.schemaplatform.workflowchat.service;
 
-import com.schemaplatform.workflow
-
-  @Transactional
-  public ChatMessage updateMessageExtensions(String messageId, String tip, String toolCallsJson,
-      String documentSummariesJson, String workflowExecutionJson) {
-    ChatMessage msg = messageRepository.findById(messageId)
-        .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
-    if (tip != null) msg.setTip(tip);
-    if (toolCallsJson != null) msg.setToolCallsJson(toolCallsJson);
-    if (documentSummariesJson != null) msg.setDocumentSummariesJson(documentSummariesJson);
-    if (workflowExecutionJson != null) msg.setWorkflowExecutionJson(workflowExecutionJson);
-    return messageRepository.save(msg);
-  }
-chat.domain.ChatMessage;
+import com.schemaplatform.workflowchat.domain.ChatMessage;
 import com.schemaplatform.workflowchat.domain.MessageStatus;
 import com.schemaplatform.workflowchat.repository.ChatMessageRepository;
 import com.schemaplatform.workflowchat.tenant.TenantContext;
@@ -93,6 +80,18 @@ public class MessageService {
     ChatMessage msg = messageRepository.findById(messageId)
         .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
     msg.updateStatus(status);
+    return messageRepository.save(msg);
+  }
+
+  @Transactional
+  public ChatMessage updateMessageExtensions(String messageId, String tip, String toolCallsJson,
+      String documentSummariesJson, String workflowExecutionJson) {
+    ChatMessage msg = messageRepository.findById(messageId)
+        .orElseThrow(() -> new IllegalStateException("消息不存在: " + messageId));
+    if (tip != null) msg.setTip(tip);
+    if (toolCallsJson != null) msg.setToolCallsJson(toolCallsJson);
+    if (documentSummariesJson != null) msg.setDocumentSummariesJson(documentSummariesJson);
+    if (workflowExecutionJson != null) msg.setWorkflowExecutionJson(workflowExecutionJson);
     return messageRepository.save(msg);
   }
 }

@@ -231,28 +231,8 @@ private void applyStatus(ChatRun run, ExecutionStatusDto status) {
       case UNKNOWN -> log.warn("Runtime 返回未知状态 run={}", run.getId());
     }
   }
-      case FAILED -> {
-        run.markFailed(status.errorMessage());
-        updateAssistantMessage(run, status.errorMessage(), null, MessageStatus.FAILED);
-      }
-      case WAITING_INPUT -> {
-        run.markWaiting();
-        // 把需求分析/确认问题写入助手正文，前端气泡不再空白
-        updateAssistantMessage(run, status.output(), status.thinking(), MessageStatus.WAITING_INPUT);
-      }
-      case CANCELLED -> {
-        run.markCancelled();
-        updateAssistantMessage(run, null, null, MessageStatus.CANCELLED);
-      }
-      case RUNNING -> {
-        run.markRunning();
-        updateAssistantMessage(run, null, null, MessageStatus.RUNNING);
-      }
-      case UNKNOWN -> log.warn("Runtime 返回未知状态 run={}", run.getId());
-    }
-  }
 
-private void updateAssistantMessage(ChatRun run, String content, String thinking, MessageStatus status,
+  private void updateAssistantMessage(ChatRun run, String content, String thinking, MessageStatus status,
       String tip, String toolCallsJson, String documentSummariesJson, String workflowExecutionJson) {
     ChatMessage placeholder = messageService.findAssistantByExecutionId(run.getRuntimeExecutionId());
     if (placeholder != null) {
@@ -263,8 +243,6 @@ private void updateAssistantMessage(ChatRun run, String content, String thinking
       }
       // 更新扩展字段
       messageService.updateMessageExtensions(placeholder.getId(), tip, toolCallsJson, documentSummariesJson, workflowExecutionJson);
-    }
-  }
     }
   }
 
