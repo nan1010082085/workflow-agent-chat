@@ -60,7 +60,7 @@ const filteredSessions = computed(() => {
   if (sortBy.value === 'time') {
     sessionsList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
   } else {
-    sessions.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+    sessionsList.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
   }
   
   return sessionsList
