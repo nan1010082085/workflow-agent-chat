@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { MessageAttachment } from '../../types'
 import { attachmentContentUrl } from '../../api/client'
 import { isImage, isPdf, isOffice, fileKind, formatSize } from '../../utils/attachmentKind'
-import AttachmentPreviewModal from './AttachmentPreviewModal.vue'
 
 const props = defineProps<{ attachments: MessageAttachment[] }>()
 
-const previewOpen = ref(false)
-const previewAttachment = ref<MessageAttachment | null>(null)
+const emit = defineEmits<{
+  (e: 'preview', attachment: MessageAttachment): void
+}>()
 
 const images = computed(() => props.attachments.filter((a) => isImage(a)))
 const files = computed(() => props.attachments.filter((a) => !isImage(a)))
@@ -18,13 +18,7 @@ const files = computed(() => props.attachments.filter((a) => !isImage(a)))
  * @param {MessageAttachment} att
  */
 function openPreview(att: MessageAttachment) {
-  previewAttachment.value = att
-  previewOpen.value = true
-}
-
-function closePreview() {
-  previewOpen.value = false
-  previewAttachment.value = null
+  emit('preview', att)
 }
 </script>
 
@@ -64,12 +58,6 @@ function closePreview() {
       </span>
     </button>
   </div>
-
-  <AttachmentPreviewModal
-    v-model="previewOpen"
-    :attachment="previewAttachment"
-    :gallery="attachments"
-  />
 </template>
 
 <style scoped>

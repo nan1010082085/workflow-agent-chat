@@ -13,11 +13,12 @@
 
 | 计划 | 摘要 |
 |---|---|
-| [附件预览 UIUX 对齐](2026-08-19-attachment-preview-uiux.md) | 统一预览壳；图/PDF/docs；摘要跳转；可选 Office excerpt（不含 harness） |
+| [附件预览走查修复](2026-08-19-attachment-preview-followup.md) | **优先**：多图切换空实现、Bubble 单例 Modal、摘要匹配 user 附件 |
+| [附件预览 UIUX 对齐](2026-08-19-attachment-preview-uiux.md) | 初版已合入；缺陷转 follow-up，勿重复开工 |
 | [内容展示优化](2026-08-13-content-display-optimization.md) | Result 可读性、处理信息抽屉、附件预览 |
 | [文件上传、附件展示与限流](2026-08-13-upload-attachments-ratelimit.md) | 上传落盘 `~/payflow/agentChat`、消息附件展示、租户+用户限流 |
 
-> **Status Update:** 附件预览 UIUX 对齐计划的 Task 1-4 已完成（前端实现），Task 5 跳过（后端 Office excerpt），Task 6 文档已更新。可进行 build 验收。
+> **Status Update:** 附件预览初版 `bb9d0cf` 已推送；走查 P0（切图/双壳/摘要源）见 follow-up，交 Claude 修。
 
 ## 已归档
 

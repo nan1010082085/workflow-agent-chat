@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { MessageAttachment } from '../../types'
 import { attachmentContentUrl } from '../../api/client'
-import { isImage, isPdf, isOffice, fileKind, formatSize } from '../../utils/attachmentKind'
+import { isImage, isPdf, fileKind, formatSize } from '../../utils/attachmentKind'
 
 const props = defineProps<{
   /** 是否显示预览弹层 */
@@ -15,17 +15,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
+  (e: 'update:attachment', value: MessageAttachment): void
 }>()
 
 const isOpen = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
-})
-
-/** 当前 gallery 中的图片索引 */
-const currentIndex = computed(() => {
-  if (!props.gallery?.length || !props.attachment) return -1
-  return props.gallery.findIndex((a) => a.id === props.attachment?.id)
 })
 
 /** 是否为图片类型 */
@@ -34,24 +29,23 @@ const isCurrentImage = computed(() => props.attachment ? isImage(props.attachmen
 /** 是否为 PDF 类型 */
 const isCurrentPdf = computed(() => props.attachment ? isPdf(props.attachment) : false)
 
-/** 是否为 Office 文档 */
-const isCurrentOffice = computed(() => props.attachment ? isOffice(props.attachment) : false)
+/** 图片 gallery（过滤非图片，确保切换时只在图片间跳转） */
+const imageGallery = computed(() => {
+  const source = props.gallery?.length ? props.gallery : (props.attachment ? [props.attachment] : [])
+  return source.filter(isImage)
+})
+
+/** 当前图片在 imageGallery 中的索引 */
+const imageIndex = computed(() => {
+  if (!imageGallery.value.length || !props.attachment) return -1
+  return imageGallery.value.findIndex((a) => a.id === props.attachment?.id)
+})
 
 /** 是否有上一张图片 */
-const hasPrev = computed(() => {
-  if (!props.gallery?.length || currentIndex.value <= 0) return false
-  // 确保上一张也是图片
-  const prev = props.gallery[currentIndex.value - 1]
-  return prev ? isImage(prev) : false
-})
+const hasPrev = computed(() => imageIndex.value > 0)
 
 /** 是否有下一张图片 */
-const hasNext = computed(() => {
-  if (!props.gallery?.length || currentIndex.value < 0) return false
-  // 确保下一张也是图片
-  const next = props.gallery[currentIndex.value + 1]
-  return next ? isImage(next) : false
-})
+const hasNext = computed(() => imageIndex.value >= 0 && imageIndex.value < imageGallery.value.length - 1)
 
 /** 面板引用，用于焦点管理 */
 const panelRef = ref<HTMLElement | null>(null)
@@ -73,20 +67,10 @@ function close() {
  * 切换到上一张图片
  */
 function goPrev() {
-  if (!hasPrev.value || !props.gallery) return
-  const prev = props.gallery[currentIndex.value - 1]
+  if (!hasPrev.value || !imageGallery.value.length) return
+  const prev = imageGallery.value[imageIndex.value - 1]
   if (prev) {
-    emit('update:modelValue', true)
-    // 直接修改 attachment 不合适，通过事件通知父组件
-    // 这里我们通过 currentIndex 来获取，但 attachment 是 prop
-    // 所以我们需要通过 gallery 和 index 来切换
-    // 由于 attachment 是 prop，我们需要通过事件来更新
-    // 但这里我们简单处理，直接通过 gallery[index] 来设置
-    // 由于 Vue 的单向数据流，我们需要通过 emit 来通知父组件
-    // 但这里我们简化实现，假设父组件会处理
-    // 实际上，我们需要一个 internal state 来管理当前预览的附件
-    // 但为了保持简单，我们使用 gallery 和 currentIndex
-    // 如果需要更复杂的逻辑，可以考虑使用 v-model:attachment
+    emit('update:attachment', prev)
   }
 }
 
@@ -94,10 +78,10 @@ function goPrev() {
  * 切换到下一张图片
  */
 function goNext() {
-  if (!hasNext.value || !props.gallery) return
-  const next = props.gallery[currentIndex.value + 1]
+  if (!hasNext.value || !imageGallery.value.length) return
+  const next = imageGallery.value[imageIndex.value + 1]
   if (next) {
-    emit('update:modelValue', true)
+    emit('update:attachment', next)
   }
 }
 
@@ -115,29 +99,13 @@ function onKeydown(e: KeyboardEvent) {
 
   if (e.key === 'ArrowLeft' && hasPrev.value) {
     e.preventDefault()
-    // 切换到上一张
-    if (props.gallery && currentIndex.value > 0) {
-      const prev = props.gallery[currentIndex.value - 1]
-      if (prev) {
-        // 由于 attachment 是 prop，我们需要通过 emit 来更新
-        // 但这里我们简化实现，假设父组件会处理
-        // 实际上，我们需要一个 internal state 来管理当前预览的附件
-        // 但为了保持简单，我们使用 gallery 和 currentIndex
-        // 如果需要更复杂的逻辑，可以考虑使用 v-model:attachment
-      }
-    }
+    goPrev()
     return
   }
 
   if (e.key === 'ArrowRight' && hasNext.value) {
     e.preventDefault()
-    // 切换到下一张
-    if (props.gallery && currentIndex.value < props.gallery.length - 1) {
-      const next = props.gallery[currentIndex.value + 1]
-      if (next) {
-        // 同上
-      }
-    }
+    goNext()
     return
   }
 
@@ -202,9 +170,13 @@ function onPanelClick(e: MouseEvent) {
   e.stopPropagation()
 }
 
-// 添加全局键盘事件监听
-onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
+// 按打开态挂卸键盘事件，避免每条消息常驻监听
+watch(isOpen, (val) => {
+  if (val) {
+    document.addEventListener('keydown', onKeydown)
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+  }
 })
 
 onUnmounted(() => {
@@ -280,8 +252,8 @@ onUnmounted(() => {
           >
             ›
           </button>
-          <div v-if="gallery && gallery.length > 1" class="gallery-counter">
-            {{ currentIndex + 1 }} / {{ gallery.filter(a => isImage(a)).length }}
+          <div v-if="imageGallery.length > 1" class="gallery-counter">
+            {{ imageIndex + 1 }} / {{ imageGallery.length }}
           </div>
         </div>
 
@@ -413,13 +385,18 @@ onUnmounted(() => {
 .preview-action-btn {
   border: 0;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+  min-width: 44px;
   background: rgba(255,255,255,.1);
   color: #fff;
   font-size: 12px;
   text-decoration: none;
   cursor: pointer;
   transition: background .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-action-btn:hover {

@@ -10,12 +10,15 @@ import {
   contentHasQuestionSection,
   normalizeAssistantContent,
 } from '../utils/messageContent'
+import { isImage } from '../utils/attachmentKind'
 import type { MessageAttachment } from '../types'
 
 const props = defineProps<{
   message: Message
   run: RunStatusView | null
   sending: boolean
+  /** 会话中所有消息，用于向前查找用户附件 */
+  sessionMessages?: Message[]
 }>()
 const emit = defineEmits<{
   (e: 'resume', action: string, payload?: string): void
@@ -29,11 +32,40 @@ const previewOpen = ref(false)
 const previewAttachment = ref<MessageAttachment | null>(null)
 
 /**
- * 从附件列表中找到第一个图片附件，作为 gallery 的起始项
+ * 合并附件池：当前消息附件 + 向前查找最近一条用户消息的附件
+ * 用于摘要匹配和图片 gallery 切换
  */
-const galleryAttachments = computed(() => {
-  return props.message.attachments || []
+const previewAttachments = computed(() => {
+  const currentAttachments = props.message.attachments || []
+  const result = [...currentAttachments]
+
+  // 如果当前消息没有附件或需要向前查找
+  if (props.sessionMessages?.length) {
+    const currentIndex = props.sessionMessages.findIndex((m) => m.id === props.message.id)
+    if (currentIndex > 0) {
+      // 向前查找最近一条含附件的用户消息
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        const prevMessage = props.sessionMessages[i]
+        if (prevMessage.role === 'user' && prevMessage.attachments?.length) {
+          // 合并附件，按 id 去重
+          for (const att of prevMessage.attachments) {
+            if (!result.some((a) => a.id === att.id)) {
+              result.push(att)
+            }
+          }
+          break // 只找最近的一条
+        }
+      }
+    }
+  }
+
+  return result
 })
+
+/**
+ * 图片 gallery（用于图片切换）
+ */
+const galleryAttachments = computed(() => previewAttachments.value.filter(isImage))
 
 const isUser = computed(() => props.message.role === 'user')
 const isAssistant = computed(() => props.message.role === 'assistant')
@@ -303,6 +335,14 @@ function onDocPreview(attachment: MessageAttachment) {
   previewAttachment.value = attachment
   previewOpen.value = true
 }
+
+/**
+ * 附件列表点击预览
+ */
+function onAttachmentPreview(attachment: MessageAttachment) {
+  previewAttachment.value = attachment
+  previewOpen.value = true
+}
 </script>
 
 <template>
@@ -322,12 +362,13 @@ function onDocPreview(attachment: MessageAttachment) {
           <MessageAttachmentList
             v-if="message.attachments?.length"
             :attachments="message.attachments"
+            @preview="onAttachmentPreview"
           />
           <MessageParts v-if="bodyContent" :content="bodyContent" />
           <DocumentSummaryList
             v-if="message.documentSummaries?.length"
             :summaries="message.documentSummaries"
-            :attachments="message.attachments"
+            :attachments="previewAttachments"
             @preview="onDocPreview"
           />
           <p

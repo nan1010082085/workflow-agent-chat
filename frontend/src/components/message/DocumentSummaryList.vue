@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { MessageDocumentSummary, MessageAttachment } from '../../types'
-import { isImage, isPdf } from '../../utils/attachmentKind'
 
 const props = defineProps<{
   summaries: MessageDocumentSummary[]

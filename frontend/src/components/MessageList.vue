@@ -52,6 +52,7 @@ function runForMessage(m: Message): RunStatusView | null {
         :message="m"
         :run="runForMessage(m)"
         :sending="Boolean(sending)"
+        :session-messages="messages"
         @resume="(a, p) => emit('resume', a, p)"
         @cancel="emit('cancel')"
         @retry="emit('retry')"

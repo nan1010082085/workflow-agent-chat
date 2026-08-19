@@ -1,6 +1,8 @@
 # 附件预览 UIUX 对齐 Implementation Plan
 
-> **For Claude / agentic workers:** 严格按任务顺序勾选落地；完成一项勾一项。本计划可独立合入，不依赖 ai-platform harness/cordis。
+> **Status:** 前端初版已合入（`bb9d0cf`）；走查缺陷见 follow-up → [`2026-08-19-attachment-preview-followup.md`](2026-08-19-attachment-preview-followup.md)（多图切换空实现、双 Modal、摘要附件源）。
+>
+> **For Claude / agentic workers:** 新缺陷请改 follow-up，勿在本文件重复开工。本计划可独立合入，不依赖 ai-platform harness/cordis。
 
 **Goal:** 对齐 Chat `docs/UIUX.md` ResultRenderer 与平台 `DocumentRenderer` / `DocumentPreviewDrawer` 语义：消息内图片 / PDF / docs 可预览；摘要可跳到源文件；预览壳键盘与无障碍可用。
 
@@ -125,10 +127,10 @@ MessageBubble
 
 **验收：** 键盘可关、可切图；`prefers-reduced-motion` 下无大位移动画；触控关闭不误触内容区。
 
-- [x] Esc / Tab 不逃离 dialog（简易 focus trap：首末焦点循环或至少初始聚焦关闭钮）
-- [x] 图片 gallery：ArrowLeft / ArrowRight
+- [ ] Esc / Tab 不逃离 dialog（简易 focus trap：首末焦点循环或至少初始聚焦关闭钮）— **切图未落地，见 follow-up B1/B7/B8**
+- [ ] 图片 gallery：ArrowLeft / ArrowRight — **空实现，见 follow-up B1**
 - [x] mask 与 panel 过渡 150–300ms；尊重 `prefers-reduced-motion: reduce`
-- [x] 触摸：panel `@click.stop`；关闭热区足够大（≥44px）
+- [ ] 触摸：panel `@click.stop`；关闭热区足够大（≥44px）— **热区偏小，见 follow-up B8**
 
 ---
 
@@ -159,12 +161,12 @@ MessageBubble
 
 | # | 场景 | 期望 | 状态 |
 |---|---|---|---|
-| 1 | 用户发 png | 网格可见；点击放大；Esc 关闭 | ✅ |
+| 1 | 用户发 png | 网格可见；点击放大；Esc 关闭 | ⚠️ 放大/Esc 可用；多图切换见 follow-up |
 | 2 | 用户发 pdf | 弹层 iframe 可读；「新窗口打开」可用 | ✅ |
 | 3 | 用户发 docx/xlsx | 进降级壳，可下载；无空白 iframe | ✅ |
-| 4 | 助手返回 documentSummaries 且同消息有同名附件 | 点击摘要打开预览 | ✅ |
+| 4 | 助手返回 documentSummaries 且同消息有同名附件 | 点击摘要打开预览 | ⚠️ 仅同消息附件；真实 user→assistant 见 follow-up B3 |
 | 5 | 摘要无匹配附件 | 友好提示，不抛错 | ✅ |
-| 6 | 键盘 | Esc 关；多图方向键 | ✅ |
+| 6 | 键盘 | Esc 关；多图方向键 | ⚠️ Esc ✅；方向键空实现 → follow-up |
 | 7 | 移动宽度 | 弹层不横向溢出、不挡关闭钮 | ✅ |
 | 8 | `pnpm`/`npm` frontend build + backend compile | 通过 | ✅ |
 
