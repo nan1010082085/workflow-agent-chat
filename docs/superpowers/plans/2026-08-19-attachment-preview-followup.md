@@ -22,17 +22,17 @@
 
 ## 问题清单（走查）
 
-| ID | 严重度 | 现象 | 根因落点 |
-|---|---|---|---|
-| B1 | **P0** | 多图 ←/→ 与按钮无效果 | `AttachmentPreviewModal.goPrev/goNext` 与方向键只写注释，未更新 attachment |
-| B2 | **P0** | 计划写「Bubble 单例」，实际双壳 | `MessageAttachmentList` 与 `MessageBubble` 各挂一个 Modal |
-| B3 | **P0** | 摘要点不开真实附件 | Summary 只拿当前助手消息 `attachments`；用户文件在上一条 user 消息 |
-| B4 | 中 | 计数显示如 `3 / 2` | `currentIndex` 用全量 gallery，分母用图片数 |
-| B5 | 中 | `[img, pdf, img]` 切不到第二张 | `hasPrev/hasNext` 只看相邻项是否图片，不跳过非图 |
-| B6 | 低 | 死代码 / 未用 import | List `closePreview`；Summary `isImage`/`isPdf`/`computed`；Modal `isCurrentOffice` |
-| B7 | 低 | 每条消息常驻 keydown | Modal `onMounted` 绑 `document`，应按打开态挂卸 |
-| B8 | 低 | 关闭钮热区偏小 | `.preview-action-btn` 高度 &lt; 44px |
-| D1 | 文档 | 原计划 Task4 / 验收 #1#4#6 误勾 ✅ | `2026-08-19-attachment-preview-uiux.md` |
+| ID | 严重度 | 现象 | 根因落点 | 状态 |
+|---|---|---|---|---|
+| B1 | **P0** | 多图 ←/→ 与按钮无效果 | `AttachmentPreviewModal.goPrev/goNext` 与方向键只写注释，未更新 attachment | ✅ 已修复 |
+| B2 | **P0** | 计划写「Bubble 单例」，实际双壳 | `MessageAttachmentList` 与 `MessageBubble` 各挂一个 Modal | ✅ 已修复 |
+| B3 | **P0** | 摘要点不开真实附件 | Summary 只拿当前助手消息 `attachments`；用户文件在上一条 user 消息 | ✅ 已修复 |
+| B4 | 中 | 计数显示如 `3 / 2` | `currentIndex` 用全量 gallery，分母用图片数 | ✅ 已修复 |
+| B5 | 中 | `[img, pdf, img]` 切不到第二张 | `hasPrev/hasNext` 只看相邻项是否图片，不跳过非图 | ✅ 已修复 |
+| B6 | 低 | 死代码 / 未用 import | List `closePreview`；Summary `isImage`/`isPdf`/`computed`；Modal `isCurrentOffice` | ✅ 已修复 |
+| B7 | 低 | 每条消息常驻 keydown | Modal `onMounted` 绑 `document`，应按打开态挂卸 | ✅ 已修复 |
+| B8 | 低 | 关闭钮热区偏小 | `.preview-action-btn` 高度 &lt; 44px | ✅ 已修复 |
+| D1 | 文档 | 原计划 Task4 / 验收 #1#4#6 误勾 ✅ | `2026-08-19-attachment-preview-uiux.md` | ✅ 已修复 |
 
 ---
 
