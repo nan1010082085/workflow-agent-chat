@@ -5,10 +5,12 @@ import AppMark from './AppMark.vue'
 import MessageParts from './message/MessageParts.vue'
 import DocumentSummaryList from './message/DocumentSummaryList.vue'
 import MessageAttachmentList from './message/MessageAttachmentList.vue'
+import AttachmentPreviewModal from './message/AttachmentPreviewModal.vue'
 import {
   contentHasQuestionSection,
   normalizeAssistantContent,
 } from '../utils/messageContent'
+import type { MessageAttachment } from '../types'
 
 const props = defineProps<{
   message: Message
@@ -21,6 +23,17 @@ const emit = defineEmits<{
   (e: 'retry'): void
   (e: 'open-process'): void
 }>()
+
+/** 附件预览状态 */
+const previewOpen = ref(false)
+const previewAttachment = ref<MessageAttachment | null>(null)
+
+/**
+ * 从附件列表中找到第一个图片附件，作为 gallery 的起始项
+ */
+const galleryAttachments = computed(() => {
+  return props.message.attachments || []
+})
 
 const isUser = computed(() => props.message.role === 'user')
 const isAssistant = computed(() => props.message.role === 'assistant')
@@ -282,6 +295,14 @@ function toggleThinking() {
 function toggleTools() {
   toolsOpen.value = !toolsOpen.value
 }
+
+/**
+ * 文档摘要点击预览
+ */
+function onDocPreview(attachment: MessageAttachment) {
+  previewAttachment.value = attachment
+  previewOpen.value = true
+}
 </script>
 
 <template>
@@ -306,6 +327,8 @@ function toggleTools() {
           <DocumentSummaryList
             v-if="message.documentSummaries?.length"
             :summaries="message.documentSummaries"
+            :attachments="message.attachments"
+            @preview="onDocPreview"
           />
           <p
             v-if="isAssistant && message.status === 'RUNNING' && displayContent"
@@ -385,6 +408,13 @@ function toggleTools() {
         </div>
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
+
+      <!-- 附件预览弹层（单例） -->
+      <AttachmentPreviewModal
+        v-model="previewOpen"
+        :attachment="previewAttachment"
+        :gallery="galleryAttachments"
+      />
 
       <!-- 2. 过程信息：可动画折叠；流式限高，结束自动收起 -->
       <div

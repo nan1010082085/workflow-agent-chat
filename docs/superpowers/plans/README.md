@@ -13,8 +13,11 @@
 
 | 计划 | 摘要 |
 |---|---|
+| [附件预览 UIUX 对齐](2026-08-19-attachment-preview-uiux.md) | 统一预览壳；图/PDF/docs；摘要跳转；可选 Office excerpt（不含 harness） |
 | [内容展示优化](2026-08-13-content-display-optimization.md) | Result 可读性、处理信息抽屉、附件预览 |
 | [文件上传、附件展示与限流](2026-08-13-upload-attachments-ratelimit.md) | 上传落盘 `~/payflow/agentChat`、消息附件展示、租户+用户限流 |
+
+> **Status Update:** 附件预览 UIUX 对齐计划的 Task 1-4 已完成（前端实现），Task 5 跳过（后端 Office excerpt），Task 6 文档已更新。可进行 build 验收。
 
 ## 已归档
 

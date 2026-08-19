@@ -93,6 +93,18 @@ ProcessingDrawer         —— 按需打开的处理信息抽屉
 
 结果支持 Markdown、表格、代码块、结构化 JSON 和下载链接；支持复制、继续追问、重试。执行详情默认折叠在抽屉中，用户主动展开。
 
+### 附件预览
+
+附件预览统一使用 `AttachmentPreviewModal` 组件：
+
+- **图片**：应用内预览，支持多图左右切换（ArrowLeft / ArrowRight）
+- **PDF**：应用内 iframe 预览，支持「新窗口打开」
+- **Office 文档**（Word/Excel）：降级面板，显示文件类型徽章、文件名和「打开/下载」按钮，不空白 iframe
+- **其他格式**：降级面板，明确提示「此格式暂不支持应用内预览」
+- **文档摘要**：若助手消息有 `documentSummaries` 且同消息有同名附件，点击摘要可打开对应附件预览
+- **交互**：点击遮罩关闭、Esc 关闭、焦点陷阱、`prefers-reduced-motion: reduce` 支持
+- **可访问性**：`role="dialog"`、`aria-modal="true"`、标题用文件名、关闭按钮有 `aria-label`
+
 ## 5. 状态文案与动作（TASKS P-03 冻结）
 
 | 用户状态 | 文案 | UI 表现 | 用户动作 |

@@ -2,75 +2,29 @@
 import { computed, ref } from 'vue'
 import type { MessageAttachment } from '../../types'
 import { attachmentContentUrl } from '../../api/client'
+import { isImage, isPdf, isOffice, fileKind, formatSize } from '../../utils/attachmentKind'
+import AttachmentPreviewModal from './AttachmentPreviewModal.vue'
 
 const props = defineProps<{ attachments: MessageAttachment[] }>()
 
-const preview = ref<MessageAttachment | null>(null)
+const previewOpen = ref(false)
+const previewAttachment = ref<MessageAttachment | null>(null)
 
 const images = computed(() => props.attachments.filter((a) => isImage(a)))
 const files = computed(() => props.attachments.filter((a) => !isImage(a)))
 
 /**
- * 是否为图片 MIME，用于内联预览。
- * @param {MessageAttachment} att
- */
-function isImage(att: MessageAttachment): boolean {
-  const mime = (att.mimetype || '').toLowerCase()
-  const name = (att.filename || '').toLowerCase()
-  return mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/.test(name)
-}
-
-/**
- * 是否为可 iframe 预览的 PDF。
- * @param {MessageAttachment} att
- */
-function isPdf(att: MessageAttachment): boolean {
-  const mime = (att.mimetype || '').toLowerCase()
-  const name = (att.filename || '').toLowerCase()
-  return mime.includes('pdf') || name.endsWith('.pdf')
-}
-
-/**
- * 文件类型短标签。
- * @param {MessageAttachment} att
- */
-function fileKind(att: MessageAttachment): string {
-  const name = (att.filename || '').toLowerCase()
-  const mime = (att.mimetype || '').toLowerCase()
-  if (isPdf(att)) return 'PDF'
-  if (name.endsWith('.docx') || name.endsWith('.doc') || mime.includes('word')) return 'Word'
-  if (name.endsWith('.xlsx') || name.endsWith('.xls') || mime.includes('sheet') || mime.includes('excel')) return 'Excel'
-  if (name.endsWith('.csv')) return 'CSV'
-  if (name.endsWith('.txt') || name.endsWith('.md')) return '文本'
-  if (name.endsWith('.json')) return 'JSON'
-  return '文件'
-}
-
-/**
- * 人类可读文件大小。
- * @param {number} [size]
- */
-function formatSize(size?: number): string {
-  if (size == null || size < 0) return ''
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
-}
-
-/**
- * 打开预览：图片与 PDF 进弹层，其它类型新标签下载/打开。
+ * 打开预览：图片、PDF 和 Office 文档进统一预览壳。
  * @param {MessageAttachment} att
  */
 function openPreview(att: MessageAttachment) {
-  if (isImage(att) || isPdf(att)) {
-    preview.value = att
-    return
-  }
-  window.open(attachmentContentUrl(att), '_blank', 'noopener')
+  previewAttachment.value = att
+  previewOpen.value = true
 }
 
 function closePreview() {
-  preview.value = null
+  previewOpen.value = false
+  previewAttachment.value = null
 }
 </script>
 
@@ -94,7 +48,7 @@ function closePreview() {
       :key="att.id"
       type="button"
       class="att-file"
-      :aria-label="`${isPdf(att) ? '预览' : '打开'} ${att.filename}`"
+      :aria-label="`${isPdf(att) ? '预览' : isOffice(att) ? '查看' : '打开'} ${att.filename}`"
       @click="openPreview(att)"
     >
       <span class="att-badge" aria-hidden="true">{{ fileKind(att) }}</span>
@@ -103,6 +57,7 @@ function closePreview() {
         <small>
           <template v-if="att.size">{{ formatSize(att.size) }}</template>
           <template v-if="isPdf(att)"> · 点击预览</template>
+          <template v-else-if="isOffice(att)"> · 点击查看</template>
           <template v-else> · 点击打开/下载</template>
         </small>
         <em v-if="att.excerpt">{{ att.excerpt }}</em>
@@ -110,32 +65,11 @@ function closePreview() {
     </button>
   </div>
 
-  <teleport to="body">
-    <div v-if="preview" class="preview-mask" @click="closePreview">
-      <div class="preview-panel" :class="{ pdf: isPdf(preview) }" @click.stop>
-        <header class="preview-head">
-          <strong>{{ preview.filename }}</strong>
-          <div class="preview-actions">
-            <a :href="attachmentContentUrl(preview)" target="_blank" rel="noopener">
-              {{ isPdf(preview) ? '新窗口打开' : '打开原图' }}
-            </a>
-            <button type="button" @click="closePreview">关闭</button>
-          </div>
-        </header>
-        <img
-          v-if="isImage(preview)"
-          :src="attachmentContentUrl(preview)"
-          :alt="preview.filename"
-        />
-        <iframe
-          v-else-if="isPdf(preview)"
-          class="pdf-frame"
-          :src="attachmentContentUrl(preview)"
-          :title="preview.filename"
-        />
-      </div>
-    </div>
-  </teleport>
+  <AttachmentPreviewModal
+    v-model="previewOpen"
+    :attachment="previewAttachment"
+    :gallery="attachments"
+  />
 </template>
 
 <style scoped>
@@ -211,64 +145,5 @@ function closePreview() {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-.preview-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(16, 24, 32, .55);
-}
-.preview-panel {
-  width: min(920px, 100%);
-  max-height: 90vh;
-  overflow: auto;
-  border-radius: 12px;
-  background: #111;
-  box-shadow: 0 20px 48px rgba(0,0,0,.35);
-}
-.preview-panel.pdf {
-  width: min(1040px, 100%);
-  height: min(90vh, 860px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.preview-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  color: #fff;
-  background: #1b232b;
-}
-.preview-head strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.preview-actions { display: flex; gap: 8px; flex: none; }
-.preview-actions a,
-.preview-actions button {
-  border: 0;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background: rgba(255,255,255,.1);
-  color: #fff;
-  font-size: 12px;
-  text-decoration: none;
-  cursor: pointer;
-}
-.preview-panel img {
-  display: block;
-  width: 100%;
-  max-height: calc(90vh - 52px);
-  object-fit: contain;
-  background: #000;
-}
-.pdf-frame {
-  flex: 1;
-  width: 100%;
-  border: 0;
-  background: #fff;
 }
 </style>
