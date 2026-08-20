@@ -3,7 +3,7 @@ import type { MessageDocumentSummary, MessageAttachment } from '../../types'
 
 const props = defineProps<{
   summaries: MessageDocumentSummary[]
-  /** 同消息的附件列表，用于匹配摘要 */
+  /** 可匹配的附件池（当前消息 + 向前 user），由父组件传入 */
   attachments?: MessageAttachment[]
 }>()
 

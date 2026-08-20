@@ -11,19 +11,18 @@
 
 ## 活跃计划
 
-| 计划 | 摘要 |
-|---|---|
-| [附件预览走查修复](2026-08-19-attachment-preview-followup.md) | **优先**：多图切换空实现、Bubble 单例 Modal、摘要匹配 user 附件 |
-| [附件预览 UIUX 对齐](2026-08-19-attachment-preview-uiux.md) | 初版已合入；缺陷转 follow-up，勿重复开工 |
-| [内容展示优化](2026-08-13-content-display-optimization.md) | Result 可读性、处理信息抽屉、附件预览 |
-| [文件上传、附件展示与限流](2026-08-13-upload-attachments-ratelimit.md) | 上传落盘 `~/payflow/agentChat`、消息附件展示、租户+用户限流 |
+> 当前无活跃计划。所有计划已完成并归档。
 
-> **Status Update:** 附件预览初版 `bb9d0cf` 已推送；走查 P0（切图/双壳/摘要源）见 follow-up，交 Claude 修。
+> **Status Update（2026-08-20）：** 所有计划已完成并归档。
 
 ## 已归档
 
 | 计划 | 完成日 | 摘要 | 勿重复做 |
 |---|---|---|---|
+| [内容展示优化](archive/2026-08-13-content-display-optimization.md) | 2026-08-20 | Result 可读性、处理信息抽屉、附件预览 | JSON 美化、ProcessingDrawer、思考/步骤折叠 |
+| [文件上传、附件展示与限流](archive/2026-08-13-upload-attachments-ratelimit.md) | 2026-08-20 | 上传落盘 `~/payflow/agentChat`、消息附件展示、租户+用户限流 | UploadService、限流 Filter、Composer 上传 |
+| [附件预览走查修复](archive/2026-08-19-attachment-preview-followup.md) | 2026-08-20 | 切图接线、单例 Modal、摘要匹配 user 附件、a11y | 空 `goPrev`、双 Modal、仅同消息摘要 |
+| [附件预览 UIUX 对齐](archive/2026-08-19-attachment-preview-uiux.md) | 2026-08-20 | 统一预览壳 / Office 降级 / 计划骨架 | 勿再开同范围初版；缺陷已在 follow-up 收口 |
 | [内容解析与用户接话](archive/2026-08-13-content-parse-and-composer.md) | 2026-08-13 | marked/DOMPurify、MessageParts、Composer 能力条与布局 | 拆段/Markdown 升级、能力占位、工具栏分离 |
 
 ## 仍开放（产品路线图，非本目录计划）

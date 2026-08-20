@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import type { MessageAttachment } from '../../types'
 import { attachmentContentUrl } from '../../api/client'
 import { isImage, isPdf, fileKind, formatSize } from '../../utils/attachmentKind'

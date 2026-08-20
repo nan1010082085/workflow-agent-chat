@@ -450,10 +450,10 @@ function onAttachmentPreview(attachment: MessageAttachment) {
       </div>
       <div v-else-if="showCancelledHint" class="bubble cancelled-hint">已取消</div>
 
-      <!-- 附件预览弹层（单例） -->
+      <!-- 附件预览弹层（单例）；v-model:attachment 承接多图切换 -->
       <AttachmentPreviewModal
         v-model="previewOpen"
-        :attachment="previewAttachment"
+        v-model:attachment="previewAttachment"
         :gallery="galleryAttachments"
       />
 

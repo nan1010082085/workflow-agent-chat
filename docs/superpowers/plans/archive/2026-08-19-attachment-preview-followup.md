@@ -1,5 +1,7 @@
 # 附件预览走查修复 Implementation Plan
 
+> **Status: ARCHIVED · DONE（2026-08-20）** — B1 接线 `v-model:attachment` 已落地。
+>
 > **For Claude / agentic workers:** 严格按任务勾选落地。本计划修复 `2026-08-19-attachment-preview-uiux` 合入后走查发现的问题，**不要重做**已可用的降级壳 / PDF iframe / Esc / UIUX 文档。
 
 **Goal:** 让多图切换与摘要→附件预览在真实对话中可用；收敛为 Bubble 单例 Modal；清掉空实现与死代码。
@@ -24,12 +26,12 @@
 
 | ID | 严重度 | 现象 | 根因落点 | 状态 |
 |---|---|---|---|---|
-| B1 | **P0** | 多图 ←/→ 与按钮无效果 | `AttachmentPreviewModal.goPrev/goNext` 与方向键只写注释，未更新 attachment | ✅ 已修复 |
+| B1 | **P0** | 多图 ←/→ 与按钮无效果 | Modal emit 后 Bubble 未接 `v-model:attachment`（走查残留） | ✅ 已修复（2026-08-20：`v-model:attachment`） |
 | B2 | **P0** | 计划写「Bubble 单例」，实际双壳 | `MessageAttachmentList` 与 `MessageBubble` 各挂一个 Modal | ✅ 已修复 |
 | B3 | **P0** | 摘要点不开真实附件 | Summary 只拿当前助手消息 `attachments`；用户文件在上一条 user 消息 | ✅ 已修复 |
 | B4 | 中 | 计数显示如 `3 / 2` | `currentIndex` 用全量 gallery，分母用图片数 | ✅ 已修复 |
 | B5 | 中 | `[img, pdf, img]` 切不到第二张 | `hasPrev/hasNext` 只看相邻项是否图片，不跳过非图 | ✅ 已修复 |
-| B6 | 低 | 死代码 / 未用 import | List `closePreview`；Summary `isImage`/`isPdf`/`computed`；Modal `isCurrentOffice` | ✅ 已修复 |
+| B6 | 低 | 死代码 / 未用 import | List `closePreview`；Summary 未用 import；Modal `onMounted` 残留 | ✅ 已修复（2026-08-20 清 `onMounted`） |
 | B7 | 低 | 每条消息常驻 keydown | Modal `onMounted` 绑 `document`，应按打开态挂卸 | ✅ 已修复 |
 | B8 | 低 | 关闭钮热区偏小 | `.preview-action-btn` 高度 &lt; 44px | ✅ 已修复 |
 | D1 | 文档 | 原计划 Task4 / 验收 #1#4#6 误勾 ✅ | `2026-08-19-attachment-preview-uiux.md` | ✅ 已修复 |
@@ -99,7 +101,7 @@ MessageBubble
 ```
 
 - [x] `MessageAttachmentList` 删除内嵌 `AttachmentPreviewModal` 与本地 `previewOpen` 状态；点击改为 `emit('preview', att)`
-- [x] `MessageBubble`：`openPreview(att)` 设置 `previewAttachment` + `previewOpen`；`:gallery` 传**本气泡可用来切图的图片列表**（见 Task 3 的 pool，至少含当前消息图片）
+- [x] `MessageBubble`：`openPreview(att)` 设置 `previewAttachment` + `previewOpen`；`:gallery` 传图集；**必须** `v-model:attachment` 承接切图（2026-08-20 补齐）
 - [x] 确认同一气泡不会出现两个 dialog
 
 ---
@@ -151,7 +153,7 @@ MessageBubble
 
 | # | 场景 | 期望 | 状态 |
 |---|---|---|---|
-| 1 | 同消息 2+ 张 png | 打开后按钮与方向键可切换；计数正确 | ✅ |
+| 1 | 同消息 2+ 张 png | 打开后按钮与方向键可切换；计数正确 | ✅（含 2026-08-20 Bubble `v-model:attachment`） |
 | 2 | 同消息 img + pdf + img | 两张图之间可切换，不被 PDF 挡住 | ✅ |
 | 3 | user 上传 pdf，assistant 摘要同名 | 点摘要打开预览壳 | ✅ |
 | 4 | 摘要文件名对不上 | 提示「无对应附件…」，无白屏 | ✅ |

@@ -1,6 +1,6 @@
 # 附件预览 UIUX 对齐 Implementation Plan
 
-> **Status:** 前端初版已合入（`bb9d0cf`）；走查缺陷见 follow-up → [`2026-08-19-attachment-preview-followup.md`](2026-08-19-attachment-preview-followup.md)（多图切换空实现、双 Modal、摘要附件源）。
+> **Status: ARCHIVED · DONE（2026-08-20）** · 初版 `bb9d0cf`；缺陷收口见 [`2026-08-19-attachment-preview-followup.md`](2026-08-19-attachment-preview-followup.md)。
 >
 > **For Claude / agentic workers:** 新缺陷请改 follow-up，勿在本文件重复开工。本计划可独立合入，不依赖 ai-platform harness/cordis。
 
